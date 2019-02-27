@@ -187,9 +187,9 @@ contract NetStateBlockChain {
         v = toGet.value;
     }
     function voteProof(bool validProof)
+        public
         ownerExists(msg.sender)
         validVote(uint(ownersVotedPointer[msg.sender]))
-        public
     {
         uint32 curPointer = ownersVotedPointer[msg.sender];
         ownersVotedPointer[msg.sender] += 1;
