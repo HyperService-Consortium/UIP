@@ -454,7 +454,7 @@ if __name__ == '__main__':
     #         OptionBytecode[:-1], BLOCKCHAIN_A,
     #         "OptionContract", hex(200000), "0x8ac7230489e80000")
     #     hyperservice.DeployContract(option_contract)
-    with open('NSB_bytecode', 'r') as f:
+    with open('./NSB/NSB_bytecode', 'r') as f:
         NSBBytecode = f.read()
         NSB_contract = SmartContract(
             NSBBytecode[:-1], BLOCKCHAIN_A,
