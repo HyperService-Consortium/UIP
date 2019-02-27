@@ -1,0 +1,228 @@
+[{
+  "constant": false,
+    "inputs": [
+    {
+      "name": "_proposal",
+      "type": "uint256"
+    }
+    ],
+    "name": "buyOption",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+},
+{
+  "constant": false,
+  "inputs": [
+  {
+    "name": "genuinePrice",
+    "type": "uint256"
+  }
+  ],
+  "name": "CashSettle",
+  "outputs": [],
+  "payable": false,
+  "stateMutability": "nonpayable",
+  "type": "function"
+},
+{
+  "constant": false,
+  "inputs": [],
+  "name": "stakeFund",
+  "outputs": [],
+  "payable": true,
+  "stateMutability": "payable",
+  "type": "function"
+},
+{
+  "constant": false,
+  "inputs": [
+  {
+    "name": "_value",
+    "type": "uint256"
+  }
+  ],
+  "name": "updateStake",
+  "outputs": [],
+  "payable": false,
+  "stateMutability": "nonpayable",
+  "type": "function"
+},
+{
+  "inputs": [
+  {
+
+    "name": "_strikePrice",
+
+    "type": "uint256"
+
+  }
+
+  ],
+
+  "payable": true,
+
+  "stateMutability": "payable",
+
+  "type": "constructor"
+
+},
+
+{
+
+  "constant": true,
+
+  "inputs": [],
+
+  "name": "INIT_STAKE",
+
+  "outputs": [
+
+  {
+
+    "name": "",
+
+    "type": "uint256"
+
+  }
+
+  ],
+
+  "payable": false,
+
+  "stateMutability": "view",
+
+  "type": "function"
+
+},
+
+{
+
+  "constant": true,
+
+  "inputs": [],
+
+  "name": "MIN_STAKE",
+
+  "outputs": [
+
+  {
+
+    "name": "",
+
+    "type": "uint256"
+
+  }
+
+  ],
+
+  "payable": false,
+
+  "stateMutability": "view",
+
+  "type": "function"
+
+},
+
+{
+
+  "constant": true,
+
+  "inputs": [
+
+  {
+
+    "name": "",
+
+    "type": "address"
+
+  }
+
+  ],
+
+  "name": "optionBuyers",
+
+  "outputs": [
+
+  {
+
+    "name": "valid",
+
+    "type": "bool"
+
+  },
+
+  {
+
+    "name": "executed",
+
+    "type": "bool"
+
+  }
+
+  ],
+
+  "payable": false,
+
+  "stateMutability": "view",
+
+  "type": "function"
+
+},
+
+{
+
+  "constant": true,
+
+  "inputs": [],
+
+  "name": "remainingFund",
+
+  "outputs": [
+
+  {
+
+    "name": "",
+
+    "type": "uint256"
+
+  }
+
+  ],
+
+  "payable": false,
+
+  "stateMutability": "view",
+
+  "type": "function"
+
+},
+
+{
+
+  "constant": true,
+
+  "inputs": [],
+
+  "name": "strikePrice",
+
+  "outputs": [
+
+  {
+
+    "name": "",
+
+    "type": "uint256"
+
+  }
+
+  ],
+
+  "payable": false,
+
+  "stateMutability": "view",
+
+  "type": "function"
+
+}]
