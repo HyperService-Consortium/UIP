@@ -179,7 +179,10 @@ contract NetStateBlockChain {
         remainMerkleProof(uint(ownersPointer[msg.sender]))
         returns (bytes32 s, bytes32 k, bytes32 v)
     {
-        while(waitingVerifyProof[ownersPointer[msg.sender]] == 0) ownersPointer[msg.sender] += 1;
+        while(ownersPointer[msg.sender] < waitingVerifyProof.length &&
+              waitingVerifyProof[ownersPointer[msg.sender]] == 0) {
+                ownersPointer[msg.sender] += 1;
+            }
         MerkleProof storage toGet = actionTree[waitingVerifyProof[ownersPointer[msg.sender]]];
         ownersPointer[msg.sender] += 1;
         s = toGet.storagehash;
