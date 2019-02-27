@@ -36,7 +36,7 @@ function:
 $$
 \text{Action}:= \left\{\begin{array}{rl}
 (\mathsf{storagehash},\mathsf{key},\mathsf{val})&,\text{Action is a }\color{#B22222}{\text{Merk}}.\\
-\mathrm{Cert}(\mathsf{content},\mathrm{Sig}_{\mathsf{sid}}^{X},\mathrm{Sig}_{\mathsf{sid}}^{Y})&,\text{Action is a }\color{#B22222}{\text{Atte}}.
+\mathrm{Cert}(\mathsf{content},\mathrm{Sig}^{X},\mathrm{Sig}^{Y})&,\text{Action is a }\color{#B22222}{\text{Atte}}.
 \end{array}\right.
 $$
 ​	一个Action的映射函数被如下运算：
