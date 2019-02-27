@@ -2,11 +2,13 @@
 
 Datastructure:
 
-$\mathcal{Q}_{\text{A}}$： 待检查队列.
+$\mathcal{Q}_{\text{A}}$：
+    
+    待检查队列.
 
 ${\mathcal{Q}}^{\text{addr}}_{\text{A}}$: 
 
-与$\mathcal{Q}_{\text{A}}$同状态的有效账户$\text{addr}$的队列.
+    与$\mathcal{Q}_{\text{A}}$同状态的有效账户$\text{addr}$的队列.
 
 $\text{Action}$: 一个行为证明,可能是$\text{Attestaion}(\color{#B22222}{\text{Atte}})$或者$\text{MerkleProof}(\color{#B22222}{\text{Merk}})$.
 
@@ -40,10 +42,10 @@ $$
 ​	一个Action的映射函数被如下运算：
 $$
 \begin{aligned}
-\mathrm{Mapping}:\mathrm{keccak256}(\mathrm{bytes32}(\mathrm{keccak256}(\textcolor{#B22222}{\text{Action}}))+\mathrm{bytes32}(\mathsf{slot}))\mapsto \textcolor{#B22222}{\text{Action}}
+\mathrm{Mapping}:\mathrm{keccak256}(\mathrm{bytes32}(\mathrm{keccak256}(\color{#B22222}{\text{Action}}))+\mathrm{bytes32}(\mathsf{slot}))\mapsto \color{#B22222}{\text{Action}}
 \end{aligned}
 $$
-​	当然我们只需要计算$\mathrm{keccak256}(\textcolor{#B22222}{\text{Action}})$.
+​	当然我们只需要计算$\mathrm{keccak256}(\color{#B22222}{\text{Action}})$.
 
 ##### Action get/vote
 
