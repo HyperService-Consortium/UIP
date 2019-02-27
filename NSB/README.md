@@ -40,13 +40,14 @@ $$
 \end{array}
 $$
 ​	一个Action的映射函数被如下运算：
+
+
 $$
-\text{Action}:= \left\{\begin{array}{rl}
-(\mathsf{storagehash},\mathsf{key},\mathsf{val})&,\text{Action is a }\textcolor{#B22222}{\text{Merk}}.\\
-\mathrm{Cert}(\mathsf{content},\mathrm{Sig}_{\mathsf{sid}}^{X},\mathrm{Sig}_{\mathsf{sid}}^{Y})&,\text{Action is a }\textcolor{#B22222}{\text{Atte}}.
-\end{array}\right.
+\begin{aligned}\mathrm{Mapping}:\mathrm{keccak256}(\mathrm{bytes32}(\mathrm{keccak256}(\color{#B22222}{\text{Action}})\color{black})+\mathrm{bytes32}(\mathsf{slot}))\mapsto \color{#B22222}{\text{Action}}\end{aligned}
 $$
-​	当然我们只需要计算$\mathrm{keccak256}(\color{#B22222}{\text{Action}})$.
+
+
+​	当然我们只需要计算$\mathrm{keccak256}(\color{#B22222}{\text{Action}}\color{black})$.
 
 ##### Action get/vote
 
