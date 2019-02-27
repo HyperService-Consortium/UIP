@@ -6,7 +6,7 @@ $\mathcal{Q}_{\text{A}}$： 待检查队列.
 
 ${\mathcal{Q}}_{\text{A}}^{\text{addr}}$: 与$\mathcal{Q}_{\text{A}}$同状态的有效账户$\text{addr}$的队列.
 
-$\text{Action}$: 一个行为证明,可能是$\text{Attestaion}(\textcolor{#B22222}{\text{Atte}})$或者$\text{MerkleProof}(\textcolor{#B22222}{\text{Merk}})$.
+$\text{Action}$: 一个行为证明,可能是$\text{Attestaion}(\color{#B22222}{\text{Atte}})$或者$\text{MerkleProof}(\color{#B22222}{\text{Merk}})$.
 
 function:
 
