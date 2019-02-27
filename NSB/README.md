@@ -4,11 +4,11 @@ Datastructure:
 
 $\mathcal{Q}_{\text{A}}$：
     
-    待检查队列.
+  待检查队列.
 
 ${\mathcal{Q}}^{\text{addr}}_{\text{A}}$: 
 
-    与$\mathcal{Q}_{\text{A}}$同状态的有效账户$\text{addr}$的队列.
+  与$\mathcal{Q}_{\text{A}}$同状态的有效账户$\text{addr}$的队列.
 
 $\text{Action}$: 一个行为证明,可能是$\text{Attestaion}(\color{#B22222}{\text{Atte}})$或者$\text{MerkleProof}(\color{#B22222}{\text{Merk}})$.
 
@@ -35,8 +35,8 @@ function:
 ​	一个Action被定义为：
 $$
 \text{Action}:= \left\{\begin{array}{rl}
-(\mathsf{storagehash},\mathsf{key},\mathsf{val})&,\text{Action is a }\textcolor{#B22222}{\text{Merk}}.\\
-\mathrm{Cert}(\mathsf{content},\mathrm{Sig}_{\mathsf{sid}}^{X},\mathrm{Sig}_{\mathsf{sid}}^{Y})&,\text{Action is a }\textcolor{#B22222}{\text{Atte}}.
+(\mathsf{storagehash},\mathsf{key},\mathsf{val})&,\text{Action is a }\color{#B22222}{\text{Merk}}.\\
+\mathrm{Cert}(\mathsf{content},\mathrm{Sig}_{\mathsf{sid}}^{X},\mathrm{Sig}_{\mathsf{sid}}^{Y})&,\text{Action is a }\color{#B22222}{\text{Atte}}.
 \end{array}\right.
 $$
 ​	一个Action的映射函数被如下运算：
