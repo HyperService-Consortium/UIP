@@ -1,99 +1,45 @@
-pragma solidity ^0.4.22;
-contract NetStateBlockChain {
+pragma solidity 0.4.22;
+
+contract Broker {
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
 
-    struct MerkleProof {
-        //storage roothash
-        bytes32 storagehash;
-        //storaged key
-        bytes32 key;
-        // corresponding value
-        bytes32 value;
-    }
-    // The actionTree
-    // keccak256(storagehash + key + value) maps to MerkleProof
-    bytes32[] public waitingVerifyProof;
+    // The authorative ouput provided by this Broker contracts.
+    uint public genuineValue;
 
-    // corresponding valid votes' number
-    uint32[] public validCount;
-
-    // corresponding votes' number
-    uint32[] public votedCount;
-
-    // remained verifying MerkleProofs range [votedPointer, waitingVerifyProof.length)
-    uint32 votedPointer;
-
-    // all the actions on the contract
-    mapping (bytes32 => MerkleProof) public actionTree;
-    // if the action/proof Atte is valid, verifiedAction[Atte] == true
-    mapping (bytes32 => bool) public verifiedAction;
-
-    // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
+    // The Broker contract is owned by multple entities to ensure security.
     mapping (address => bool) public isOwner;
     address[] public owners;
-
-    // remained caught MerkleProofs range [ownersPointer, waitingVerifyProof.length)
-    mapping(address => uint32) public ownersPointer;
-    // remained verifying MerkleProofs by onwers range [onwersvotedPointer, waitingVerifyProof.length)
-    mapping(address => uint32) public ownersVotedPointer;
     uint public requiredOwnerCount;
-    uint public requiredValidVotesCount;
+
+    // Votes by the owners for a specific price value.
+    mapping (uint => mapping (address => bool)) public valueVotes;
+    uint[] public valueProposals;
 
     // Maps used for adding and removing owners.
     mapping (address => mapping (address => bool)) public addingOwnerProposal;
     mapping (address => mapping (address => bool)) public removingOwnerProposal;
 
     modifier ownerDoesNotExist(address owner) {
-        require(!isOwner[owner], "owner exists");
+        require(!isOwner[owner]);
         _;
     }
 
     modifier ownerExists(address owner) {
-        require(isOwner[owner], "onwer does not exist");
+        require(isOwner[owner]);
         _;
     }
-
-    event addingMerkleProof(bytes32, bytes32, bytes32);
 
     modifier validRequirement(uint ownerCount, uint _requiredOwner) {
-        require(ownerCount < MAX_OWNER_COUNT, "too many owners");
-        require(_requiredOwner <= ownerCount, "not enough owners");
-        require(_requiredOwner != 0, "at least one positive voter");
-        require(ownerCount != 0, "at least one owner");
-        _;
-    }
-
-    modifier validMerkleProof(bytes32 storagehash, bytes32 key) {
-        require(storagehash != 0, "invalid storagehash");
-        require(key != 0, "invalid key");
-        _;
-    }
-    modifier remainMerkleProof(uint curPointer) {
-        require(curPointer < waitingVerifyProof.length, "no MerkleProof to fetch");
-        _;
-    }
-
-    modifier validVote(uint curVotedPointer) {
-        require(votedPointer <= curVotedPointer, "the MerkleProof is proved");
-        require(curVotedPointer <waitingVerifyProof.length, "no MerkleProof to vote");
-        require(waitingVerifyProof[curVotedPointer] != 0, "the MerkleProof is proved");
-        _;
-    }
-
-    modifier validUpdate(uint curPointer) {
-        require(curPointer < votedPointer, "Remain Proof to verify");
-        _;
-    }
-
-    modifier validChange(address addr, uint changeNum) {
-        require(ownersVotedPointer[addr] <= changeNum, "too small");
-        require(changeNum <waitingVerifyProof.length, "too big");
+        require(ownerCount < MAX_OWNER_COUNT);
+        require(_requiredOwner <= ownerCount);
+        require(_requiredOwner != 0);
+        require(ownerCount != 0);
         _;
     }
 
     // Remember to specify at least one address and set the _required as one.
-    constructor (address[] _owners, uint _required)
+    constructor(address[] _owners, uint _required)
         public
         validRequirement(_owners.length, _required)
     {
@@ -103,7 +49,6 @@ contract NetStateBlockChain {
         }
         owners = _owners;
         requiredOwnerCount = _required;
-        requiredValidVotesCount = (requiredOwnerCount + 1) >> 1;
     }
 
     function addOwner(address _newOwner)
@@ -113,8 +58,6 @@ contract NetStateBlockChain {
     {
         require(_newOwner != 0);
         addingOwnerProposal[_newOwner][msg.sender] = true;
-
-        //use a integer to count it?
         uint vote_count = 0;
         for (uint i = 0; i < owners.length; i++) {
             address owner = owners[i];
@@ -127,6 +70,7 @@ contract NetStateBlockChain {
         if (vote_count >= requiredOwnerCount) {
             owners.push(_newOwner);
             isOwner[_newOwner] = true;
+            clearStaleOwnerAddingProposal(_newOwner);
         }
     }
 
@@ -137,8 +81,6 @@ contract NetStateBlockChain {
         validRequirement(owners.length - 1, requiredOwnerCount)
     {
         removingOwnerProposal[_removeOwner][msg.sender] = true;
-
-        //use a integer to count it?
         uint vote_count = 0;
         for (uint i = 0; i < owners.length; i++) {
             address owner = owners[i];
@@ -160,87 +102,38 @@ contract NetStateBlockChain {
         owners.length -= 1;
     }
 
-    // change it to VES/DAPP/NSB user?
-    function addMerkleProof(bytes32 storagehash, bytes32 key, bytes32 val)
+    function getGenuineValue()
         public
-        ownerExists(msg.sender)
-        validMerkleProof(storagehash, key)
+        returns (uint)
     {
-        MerkleProof memory toAdd = MerkleProof(storagehash, key, val);
-        bytes32 keccakhash = keccak256(storagehash, key, val);
-        waitingVerifyProof.push(keccakhash);
-        actionTree[keccakhash] = toAdd;
-        emit addingMerkleProof(storagehash, key, val);
-    }
-
-    function getMerkleProof()
-        public
-        ownerExists(msg.sender)
-        remainMerkleProof(uint(ownersPointer[msg.sender]))
-        returns (bytes32 s, bytes32 k, bytes32 v)
-    {
-        while(waitingVerifyProof[ownersPointer[msg.sender]] == 0) ownersPointer[msg.sender] += 1;
-        MerkleProof storage toGet = actionTree[waitingVerifyProof[ownersPointer[msg.sender]]];
-        ownersPointer[msg.sender] += 1;
-        s = toGet.storagehash;
-        k = toGet.key;
-        v = toGet.value;
-    }
-    function voteProof(bool validProof)
-        ownerExists(msg.sender)
-        validVote(uint(ownersVotedPointer[msg.sender]))
-        public
-    {
-        uint32 curPointer = ownersVotedPointer[msg.sender];
-        ownersVotedPointer[msg.sender] += 1;
-        if(validProof) {
-            validCount[curPointer] += 1;
-        }
-        votedCount[curPointer] += 1;
-        if (votedCount[curPointer] == requiredOwnerCount) {
-            if (validCount[curPointer] >= requiredValidVotesCount) {
-                verifiedAction[waitingVerifyProof[curPointer]] = true;
-            } else {
-                delete actionTree[waitingVerifyProof[curPointer]];
+        uint max_vote = 0;
+        uint voted_value = 0;
+        for (uint i = 0; i < valueProposals.length; i++) {
+            uint cur_vote = 0;
+            uint cur_value = valueProposals[i];
+            mapping (address => bool) proposal = valueVotes[cur_value];
+            for (uint j = 0; j < owners.length; j++) {
+                address owner = owners[j];
+                if (proposal[owner]) {
+                    cur_vote += 1;
+                }
             }
-            delete waitingVerifyProof[curPointer];
-            delete validCount[curPointer];
-            delete votedCount[curPointer];
+            // The "=" is to make sure the most recent value proposal has higher priority.
+            if (cur_vote >= max_vote) {
+                max_vote = cur_vote;
+                voted_value = cur_value;
+            }
         }
-        ownersVotedPointer[msg.sender] += 1;
-        while(waitingVerifyProof[votedPointer] == 0)votedPointer += 1;
-    }
-    function updateToLatestVote()
-        public
-        ownerExists(msg.sender)
-        validUpdate(uint(ownersVotedPointer[msg.sender]))
-    {
-        ownersVotedPointer[msg.sender] = votedPointer;
-        if(ownersPointer[msg.sender] < votedPointer) {
-            ownersPointer[msg.sender] = votedPointer;
-        }
+        genuineValue = voted_value;
+        return genuineValue;
     }
 
-    function resetGetPointer(uint32 num)
+    function setValueProposal(uint _value)
         public
         ownerExists(msg.sender)
-        validChange(msg.sender, num)
     {
-        ownersPointer[msg.sender] = num;
-    }
-
-    //is it necessary?
-    function reGetMerkleProof(bytes32 keccakhash)
-        public
-        view
-        ownerExists(msg.sender)
-        returns (bytes32 s, bytes32 k, bytes32 v)
-    {
-        // require(actionTree[keccakhash] != , "not exists");
-        MerkleProof storage toGet = actionTree[keccakhash];
-        s = toGet.storagehash;
-        k = toGet.key;
-        v = toGet.value;
+        updateValueProposalsIfNecessary(_value);
+        valueVotes[_value][msg.sender] = true;
     }
 
     function getOwnerCount()
@@ -259,32 +152,42 @@ contract NetStateBlockChain {
         return isOwner[msg.sender];
     }
 
-    function getTobeVotes()
-        public
-        view
-        ownerExists(msg.sender)
-        returns (uint32)
+    function updateValueProposalsIfNecessary(uint _value)
+        private
     {
-        return ownersVotedPointer[msg.sender];
+        for (uint i = 0; i < valueProposals.length; i++) {
+            if (valueProposals[i] == _value) {
+                return;
+            }
+        }
+        if (valueProposals.length < MAX_VALUE_PROPOSAL_COUNT) {
+            valueProposals.push(_value);
+            return;
+        }
+        // Remove the oldest value proposal.
+        uint oldest_value = valueProposals[0];
+        for (i = 1; i < valueProposals.length; i++) {
+            valueProposals[i-1] = valueProposals[i];
+        }
+        clearStaleValueVotes(oldest_value);
+        valueProposals.push(_value);
     }
 
-    function validMerkleProoforNot(bytes32 keccakhash)
-        public
-        view
-        returns (bool)
+    function clearStaleValueVotes(uint _value)
+        private
     {
-        return verifiedAction[keccakhash];
+        for (uint i = 0; i < owners.length; i++) {
+            address owner = owners[i];
+            delete valueVotes[_value][owner];
+        }
     }
 
-    function getVaildMerkleProof(bytes32 keccakhash)
-        public
-        view
-        returns (bytes32 s, bytes32 k, bytes32 v)
+    function clearStaleOwnerAddingProposal(address _owner)
+        private
     {
-        require(verifiedAction[keccakhash] == true, "invalid");
-        MerkleProof storage toGet = actionTree[keccakhash];
-        s = toGet.storagehash;
-        k = toGet.key;
-        v = toGet.value;
+        for (uint i = 0; i < owners.length; i++) {
+            address owner = owners[i];
+            delete addingOwnerProposal[_owner][owner];
+        }
     }
 }

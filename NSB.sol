@@ -175,6 +175,7 @@ contract NetStateBlockChain {
     
     function getMerkleProof()
         public
+        ownerExists(msg.sender)
         remainMerkleProof(uint(ownersPointer[msg.sender]))
         returns (bytes32 s, bytes32 k, bytes32 v)
     {
@@ -186,6 +187,7 @@ contract NetStateBlockChain {
         v = toGet.value;
     }
     function voteProof(bool validProof)
+        ownerExists(msg.sender)
         validVote(uint(ownersVotedPointer[msg.sender]))
         public
     {
@@ -210,6 +212,7 @@ contract NetStateBlockChain {
     }
     function updateToLatestVote()
         public
+        ownerExists(msg.sender)
         validUpdate(uint(ownersVotedPointer[msg.sender]))
     {
         ownersVotedPointer[msg.sender] = votedPointer;
@@ -217,18 +220,20 @@ contract NetStateBlockChain {
             ownersPointer[msg.sender] = votedPointer;
         }
     }
-    
+
     function resetGetPointer(uint32 num)
         public
+        ownerExists(msg.sender)
         validChange(msg.sender, num)
     {
         ownersPointer[msg.sender] = num;
     }
-    
+
     //is it necessary?
     function reGetMerkleProof(bytes32 keccakhash)
         public
         view
+        ownerExists(msg.sender)
         returns (bytes32 s, bytes32 k, bytes32 v)
     {
         // require(actionTree[keccakhash] != , "not exists");
@@ -237,26 +242,27 @@ contract NetStateBlockChain {
         k = toGet.key;
         v = toGet.value;
     }
-    
-    function getOwnerCount() 
+
+    function getOwnerCount()
         public
         view
         returns (uint)
     {
         return owners.length;
     }
-    
-    function isSenderAOwner() 
+
+    function isSenderAOwner()
         public
         view
         returns (bool)
     {
         return isOwner[msg.sender];
     }
-    
+
     function getTobeVotes()
         public
         view
+        ownerExists(msg.sender)
         returns (uint32)
     {
         return ownersVotedPointer[msg.sender];
