@@ -34,10 +34,10 @@ function:
 
 ​	一个Action被定义为：
 $$
-\text{Action}:= \left\{\begin{array}{rl}
+\text{Action}:= \begin{array}{rl}
 (\mathsf{storagehash},\mathsf{key},\mathsf{val})&,\text{Action is a }\color{#B22222}{\text{Merk}}.\\
 \mathrm{Cert}(\mathsf{content},\mathrm{Sig}^{X},\mathrm{Sig}^{Y})&,\text{Action is a }\color{#B22222}{\text{Atte}}.
-\end{array}\right.
+\end{array}
 $$
 ​	一个Action的映射函数被如下运算：
 $$
