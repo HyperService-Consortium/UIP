@@ -308,21 +308,28 @@ if __name__ == '__main__':
 
 
     # Deploy the Broker and Option contract.
-    with open('broker_bytecode', 'r') as f:
-        BrokerBytecode = f.read()
-        broker_contract = SmartContract(
-            BrokerBytecode[:-1], BLOCKCHAIN_A,
-            "BrokerContract", hex(2000000))
-        hyperservice.DeployContract(broker_contract)
-        queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
-        print(queryProof)
+    # with open('broker_bytecode', 'r') as f:
+    #     BrokerBytecode = f.read()
+    #     broker_contract = SmartContract(
+    #         BrokerBytecode[:-1], BLOCKCHAIN_A,
+    #         "BrokerContract", hex(2000000))
+    #     hyperservice.DeployContract(broker_contract)
+    #     queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
+    #     print(queryProof)
 
-    with open('option_bytecode', 'r') as f:
-        OptionBytecode = f.read()
-        option_contract = SmartContract(
-            OptionBytecode[:-1], BLOCKCHAIN_A,
-            "OptionContract", hex(200000), "0x8ac7230489e80000")
-        hyperservice.DeployContract(option_contract)
+    # with open('option_bytecode', 'r') as f:
+    #     OptionBytecode = f.read()
+    #     option_contract = SmartContract(
+    #         OptionBytecode[:-1], BLOCKCHAIN_A,
+    #         "OptionContract", hex(200000), "0x8ac7230489e80000")
+    #     hyperservice.DeployContract(option_contract)
+    with open('NSB_bytecode', 'r') as f:
+        NSBBytecode = f.read()
+        NSB_contract = SmartContract(
+            NSBBytecode[:-1], BLOCKCHAIN_A,
+            "OptionContract", hex(5500000), hex(500000))
+        hyperservice.DeployContract(NSB_contract)
+
     # print(hyperservice.contracts)
 
 
