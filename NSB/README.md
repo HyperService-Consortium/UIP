@@ -97,3 +97,13 @@ $$
             owners.length -= 1;
         }
 ```
+5.voteProof(bool validProof):
+
+细节:fb0d84254693f131469282fcd1eb488e99504923
+
+指针多移了一次.
+处理被删除的Action的时候没考虑指针右移越界的情况.
+```
+    while(votedPointer < waitingVerifyProof.length && 
+            waitingVerifyProof[votedPointer] == 0)votedPointer ++;
+```
