@@ -373,7 +373,7 @@ class HyperService:
                 print ("Contract is deploying, please stand by")
                 time.sleep(2)
                 continue
-
+            print(response)
             block_number = response['result']['blockNumber']
             contract_addr = response['result']['contractAddress']
             get_code = {
@@ -383,6 +383,7 @@ class HyperService:
                     "id": 64
                     }
             code_resp = self.DispatchRpcToDomain(url, get_code)
+            print(code_resp)
             if code_resp['result'] is '0x':
                 raise IndexError("Contract deployment failed")
             return contract_addr
@@ -454,11 +455,11 @@ if __name__ == '__main__':
     #         OptionBytecode[:-1], BLOCKCHAIN_A,
     #         "OptionContract", hex(200000), "0x8ac7230489e80000")
     #     hyperservice.DeployContract(option_contract)
-    with open('./NSB/NSB_bytecode', 'r') as f:
+    with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
         NSB_contract = SmartContract(
             NSBBytecode[:-1], BLOCKCHAIN_A,
-            "OptionContract", hex(5500000), hex(500000))
+            "NSBContract", hex(4000000))
         hyperservice.DeployContract(NSB_contract)
 
     # print(hyperservice.contracts)

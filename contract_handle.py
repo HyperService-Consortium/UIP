@@ -23,6 +23,9 @@ broker_addr = Web3.toChecksumAddress("0xd7ea2b03da511799eb0c5a28989cf5268c869311
 broker_abi_addr = "broker_abi"
 broker_bytecode_addr = "broker_bytecode"
 
+nsb_addr = Web3.toChecksumAddress("0xbee9aa76bb8c0fd2d0926607221e48f02b3235d0")
+nsb_abi_addr = "./nsb/nsb.abi"
+nsb_bytecode_addr = "./nsb/nsb.bin"
 
 class FileLoad(object):
     def __int__(self):
@@ -67,7 +70,10 @@ if __name__ == '__main__' :
     print(web3.eth.coinbase)
     print(web3.eth.accounts)
     print(HexBytes(web3.eth.getStorageAt(broker_addr, "0x0", "latest")).hex())
-    broker = Contract(broker_addr, broker_abi_addr, broker_bytecode_addr)
-    print(broker.handle.all_functions())
-    print(broker.func('getGenuineValue'))
-    print(broker.func('isOwner',Web3.toChecksumAddress(broker_addr)))
+    # broker = Contract(broker_addr, broker_abi_addr, broker_bytecode_addr)
+    # print(broker.handle.all_functions())
+    # print(broker.func('getGenuineValue'))
+    # print(broker.func('isOwner',Web3.toChecksumAddress(broker_addr)))
+    nsb = Contract(nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
+    print(nsb.handle.all_functions())
+    # print(nsb.func('isOwner', nsb_addr))
