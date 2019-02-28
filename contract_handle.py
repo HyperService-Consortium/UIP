@@ -2,6 +2,7 @@
 from web3 import Web3
 from hexbytes import HexBytes
 from uiputils.types import Contract
+# import plyvel
 
 web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545", request_kwargs={'timeout': 10}))
 
@@ -12,6 +13,53 @@ broker_bytecode_addr = "broker_bytecode"
 nsb_addr = Web3.toChecksumAddress("0x4c8941bae3f7db6837f7b0bcad76d5fe416d9eb9")
 nsb_abi_addr = "./nsb/nsb.abi"
 nsb_bytecode_addr = "./nsb/nsb.bin"
+nsb_db_addr = "./nsb/actiondaba"
+
+class NetStatusBlockchain:
+    # Prot NSB in uip
+    def __init__(self, contract):  # , nsb_db_addr):
+        self.handle = contract
+        # self.db = plyvel.levelDB(nsb_db_addr, create_if_exists=True)
+        pass
+
+    def addOwner(self, addr):
+        self.handle.func('addOnwer', addr)
+
+    def removeOwner(self, addr):
+        self.handle.func('removeOwner', addr)
+
+    def addAction(self, storagehash, key, val):
+        return self.handle.func('addAction', storagehash, key, val)
+
+    def getAction(self):
+        return self.handle.func('getAction')
+
+    def voteProof(self, validProof):
+        return self.handle.func('voteProof', validProof)
+
+    def updateToLatestVote(self):
+        self.handle.func('updateToLatestVote')
+
+    def resetGetPointer(self, num):
+        self.handle.func('resetGetPointer', num)
+
+    def reGetAction(self, keccakhash):
+        return self.handle.func('reGetAction', keccakhash)
+
+    def getOwnerCount(self):
+        return self.handle.func('reGetAction')
+
+    def isSenderAOwner(self):
+        return self.handle.func('isSenderAOwner')
+
+    def getTobeVotes(self):
+        return self.handle.func('getTobeVotes')
+
+    def validActionorNot(self, keccakhash):
+        return self.handle.func('validActionorNot', keccakhash)
+
+    def getVaildAction(self, keccakhash):
+        return self.handle.func('getVaildAction', keccakhash)
 
 if __name__ == '__main__' :
     # print(compiled_sol)
