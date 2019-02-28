@@ -5,11 +5,11 @@ __author__ = 'Myriad Dreamin'
 
 from uiputils.loadfile import FileLoad
 
+
 class Contract:
+    # return a contract that can transact with web3
     def __init__(self, web3, contract_addr="", contract_abi=None, contract_bytecode=None):
 
-        self.addr = contract_addr
-        self.web3 = web3
         contract_abi = FileLoad.getabi(contract_abi)
         contract_bytecode = FileLoad.getbytecode(contract_bytecode)
 
@@ -18,5 +18,14 @@ class Contract:
         else:
             self.handle = web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
 
+        self.web3 = web3
+        self.address = self.handle.address
+        self.abi = self.handle.abi
+        self.bytecode = self.handle.bytecode
+        self.functions = self.handle.functions
+
     def func(self, funcname, *args):
         return self.handle.functions[funcname](*args).call()
+
+    def funcs(self):
+        return self.handle.all_functions()

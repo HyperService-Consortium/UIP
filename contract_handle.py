@@ -24,7 +24,10 @@ if __name__ == '__main__' :
     # print(broker.func('getGenuineValue'))
     # print(broker.func('isOwner',Web3.toChecksumAddress(broker_addr)))
     nsb = Contract(web3, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
-    print(nsb.handle.all_functions())
+
+    print(nsb.funcs())
+
+    print(nsb.functions.isOwner(Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")).call())
     print(nsb.func('isOwner', Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")))
 
 	
