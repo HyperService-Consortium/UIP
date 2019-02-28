@@ -120,7 +120,7 @@ contract NetworkStatusBlockChain {
         for (uint i = 0; i < owners.length; i++) {
             address owner = owners[i];
             if (addingOwnerProposal[_newOwner][owner] == true) {
-                vote_count += 1;
+                vote_count ++;
             }
         }
 
@@ -144,7 +144,7 @@ contract NetworkStatusBlockChain {
         for (uint i = 0; i < owners.length; i++) {
             address owner = owners[i];
             if (removingOwnerProposal[_removeOwner][owner] == true) {
-                vote_count += 1;
+                vote_count ++;
             }
         }
 
@@ -174,6 +174,9 @@ contract NetworkStatusBlockChain {
         
         waitingVerifyProof.push(keccakhash);
         actionTree[keccakhash] = toAdd;
+        validCount.length ++;
+        votedCount.length ++;
+        
         emit addingAction(storagehash, key, val);
     }
 
@@ -185,10 +188,10 @@ contract NetworkStatusBlockChain {
     {
         while(ownersPointer[msg.sender] < waitingVerifyProof.length &&
               waitingVerifyProof[ownersPointer[msg.sender]] == 0) {
-                ownersPointer[msg.sender] += 1;
+                ownersPointer[msg.sender] ++;
             }
         Action storage toGet = actionTree[waitingVerifyProof[ownersPointer[msg.sender]]];
-        ownersPointer[msg.sender] += 1;
+        ownersPointer[msg.sender] ++;
         s = toGet.storagehash;
         k = toGet.key;
         v = toGet.value;
@@ -199,11 +202,11 @@ contract NetworkStatusBlockChain {
         validVote(msg.sender, uint(ownersVotedPointer[msg.sender]))
     {
         uint32 curPointer = ownersVotedPointer[msg.sender];
-        ownersVotedPointer[msg.sender] += 1;
+        ownersVotedPointer[msg.sender] ++;
         if(validProof) {
-            validCount[curPointer] += 1;
+            validCount[curPointer] ++;
         }
-        votedCount[curPointer] += 1;
+        votedCount[curPointer] ++;
         if (votedCount[curPointer] == requiredOwnerCount) {
             if (validCount[curPointer] >= requiredValidVotesCount) {
                 verifiedAction[waitingVerifyProof[curPointer]] = true;
@@ -214,8 +217,8 @@ contract NetworkStatusBlockChain {
             delete validCount[curPointer];
             delete votedCount[curPointer];
         }
-        ownersVotedPointer[msg.sender] += 1;
-        while(waitingVerifyProof[votedPointer] == 0)votedPointer += 1;
+        while(votedPointer < waitingVerifyProof.length && 
+            waitingVerifyProof[votedPointer] == 0)votedPointer ++;
     }
     function updateToLatestVote()
         public
