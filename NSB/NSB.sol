@@ -75,9 +75,9 @@ contract NetworkStatusBlockChain {
         _;
     }
 
-    modifier validVote(uint curVotedPointer) {
+    modifier validVote(address addr, uint curVotedPointer) {
         require(votedPointer <= curVotedPointer, "the Action is proved");
-        require(curVotedPointer <waitingVerifyProof.length, "no Action to vote");
+        require(curVotedPointer < ownersPointer[addr], "no Action to vote");
         require(waitingVerifyProof[curVotedPointer] != 0, "the Action is proved");
         _;
     }
@@ -151,14 +151,14 @@ contract NetworkStatusBlockChain {
         // Removing owner proposal is approved.
         if (vote_count >= requiredOwnerCount) {
             isOwner[_removeOwner] = false;
-            for (uint j = 0; j < owners.length - 1; j++) {
-                if (owners[i] == _removeOwner) {
-                    owners[i] = owners[owners.length - 1];
+            for (uint j = 0; j < owners.length; j++) {
+                if (owners[j] == _removeOwner) {
+                    owners[j] = owners[owners.length - 1];
                     break;
                 }
             }
+            owners.length -= 1;
         }
-        owners.length -= 1;
     }
 
     // change it to VES/DAPP/NSB user?
@@ -170,7 +170,7 @@ contract NetworkStatusBlockChain {
         Action memory toAdd = Action(storagehash, key, val);
         bytes32 keccakhash = keccak256(storagehash, key, val);
         
-        require(actionTree[keccakhash].storagehash != bytes32(0), "already in actionTree");
+        require(actionTree[keccakhash].storagehash == bytes32(0), "already in actionTree");
         
         waitingVerifyProof.push(keccakhash);
         actionTree[keccakhash] = toAdd;
@@ -196,7 +196,7 @@ contract NetworkStatusBlockChain {
     function voteProof(bool validProof)
         public
         ownerExists(msg.sender)
-        validVote(uint(ownersVotedPointer[msg.sender]))
+        validVote(msg.sender, uint(ownersVotedPointer[msg.sender]))
     {
         uint32 curPointer = ownersVotedPointer[msg.sender];
         ownersVotedPointer[msg.sender] += 1;
