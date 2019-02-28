@@ -1,5 +1,24 @@
+
 from hexbytes import HexBytes
 import rlp
+
+
+# from solc import compile_standard
+
+# compiled_sol = compile_standard
+#     'language': 'Solidity',
+#     'sources': {
+#         'broker': {
+#             "urls":[
+#                 "./broker.sol"
+#             ]
+#         }
+#     }
+# }, allow_paths="./,", abi=True, bin=True, source_files=["broker.sol"]
+# )
+# compiled_sol = compile_source("./broker.sol", allow_empty=False)
+
+
 # class EthDB(leveldb.LevelDB):
     # the child class of LevelDB
 

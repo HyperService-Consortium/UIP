@@ -191,11 +191,9 @@ if __name__ == '__main__':
 
     with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
-        # print(NSBBytecode[:])
-        bycde = serializeNSBData(NSBBytecode, ["0xe1300d8ea0909faa764c316436ad0ece571f62b2"], 1)
-        print(bycde)
+        NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
         NSB_contract = SmartContract(
-            bycde, BLOCKCHAIN_A,
+            NSBdata, BLOCKCHAIN_A,
             "NSBContract", hex(10000000))
         hyperservice.DeployContract(NSB_contract)
 
