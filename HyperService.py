@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import json, requests, time
-
+from uiputils.jsonrpc import JsonRPC
+import uiputils.cast as converter
 
 BLOCKCHAIN_A = "private_A"
 BLOCKCHAIN_B = "private_B"
@@ -74,12 +75,8 @@ class HyperService:
 
     def EstablishBNVisibility(self, domains):
         for domain in domains:
-            coinbase = {
-                        "jsonrpc": "2.0",
-                        "method": "eth_coinbase",
-                        "params": [],
-                        "id": 64
-                        }
+            coinbase = JsonRPC.ethCoinbase()
+
             url = NETWORK_SETUP[domain]
             response = self.DispatchRpcToDomain(url, coinbase)
             self.domain_handles[domain] = response['result']
@@ -88,7 +85,7 @@ class HyperService:
             unlock = {
                     "jsonrpc": "2.0", 
                     "method": "personal_unlockAccount",
-                    "params":[self.domain_handles[domain],
+                    "params": [self.domain_handles[domain],
                         UNLOCK_PWD, ACCOUNT_UNLOCK_PERIOD],
                     "id": 64
                     }
@@ -99,17 +96,16 @@ class HyperService:
             raise Exception("Unsupported domain: " + contract.domain)
 
         handle = self.domain_handles[contract.domain]
-        deploy = {
-                "jsonrpc": "2.0",
-                "method": "eth_sendTransaction",
-                "params": [{
+
+        transaction = {
                     "from": handle,
                     "data": contract.bytecode,
                     "gas": contract.gas,
-		            "value": contract.value,
-                    }],
-                "id": 64
-                }
+                    "value": contract.value,
+                    }
+
+        deploy = JsonRPC.ethSendTransaction(transaction)
+
         url = NETWORK_SETUP[contract.domain]
         response = self.DispatchRpcToDomain(url, deploy)
         tx_hash = response['result']
@@ -118,12 +114,7 @@ class HyperService:
         self.contracts[contract_addr] = contract
 
     def RetrieveContractAddress(self, url, tx_hash):
-        get_tx = {
-                "jsonrpc":"2.0", 
-                "method":"eth_getTransactionReceipt",
-                "params": [tx_hash],
-                "id":64
-                }
+        get_tx = JsonRPC.ethGetTransactionReceipt(tx_hash)
 
         while True:
             response = self.DispatchRpcToDomain(url, get_tx)
@@ -131,24 +122,19 @@ class HyperService:
                 print ("Contract is deploying, please stand by")
                 time.sleep(2)
                 continue
-            # print(response)
+
             block_number = response['result']['blockNumber']
             contract_addr = response['result']['contractAddress']
-            get_code = {
-                    "jsonrpc": "2.0",
-                    "method": "eth_getCode",
-                    "params": [contract_addr, block_number],
-                    "id": 64
-                    }
+            get_code = JsonRPC.ethGetCode(contract_addr, block_number)
+
             code_resp = self.DispatchRpcToDomain(url, get_code)
-            print(code_resp)
+
             if code_resp['result'] == '0x':
                 raise IndexError("Contract deployment failed")
             return contract_addr
 
     def GetAuthenticatedPriceFromBroker(self):
         for index, (addr, contract) in enumerate(self.contracts.items()):
-            # print(contract)
             if contract.name is 'BrokerContract':
                 return self.GetContractState(addr, 0)
 
@@ -158,46 +144,32 @@ class HyperService:
         
         domain = self.contracts[contract].domain
         url = NETWORK_SETUP[domain]
-        get_state = {
-            "jsonrpc": "2.0", 
-            "method": "eth_getStorageAt",
-            "params": [contract, hex(index), block],
-            "id": 64
-        }
+        get_state = JsonRPC.ethGetStorageAt(contract, hex(index), block)
+
         value_response = self.DispatchRpcToDomain(url, get_state)
-	
-        get_proof = {
-            "jsonrpc": "2.0", 
-            "method": "eth_getProof",
-            "params": [contract, [hex(index)], block],
-            "id": 64
-        }
+
+
+        get_proof = JsonRPC.ethGetProof(contract, [hex(index)], block)
+
         proof_response = self.DispatchRpcToDomain(url, get_proof)
         state_proof = proof_response['result']['storageProof']
         return StateProof(value_response['result'], block, state_proof)
 
 
-def uint64string(num):
-    nums = str(num)
-    return "0" * (64 - len(nums)) + nums
-
-
 def serializeNSBData(bytecode, addrlist, required):
-    suffixdata = uint64string(40)
-    suffixdata += uint64string(required)
-    suffixdata += uint64string(len(addrlist))
+    suffixdata = converter.uint64string(40) + converter.uint64string(required) + converter.uint64string(len(addrlist))
     for x in addrlist:
         if x[0:2] == '0x':
-            suffixdata += uint64string(x[2:])
+            suffixdata += converter.uint64string(x[2:])
         else:
-            suffixdata += uint64string(x)
+            suffixdata += converter.uint64string(x)
     return bytecode + suffixdata
+
 
 if __name__ == '__main__':
 
     supported_chains = [BLOCKCHAIN_A]#, BLOCKCHAIN_B]
     hyperservice = HyperService(supported_chains)
-
 
     # Deploy the Broker and Option contract.
     # with open('broker_bytecode', 'r') as f:
@@ -207,8 +179,8 @@ if __name__ == '__main__':
     #         BrokerBytecode[:-1], BLOCKCHAIN_A,
     #         "BrokerContract", hex(2000000))
     #     hyperservice.DeployContract(broker_contract)
-        # queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
-        # print(queryProof)
+    #     queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
+    #     print(queryProof)
 
     # with open('option_bytecode', 'r') as f:
     #     OptionBytecode = f.read()
@@ -216,6 +188,7 @@ if __name__ == '__main__':
     #         OptionBytecode[:-1], BLOCKCHAIN_A,
     #         "OptionContract", hex(200000), "0x8ac7230489e80000")
     #     hyperservice.DeployContract(option_contract)
+
     with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
         # print(NSBBytecode[:])
