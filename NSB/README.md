@@ -54,3 +54,46 @@ $$
 
 
 ##### other api
+
+
+#### bug fix:
+
+1.getAction(): 
+
+处理被删除的Action的时候没考虑指针右移越界的情况.
+```
+    ownersPointer[msg.sender] < waitingVerifyProof.length
+```
+2.addAction(Action action):
+
+修改判断Action是否已存在的逻辑:
+
+细节:d1aa37c38f3857d4fb958efd0fccbc2ced367ff2
+```
+    require(actionTree[keccakhash].storagehash == bytes32(0), "already in actionTree");
+```
+3.validVote(uint curPointer):
+
+细节:d1aa37c38f3857d4fb958efd0fccbc2ced367ff2
+
+更改合法vote右区间端点的逻辑为:
+```
+    require(curVotedPointer < ownersPointer[addr], "no Action to vote");
+```
+4.removeOwner(address _removeOwner):
+
+细节:d1aa37c38f3857d4fb958efd0fccbc2ced367ff2
+
+修改删除合法账号的逻辑:
+```
+    if (vote_count >= requiredOwnerCount) {
+            isOwner[_removeOwner] = false;
+            for (uint j = 0; j < owners.length; j++) {
+                if (owners[j] == _removeOwner) {
+                    owners[j] = owners[owners.length - 1];
+                    break;
+                }
+            }
+            owners.length -= 1;
+        }
+```
