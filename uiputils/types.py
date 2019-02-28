@@ -25,7 +25,9 @@ class Contract:
         self.functions = self.handle.functions
 
     def func(self, funcname, *args):
+        # call a contract function
         return self.handle.functions[funcname](*args).call()
 
     def funcs(self):
+        # return all functions in self.abi
         return self.handle.all_functions()

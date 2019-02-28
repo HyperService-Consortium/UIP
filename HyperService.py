@@ -2,7 +2,7 @@
 
 import json, requests, time
 from uiputils.jsonrpc import JsonRPC
-import uiputils.cast as converter
+from uiputils.cast import uint64string
 
 BLOCKCHAIN_A = "private_A"
 BLOCKCHAIN_B = "private_B"
@@ -157,12 +157,12 @@ class HyperService:
 
 
 def serializeNSBData(bytecode, addrlist, required):
-    suffixdata = converter.uint64string(40) + converter.uint64string(required) + converter.uint64string(len(addrlist))
+    suffixdata = uint64string(40) + uint64string(required) + uint64string(len(addrlist))
     for x in addrlist:
         if x[0:2] == '0x':
-            suffixdata += converter.uint64string(x[2:])
+            suffixdata += uint64string(x[2:])
         else:
-            suffixdata += converter.uint64string(x)
+            suffixdata += uint64string(x)
     return bytecode + suffixdata
 
 
