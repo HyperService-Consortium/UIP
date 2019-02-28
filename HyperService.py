@@ -383,8 +383,8 @@ class HyperService:
                     "id": 64
                     }
             code_resp = self.DispatchRpcToDomain(url, get_code)
-            # print(code_resp)
-            if code_resp['result'] is '0x':
+            print(code_resp)
+            if code_resp['result'] == '0x':
                 raise IndexError("Contract deployment failed")
             return contract_addr
 
@@ -433,6 +433,23 @@ def funcTrans(nodelist):
             raise TypeError("node must be str or list, But %s." % node.__name__)
     return decodelist
 
+
+def uint64string(num):
+    nums = str(num)
+    return "0" * (64 - len(nums)) + nums
+
+
+def serializeNSBData(bytecode, addrlist, required):
+    suffixdata = uint64string(40)
+    suffixdata += uint64string(required)
+    suffixdata += uint64string(len(addrlist))
+    for x in addrlist:
+        if x[0:2] == '0x':
+            suffixdata += uint64string(x[2:])
+        else:
+            suffixdata += uint64string(x)
+    return bytecode + suffixdata
+
 if __name__ == '__main__':
 
     supported_chains = [BLOCKCHAIN_A]#, BLOCKCHAIN_B]
@@ -459,8 +476,10 @@ if __name__ == '__main__':
     with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
         # print(NSBBytecode[:])
+        bycde = serializeNSBData(NSBBytecode, ["0xe1300d8ea0909faa764c316436ad0ece571f62b2"], 1)
+        print(bycde)
         NSB_contract = SmartContract(
-            NSBBytecode[:], BLOCKCHAIN_A,
+            bycde, BLOCKCHAIN_A,
             "NSBContract", hex(10000000))
         hyperservice.DeployContract(NSB_contract)
 
