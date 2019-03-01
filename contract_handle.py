@@ -61,6 +61,7 @@ class NetStatusBlockchain:
     def getVaildAction(self, keccakhash):
         return self.handle.func('getVaildAction', keccakhash)
 
+
 if __name__ == '__main__' :
     # print(compiled_sol)
     print(web3.eth)

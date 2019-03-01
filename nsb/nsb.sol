@@ -4,20 +4,20 @@ contract NetworkStatusBlockChain {
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
 
     struct MelkeProof {
-        //storage roothash
+        // storage roothash
         bytes32 storagehash;
-        //storaged key
+        // storaged key
         bytes32 key;
         // corresponding value
         bytes32 value;
     }
     
     struct Action {
-        //Party a
-        address pa;
-        //Party z
-        address pz;
-        //signature
+        // Party a
+        // address pa;
+        // Party z
+        // address pz;
+        // signature
         string signature;
     }
     
@@ -252,16 +252,16 @@ contract NetworkStatusBlockChain {
         ownersPointer[msg.sender] = num;
     }
 
-    function addAction(address pa, address pz, string signature)
+    function addAction(string signature)
         public
         ownerExists(msg.sender)
         returns (bytes32 keccakhash)
     {
-        require(pa != 0, "invalid pa address");
-        require(pz != 0, "invalid pz address");
+        // require(pa != 0, "invalid pa address");
+        // require(pz != 0, "invalid pz address");
         
-        Action memory toAdd = Action(pa, pz, signature);
-        keccakhash = keccak256(pa, pz, signature);
+        Action memory toAdd = Action(signature);
+        keccakhash = keccak256(signature);
         
         ActionTree[keccakhash]= toAdd;
     }
@@ -269,11 +269,11 @@ contract NetworkStatusBlockChain {
     function getAction(bytes32 keccakhash)
         public
         view
-        returns (address pa, address pz, string signature)
+        returns (string signature)
     {
         Action storage toGet = ActionTree[keccakhash];
-        pa = toGet.pa;
-        pz = toGet.pz;
+        // pa = toGet.pa;
+        // pz = toGet.pz;
         signature = toGet.signature;
     }
     
