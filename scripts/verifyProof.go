@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"errors"
 	"./rlp"
+	"encoding/hex"
 )
 
 const EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
@@ -83,6 +84,17 @@ func stringtobytes(bytes string) []byte {
 	return bres
 }
 
+func stringtonibbles(nibbles string) []bytes {
+	glen := len(nibbles)
+	bres ,ofs := make([]byte, glen, glen), 0
+	if nibbles[1] == 'x' {
+		ofs = 2
+	}
+	for idx := int(ofs); idx < glen; idx++ {
+		bres[idx] |= byte(hexmaps[nibbles[(idx + ofs)]])
+	}
+}
+
 func stringtoheaderkey(number uint64, hashstr string) []byte {
 	return append(append(headerPrefix, uint64toslice(number)...), stringtohash(hashstr).bytes()...);
 }
@@ -115,30 +127,35 @@ func init() {
 //2084db4a68aa8b172f70bc04e2e74541617c003374de6eb4b295e823e5beab01
 //200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
 //                 1
-func findPath(db *leveldb.DB, rootHashStr string,path []byte) ([]byte ,error) {
-	roothash := stringtohash(rootHashStr)
+func findPath(db *leveldb.DB, rootHashStr *string, path []byte, storagepath []string, consumed uint32) ([]byte ,error) {
+	roothash := stringtohash(*rootHashStr)
 	querynode, err := Cook(db, roothash[ : ])
 	if err != nil {
 		return nil, err;
 	}else {
-		if len(path) == 0 {
-			return querynode, nil
+		if hex.EncodeToString(querynode) != storagepath[0] {
+			return nil, errors.New("No exists")
 		}
 		node := rlp.Unserialize(querynode)
 		switch node.Length() {
 			case 2: {
-				return findPath(db,node.Get(1).AsString(),path[1 : ])
-				break ;
+				firstvar, secondvar := node.Get(0).AsString(), node.Get(1).AsString()
+				fmt.Println("Test", consumed, firstvar, secondvar)
+				if len(path) == 30 {
+					if hex.EncodeToString(path) != firstvar[consumed:] {
+						return nil, errors.New("No exists")
+					}
+					return querynode, nil
+				}
+				return findPath(db, &secondvar, path[1 : ], storagepath[1 : ], consumed + 1)
 			}
 			case 17: {
 				tryquery := node.Get(int(path[0])).AsString()
 				if len(tryquery) == 64 {
-					return findPath(db,tryquery,path[1 : ])
+					return findPath(db,&tryquery,path[1 : ], storagepath[1 : ], consumed + 1)
 				}else{
-					err = errors.New("No exists")
-					return nil, err
+					return nil, errors.New("No exists")
 				}
-				break ;
 			}
 			default: {
 				err := errors.New("Unknown node types")
@@ -146,43 +163,31 @@ func findPath(db *leveldb.DB, rootHashStr string,path []byte) ([]byte ,error) {
 			}
 		}
 	}
-	err = errors.New("Impossible approach")
-	return nil, err
 }
-func VerifyProof(db *leveldb.DB, rootHashStr string, key []byte){
-	toval, err := findPath(db, rootHashStr, key)
-	fmt.Println(toval, err)
+
+func VerifyProof(db *leveldb.DB, rootHashStr *string, keyvalue *string, storagepath []string) {
+	keyvaluelist := rlp.Unserialize(stringtobytes(*keyvalue))
+	key, value := keyvaluelist.Get(0).AsString(), keyvaluelist.Get(1).AsString()
+	fmt.Println(len(key))
+	// key = append(make([]byte,0),2,9)
+	toval, err := findPath(db, rootHashStr, stringtonibbles(key), storagepath, 0)
+	fmt.Println("finally", toval, value, err)
 	rlp.PrintListInString(rlp.Unserialize(toval))
 }
 func main(){
 	//fmt.Println(stringtohash("6fb589682cc8db511886024d278b6712b4d886db988b5692e261ed4c9d709f8e").bytes())
 	StorageHash := "0x11e91152ab237ceff29728c03999ef2debadd7db0fc45b280657c6f7cc4c1ffa"
-	//StorageProofPathVal := "e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333"
-	//StoragePath := []string{"f8918080a06d032ff808e3a2b585df339916901d7b7d04c5bd18a088607093d3178172b7ee8080808080a0071b011fdbd4ad7d1e6f9762be4d1a88dffde614a6bd399bf3b5bad8f41249b5808080a01b56cc0a5b9b1ce34e9a14e896ea000c830bd64387573d238cbe3fa24ddfa2c3a0f5c2efa606e3a5be341f22bf1d5c8f4bce679719870c097a24abb38aec0a4855808080", "f8518080808080a06f643b8fd2176a403e2ccfae43808c4543289e1082078e91d821d1c7886d6f51808080a03822ab26403807d175522401e184b20b5aa8c7fcd802f4793970a70e810f4ce980808080808080", "e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333"}
-	StoragePath := append(make([]byte,0),2,9)
-	fmt.Println("My first leveldb")
-	//rlp.PrintListInString(rlp.Unserialize(stringtobytes("e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333")))
+	StorageProofPathVal := "e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333"
+	StoragePath := []string{"f8918080a06d032ff808e3a2b585df339916901d7b7d04c5bd18a088607093d3178172b7ee8080808080a0071b011fdbd4ad7d1e6f9762be4d1a88dffde614a6bd399bf3b5bad8f41249b5808080a01b56cc0a5b9b1ce34e9a14e896ea000c830bd64387573d238cbe3fa24ddfa2c3a0f5c2efa606e3a5be341f22bf1d5c8f4bce679719870c097a24abb38aec0a4855808080", "f8518080808080a06f643b8fd2176a403e2ccfae43808c4543289e1082078e91d821d1c7886d6f51808080a03822ab26403807d175522401e184b20b5aa8c7fcd802f4793970a70e810f4ce980808080808080", "e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333"}
+	//StoragePath := append(make([]byte,0),2,9)
+	
+	
 	db, err := leveldb.OpenFile(EDB_PATH, nil)
 	if err != nil{
 		fmt.Println("link error")
 		fmt.Println(err)
 	}else {
-		//checkAll(db)
-		// que, err := Cook(db,stringtohash("11e91152ab237ceff29728c03999ef2debadd7db0fc45b280657c6f7cc4c1ffa").bytes())
-		// if err == nil {
-		// 	rlp.PrintListInString(rlp.Unserialize(que))
-		// }else {
-		// 	fmt.Println(err)
-		// }
-		VerifyProof(db, StorageHash, StoragePath)
+		VerifyProof(db, &StorageHash, &StorageProofPathVal, StoragePath)
 		db.Close()
 	}
 }
-/*
- */
-/*
-    6d032ff808e3a2b585df339916901d7b7d04c5bd18a088607093d3178172b7ee
-["0x200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563","0x33"]
-[104 0 0 0 0 0 0 0 19 0 153 250 248 6 134 246 32 178 249 33 18 247 117 246 40 96 249 33 67 115 148 25 248 49 247 250 117 121 5 17 246]
-[104 0 0 0 0 0 0 0 19 0 153  94 236 6 134 106 32 242 189 33 18 107 117 58 40 96 253 33 67 179 148 25 12 49 251 46 117 121 5 17 10 116]
- */
