@@ -9,7 +9,12 @@ import (
 	"encoding/hex"
 )
 
-const EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
+const (
+	EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
+	SHORTNODE = 2
+	FULLNODE = 17
+	HASHSTRINGLENGTH = 64
+)
 
 
 var (
@@ -150,7 +155,7 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 		node := rlp.Unserialize(querynode)
 
 		switch node.Length() {
-			case 2: {
+			case SHORTNODE: {
 				firstvar, secondvar := node.Get(0).AsString(), node.Get(1).AsString()
 
 				//end of proofpath
@@ -169,10 +174,10 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 
 				return findPath(db, secondvar, path[firstvarlen: ], storagepath[1 : ], consumed + firstvarlen)
 			}
-			case 17: {
+			case FULLNODE: {
 				tryquery := node.Get(int(hexmaps[path[0]])).AsString()
 
-				if len(tryquery) == 64 {
+				if len(tryquery) == HASHSTRINGLENGTH {
 					return findPath(db, tryquery, path[1 : ], storagepath[1 : ], consumed + 1)
 				}else {
 					return "", errors.New("No exists")
