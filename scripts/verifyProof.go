@@ -129,7 +129,7 @@ func bytesequal(nib1 []byte, nib2 []byte) bool {
 }
 
 // get value of key on the trie
-func findPath(db *leveldb.DB, rootHashStr *string, path string, storagepath []string, consumed int) (string ,error) {
+func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []string, consumed int) (string ,error) {
 
 	//key consumed
 	if len(path) == 0 {
@@ -137,7 +137,7 @@ func findPath(db *leveldb.DB, rootHashStr *string, path string, storagepath []st
 	}
 
 	// get node from db
-	querynode, err := db.Get(stringtohash(*rootHashStr).bytes(), nil)
+	querynode, err := db.Get(stringtohash(rootHashStr).bytes(), nil)
 	if err != nil {
 		return "", err;
 	}else {
@@ -167,13 +167,13 @@ func findPath(db *leveldb.DB, rootHashStr *string, path string, storagepath []st
 					return "", errors.New("No exists")
 				}
 
-				return findPath(db, &secondvar, path[firstvarlen: ], storagepath[1 : ], consumed + firstvarlen)
+				return findPath(db, secondvar, path[firstvarlen: ], storagepath[1 : ], consumed + firstvarlen)
 			}
 			case 17: {
 				tryquery := node.Get(int(hexmaps[path[0]])).AsString()
 
 				if len(tryquery) == 64 {
-					return findPath(db, &tryquery, path[1 : ], storagepath[1 : ], consumed + 1)
+					return findPath(db, tryquery, path[1 : ], storagepath[1 : ], consumed + 1)
 				}else {
 					return "", errors.New("No exists")
 				}
@@ -193,7 +193,7 @@ func VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, s
 		value = value[2:]
 	}
 	// key = append(make([]byte,0),2,9)
-	toval, err := findPath(db, &rootHashStr, key, storagepath, 0)
+	toval, err := findPath(db, rootHashStr, key, storagepath, 0)
 	if err != nil {
 		fmt.Println(err)
 	}else {
