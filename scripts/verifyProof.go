@@ -6,14 +6,17 @@ import (
 	"fmt"
 	"errors"
 	"./rlp"
-	"encoding/hex"
+    "encoding/hex"
+    "C"
+    "unsafe"
 )
 
 const (
 	EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
 	SHORTNODE = 2
 	FULLNODE = 17
-	HASHSTRINGLENGTH = 64
+    HASHSTRINGLENGTH = 64
+    CHAR_P_SIZE = 8
 )
 
 
@@ -48,7 +51,7 @@ func checkAll(db *leveldb.DB){
 }
 
 // unint64(8-bytes) to bytes
-func uint64toslice(number uint64) []byte {
+func uint64tobytes(number uint64) []byte {
 	enc := make([]byte, 8)
 	for idx := uint64(0); idx < 8; idx++ {
 		enc[7 - idx] = byte((number >> (idx << 3) ) & 0xff)
@@ -116,7 +119,18 @@ func stringtonibbles(nibbles string) []byte {
 
 // input a block number and the corresponding block hash, return a headerkey
 func stringtoheaderkey(number uint64, hashstr string) []byte {
-	return append(append(headerPrefix, uint64toslice(number)...), stringtohash(hashstr).bytes()...);
+	return append(append(headerPrefix, uint64tobytes(number)...), stringtohash(hashstr).bytes()...);
+}
+
+func stringPtrToStringSlice(stringPtr **C.char, slicelen C.size_t) []string {
+    strslice := make([]string, 0, slicelen)
+    var unblock unsafe.Pointer
+    
+    for idx := C.size_t(0); idx < slicelen; idx++ {
+        unblock = unsafe.Pointer(uintptr(unsafe.Pointer(stringPtr)) + uintptr(idx * CHAR_P_SIZE))
+        strslice = append(strslice, C.GoString(*((**C.char)(unblock))))
+    }
+    return strslice;
 }
 
 // compare two byte slice
@@ -190,7 +204,32 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 	}
 }
 
-func VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, storagepath []string) {
+var dbPacket = make([]*leveldb.DB, 0, 64)
+var dbpi = 0
+
+//export openDB
+func openDB(dbpath *C.char) C.int {
+    db, err := leveldb.OpenFile(C.GoString(dbpath), nil)
+    if err != nil {
+		fmt.Println("link error")
+        fmt.Println(err)
+        return C.int(0)
+	}else {
+        dbPacket = append(dbPacket, db)
+        dbpi++
+		return C.int(dbpi - 1);
+	}
+    
+}
+
+
+//export closeDB
+func closeDB(dbpi C.int) {
+    db := dbPacket[dbpi]
+    db.Close();
+}
+
+func _VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, storagepath []string) bool {
 	if key[0:2] == "0x" {
 		key = key[2:]
 	}
@@ -203,13 +242,30 @@ func VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, s
 		fmt.Println(err)
 	}else {
 		if value == toval {
-			fmt.Println("Proved")
+            fmt.Println("Proved")
+            return true
 		}else {
-			fmt.Println("key maps to", "0x" + toval + ", not", "0x" + value)
+            fmt.Println("key maps to", "0x" + toval + ", not", "0x" + value)
+            return false
 		}
-	}
+    }
+    return false
 }
+//export VerifyProof
+func VerifyProof(dbPtr C.int,
+                rootHashStrPtr *C.char, keyPtr *C.char, valuePtr *C.char,
+                storagepathSlice **C.char, storagepathSliceLen C.size_t) C.int {
+    db := dbPacket[dbPtr]
+    rootHashStr := C.GoString(rootHashStrPtr)
+    key := C.GoString(keyPtr)
+    value := C.GoString(valuePtr)
+    storagepath := stringPtrToStringSlice(storagepathSlice, storagepathSliceLen)
 
+    if _VerifyProof(db, rootHashStr, key, value, storagepath) {
+        return 1
+    }
+    return 0
+}
 func init() {
 	for idx := '0'; idx <= '9'; idx++ {
 		hexmaps[idx] = uint64(idx - '0')
@@ -223,18 +279,4 @@ func init() {
 }
 
 func main(){
-	StorageHash := "0x11e91152ab237ceff29728c03999ef2debadd7db0fc45b280657c6f7cc4c1ffa"
-	StoragePath := []string{"f8918080a06d032ff808e3a2b585df339916901d7b7d04c5bd18a088607093d3178172b7ee8080808080a0071b011fdbd4ad7d1e6f9762be4d1a88dffde614a6bd399bf3b5bad8f41249b5808080a01b56cc0a5b9b1ce34e9a14e896ea000c830bd64387573d238cbe3fa24ddfa2c3a0f5c2efa606e3a5be341f22bf1d5c8f4bce679719870c097a24abb38aec0a4855808080", "f8518080808080a06f643b8fd2176a403e2ccfae43808c4543289e1082078e91d821d1c7886d6f51808080a03822ab26403807d175522401e184b20b5aa8c7fcd802f4793970a70e810f4ce980808080808080", "e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333"}
-
-	key := "0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"
-	val := "0x33"
-	
-	db, err := leveldb.OpenFile(EDB_PATH, nil)
-	if err != nil {
-		fmt.Println("link error")
-		fmt.Println(err)
-	}else {
-		VerifyProof(db, StorageHash, key, val, StoragePath)
-		db.Close()
-	}
 }
