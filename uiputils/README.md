@@ -122,7 +122,7 @@ print(caster(1,GoString.fromstr("0x11e91152ab237ceff29728c03999ef2debadd7db0fc45
 
 ### class GoStringSlice
 
-the class of `string `(Golang) in C.
+the class of `string`(Golang) in C.
 
 ##### attribute Type
 
@@ -134,7 +134,7 @@ cast the stringlist in python to the `[]string` (Golang) in C.
 
 ### class GoBytes
 
-the class of `[]Byte `(Golang) in C.
+the class of `[]Byte`(Golang) in C.
 
 ##### attribute Type
 
