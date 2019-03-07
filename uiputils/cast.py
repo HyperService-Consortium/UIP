@@ -26,3 +26,9 @@ def uint256string(num):
     nums = str(num)
     return "0" * (256 - len(nums)) + nums
 
+
+if __name__ == '__main__':
+    print(uintxstring(15, 8))
+    print(uint32string(15))
+    print(uint64string(15))
+    print(uint128string(15))
