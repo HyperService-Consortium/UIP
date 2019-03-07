@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     prover = eth.Prover(EDB_PATH)
 
-    prover.verify(StorageHash, key, val, StoragePath)
+    prover.verify(key, val, StorageHash, StoragePath)
 
     prover.close()
 

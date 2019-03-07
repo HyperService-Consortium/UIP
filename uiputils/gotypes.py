@@ -14,6 +14,36 @@ GoUint64 = ctypes.c_uint64
 GoInt = GoUint64
 GoUInt = GoUint64
 
-GoBytes = ctypes.c_char_p
-GoString = ctypes.POINTER(ctypes.c_char)
-GoStringSlice = ctypes.POINTER(GoString)
+GolevelDBptr = ctypes.c_int
+
+
+class GoBytes(object):
+    # GoBytes in C
+    Type = ctypes.c_char_p
+
+    @staticmethod
+    def frombytes(bytesarr):
+        return ctypes.c_char_p(bytesarr)
+
+
+class GoString(object):
+    # GoString in C
+
+    Type = ctypes.POINTER(ctypes.c_char)
+
+    @staticmethod
+    def fromstr(pystr, enc):
+        return ctypes.c_char_p(bytes(pystr.encode(enc)))
+
+
+class GoStringSlice(object):
+    # GoStringSlice in C
+
+    Type = ctypes.POINTER(GoString.Type)
+
+    @staticmethod
+    def fromstrlist(strlist, enc):
+        strs = [ctypes.c_char_p(bytes(path.encode(enc))) for path in strlist]
+        charparray = ctypes.c_char_p * len(strlist)
+        charlist = charparray(*strs)
+        return ctypes.cast(charlist, GoStringSlice.Type)

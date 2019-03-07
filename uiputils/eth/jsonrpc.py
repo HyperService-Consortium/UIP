@@ -1,65 +1,5 @@
 
-
-'eth methods'
-
-import json
-from ctypes import *
-from uiputils.gotypes import GoString, GoInt32, GoStringSlice
-
-PROVER_PATH = "./uiputils/include/verifyproof.dll"
-ENC = "utf-8"
-
-
-class Contract:
-    # return a contract that can transact with web3
-    def __init__(self, web3, contract_addr="", contract_abi=None, contract_bytecode=None):
-
-        contract_abi = FileLoad.getabi(contract_abi)
-        contract_bytecode = FileLoad.getbytecode(contract_bytecode)
-
-        if contract_addr != "":
-            self.handle = web3.eth.contract(contract_addr, abi=contract_abi, bytecode=contract_bytecode)
-        else:
-            self.handle = web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
-
-        self.web3 = web3
-        self.address = self.handle.address
-        self.abi = self.handle.abi
-        self.bytecode = self.handle.bytecode
-        self.functions = self.handle.functions
-
-    def func(self, funcname, *args):
-        # call a contract function
-        return self.handle.functions[funcname](*args).call()
-
-    def funcs(self):
-        # return all functions in self.abi
-        return self.handle.all_functions()
-
-
-class FileLoad(object):
-    # simply load files
-    def __int__(self):
-        pass
-
-    @staticmethod
-    def getabi(contract_abi):
-        if isinstance(contract_abi, str):
-            with open(contract_abi, "r") as abifile:
-                return json.load(abifile)
-        else:
-            return contract_abi
-
-    @staticmethod
-    def getbytecode(contract_bytecode):
-        if isinstance(contract_bytecode, str):
-            with open(contract_bytecode, "rb") as bytecodefile:
-                return bytecodefile.read()
-        else:
-            return contract_bytecode
-
-
-class JsonRPC:
+class JsonRPC(object):
     # JSON-RPC methods
     def __init__(self):
         pass
@@ -229,31 +169,3 @@ class JsonRPC:
                 "params": [transactionhash],
                 "id": 1
                 }
-
-
-dbptr = c_void_p
-
-funcs = CDLL(PROVER_PATH)
-
-funcs.openDB.restype = dbptr
-funcs.openDB.argtype = GoString
-
-funcs.closeDB.argtype = dbptr
-
-funcs.VerifyProof.restype = GoInt32
-funcs.VerifyProof.argtypes = (dbptr, GoString, GoString, GoString, GoStringSlice, GoInt32)
-
-
-class Prover:
-    def __init__(self, path):
-        self.ethdb = funcs.openDB(bytes(path.encode(ENC)))
-
-    def close(self):
-        funcs.closeDB(self.ethdb)
-
-    def verify(self, StorageHash, key, val, StoragePath):
-        strs = [c_char_p(bytes(path.encode(ENC))) for path in StoragePath]
-        lenx = len(StoragePath)
-        charparray = c_char_p * lenx
-        charlist = charparray(*strs)
-        funcs.VerifyProof(self.ethdb, StorageHash, key, val, cast(charlist, POINTER(GoString)), lenx)

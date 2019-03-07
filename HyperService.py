@@ -5,16 +5,18 @@ from uiputils.eth import JsonRPC
 from uiputils.cast import uint64string
 from uiputils.types import StateProof, SmartContract
 
-BLOCKCHAIN_A = "private_A"
-BLOCKCHAIN_B = "private_B"
-BLOCKCHAIN_C = "Rinkeby"
-BLOCKCHAIN_D = "Popsten"
+BLOCKCHAIN = {
+        "A": "private_A",
+        "B": "private_B",
+        "C": "Rinkeby",
+        "D": "Popsten"
+}
 
 NETWORK_SETUP = {
-        BLOCKCHAIN_A: "http://127.0.0.1:8545",
-        BLOCKCHAIN_B: "http://127.0.0.1:8599",
-        BLOCKCHAIN_C: "http://127.0.0.1:8545",
-        BLOCKCHAIN_D: "http://127.0.0.1:8545"
+        BLOCKCHAIN['A']: "http://127.0.0.1:8545",
+        BLOCKCHAIN['B']: "http://127.0.0.1:8599",
+        BLOCKCHAIN['C']: "http://127.0.0.1:8545",
+        BLOCKCHAIN['D']: "http://127.0.0.1:8545"
         }
 
 # Configuration.
@@ -137,7 +139,7 @@ def serializeNSBData(bytecode, addrlist, required):
 
 if __name__ == '__main__':
 
-    supported_chains = [BLOCKCHAIN_A]#, BLOCKCHAIN_B]
+    supported_chains = [BLOCKCHAIN['A']]#, BLOCKCHAIN['A']]
     hyperservice = HyperService(supported_chains)
 
     # Deploy the Broker and Option contract.
@@ -145,7 +147,7 @@ if __name__ == '__main__':
     #     BrokerBytecode = f.read()
     #     print(BrokerBytecode[:-1])
     #     broker_contract = SmartContract(
-    #         BrokerBytecode[:-1], BLOCKCHAIN_A,
+    #         BrokerBytecode[:-1], BLOCKCHAIN['A'],
     #         "BrokerContract", hex(2000000))
     #     hyperservice.DeployContract(broker_contract)
     #     queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
@@ -154,7 +156,7 @@ if __name__ == '__main__':
     # with open('option_bytecode', 'r') as f:
     #     OptionBytecode = f.read()
     #     option_contract = SmartContract(
-    #         OptionBytecode[:-1], BLOCKCHAIN_A,
+    #         OptionBytecode[:-1], BLOCKCHAIN['A'],
     #         "OptionContract", hex(200000), "0x8ac7230489e80000")
     #     hyperservice.DeployContract(option_contract)
 
@@ -162,7 +164,7 @@ if __name__ == '__main__':
         NSBBytecode = f.read()
         NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
         NSB_contract = SmartContract(
-            NSBdata, BLOCKCHAIN_A,
+            NSBdata, BLOCKCHAIN['A'],
             "NSBContract", hex(10000000))
         hyperservice.DeployContract(NSB_contract)
 
