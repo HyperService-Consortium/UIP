@@ -3,7 +3,8 @@ contract NetworkStatusBlockChain {
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
 
-    struct MelkeProof {
+    struct MerkleProof {
+        string blockaddr
         // storage roothash
         bytes32 storagehash;
         // storaged key
@@ -21,8 +22,8 @@ contract NetworkStatusBlockChain {
         string signature;
     }
     
-    // The MelkeProofTree
-    // keccak256(storagehash + key + value) maps to MelkeProof
+    // The MerkleProofTree
+    // keccak256(storagehash + key + value) maps to MerkleProof
     bytes32[] public waitingVerifyProof;
 
     // corresponding valid votes' number
@@ -31,21 +32,21 @@ contract NetworkStatusBlockChain {
     // corresponding votes' number
     uint32[] public votedCount;
 
-    // remained verifying MelkeProofs range [votedPointer, waitingVerifyProof.length)
+    // remained verifying MerkleProofs range [votedPointer, waitingVerifyProof.length)
     uint32 votedPointer;
 
-    // all the MelkeProofs on the contract
-    mapping (bytes32 => MelkeProof) public MelkeProofTree;
-    // if the MelkeProof Atte is valid, verifiedMelkeProof[Atte] == true
-    mapping (bytes32 => bool) public verifiedMelkeProof;
+    // all the MerkleProofs on the contract
+    mapping (bytes32 => MerkleProof) public MerkleProofTree;
+    // if the MerkleProof Atte is valid, verifiedMerkleProof[Atte] == true
+    mapping (bytes32 => bool) public verifiedMerkleProof;
 
     // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
     mapping (address => bool) public isOwner;
     address[] public owners;
 
-    // remained caught MelkeProofs range [ownersPointer, waitingVerifyProof.length)
+    // remained caught MerkleProofs range [ownersPointer, waitingVerifyProof.length)
     mapping(address => uint32) public ownersPointer;
-    // remained verifying MelkeProofs by onwers range [onwersvotedPointer, waitingVerifyProof.length)
+    // remained verifying MerkleProofs by onwers range [onwersvotedPointer, waitingVerifyProof.length)
     mapping(address => uint32) public ownersVotedPointer;
     uint public requiredOwnerCount;
     uint public requiredValidVotesCount;
@@ -67,7 +68,7 @@ contract NetworkStatusBlockChain {
         _;
     }
 
-    event addingMelkeProof(bytes32, bytes32, bytes32);
+    event addingMerkleProof(bytes32, bytes32, bytes32);
 
     modifier validRequirement(uint ownerCount, uint _requiredOwner) {
         require(ownerCount < MAX_OWNER_COUNT, "too many owners");
@@ -77,20 +78,20 @@ contract NetworkStatusBlockChain {
         _;
     }
 
-    modifier validMelkeProof(bytes32 storagehash, bytes32 key) {
+    modifier validMerkleProof(bytes32 storagehash, bytes32 key) {
         require(storagehash != 0, "invalid storagehash");
         require(key != 0, "invalid key");
         _;
     }
-    modifier remainMelkeProof(uint curPointer) {
-        require(curPointer < waitingVerifyProof.length, "no MelkeProof to fetch");
+    modifier remainMerkleProof(uint curPointer) {
+        require(curPointer < waitingVerifyProof.length, "no MerkleProof to fetch");
         _;
     }
 
     modifier validVote(address addr, uint curVotedPointer) {
-        require(votedPointer <= curVotedPointer, "the MelkeProof is proved");
-        require(curVotedPointer < ownersPointer[addr], "no MelkeProof to vote");
-        require(waitingVerifyProof[curVotedPointer] != 0, "the MelkeProof is proved");
+        require(votedPointer <= curVotedPointer, "the MerkleProof is proved");
+        require(curVotedPointer < ownersPointer[addr], "no MerkleProof to vote");
+        require(waitingVerifyProof[curVotedPointer] != 0, "the MerkleProof is proved");
         _;
     }
 
@@ -174,36 +175,37 @@ contract NetworkStatusBlockChain {
     }
 
     // change it to VES/DAPP/NSB user?
-    function addMelkeProof(bytes32 storagehash, bytes32 key, bytes32 val)
+    function addMerkleProof(string blockaddr, bytes32 storagehash, bytes32 key, bytes32 val)
         public
         ownerExists(msg.sender)
-        validMelkeProof(storagehash, key)
+        validMerkleProof(storagehash, key)
     {
-        MelkeProof memory toAdd = MelkeProof(storagehash, key, val);
-        bytes32 keccakhash = keccak256(storagehash, key, val);
+        MerkleProof memory toAdd = MerkleProof(blockaddr, storagehash, key, val);
+        bytes32 keccakhash = keccak256(blockaddr, storagehash, key, val);
         
-        require(MelkeProofTree[keccakhash].storagehash == bytes32(0), "already in MelkeProofTree");
+        require(MerkleProofTree[keccakhash].storagehash == bytes32(0), "already in MerkleProofTree");
         
         waitingVerifyProof.push(keccakhash);
-        MelkeProofTree[keccakhash] = toAdd;
+        MerkleProofTree[keccakhash] = toAdd;
         validCount.length ++;
         votedCount.length ++;
         
-        emit addingMelkeProof(storagehash, key, val);
+        emit addingMerkleProof(storagehash, key, val);
     }
 
-    function getMelkeProof()
+    function getMerkleProof()
         public
         ownerExists(msg.sender)
-        remainMelkeProof(uint(ownersPointer[msg.sender]))
-        returns (bytes32 s, bytes32 k, bytes32 v)
+        remainMerkleProof(uint(ownersPointer[msg.sender]))
+        returns (string a, bytes32 s, bytes32 k, bytes32 v)
     {
         while(ownersPointer[msg.sender] < waitingVerifyProof.length &&
               waitingVerifyProof[ownersPointer[msg.sender]] == 0) {
             ownersPointer[msg.sender] ++;
         }
-        MelkeProof storage toGet = MelkeProofTree[waitingVerifyProof[ownersPointer[msg.sender]]];
+        MerkleProof storage toGet = MerkleProofTree[waitingVerifyProof[ownersPointer[msg.sender]]];
         ownersPointer[msg.sender] ++;
+        a = toGet.blockaddr
         s = toGet.storagehash;
         k = toGet.key;
         v = toGet.value;
@@ -221,9 +223,9 @@ contract NetworkStatusBlockChain {
         votedCount[curPointer] ++;
         if (votedCount[curPointer] == requiredOwnerCount) {
             if (validCount[curPointer] >= requiredValidVotesCount) {
-                verifiedMelkeProof[waitingVerifyProof[curPointer]] = true;
+                verifiedMerkleProof[waitingVerifyProof[curPointer]] = true;
             } else {
-                delete MelkeProofTree[waitingVerifyProof[curPointer]];
+                delete MerkleProofTree[waitingVerifyProof[curPointer]];
             }
             delete waitingVerifyProof[curPointer];
             delete validCount[curPointer];
@@ -278,14 +280,14 @@ contract NetworkStatusBlockChain {
     }
     
     //is it necessary?
-    function reGetMelkeProof(bytes32 keccakhash)
+    function reGetMerkleProof(bytes32 keccakhash)
         public
         view
         ownerExists(msg.sender)
         returns (bytes32 s, bytes32 k, bytes32 v)
     {
-        // require(MelkeProofTree[keccakhash] != , "not exists");
-        MelkeProof storage toGet = MelkeProofTree[keccakhash];
+        // require(MerkleProofTree[keccakhash] != , "not exists");
+        MerkleProof storage toGet = MerkleProofTree[keccakhash];
         s = toGet.storagehash;
         k = toGet.key;
         v = toGet.value;
@@ -316,21 +318,21 @@ contract NetworkStatusBlockChain {
         return ownersVotedPointer[msg.sender];
     }
     
-    function validMelkeProoforNot(bytes32 keccakhash)
+    function validMerkleProoforNot(bytes32 keccakhash)
         public
         view
         returns (bool)
     {
-        return verifiedMelkeProof[keccakhash];
+        return verifiedMerkleProof[keccakhash];
     }
     
-    function getVaildMelkeProof(bytes32 keccakhash)
+    function getVaildMerkleProof(bytes32 keccakhash)
         public
         view
         returns (bytes32 s, bytes32 k, bytes32 v)
     {
-        require(verifiedMelkeProof[keccakhash] == true, "invalid");
-        MelkeProof storage toGet = MelkeProofTree[keccakhash];
+        require(verifiedMerkleProof[keccakhash] == true, "invalid");
+        MerkleProof storage toGet = MerkleProofTree[keccakhash];
         s = toGet.storagehash;
         k = toGet.key;
         v = toGet.value;
