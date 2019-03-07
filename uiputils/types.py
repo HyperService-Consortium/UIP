@@ -1,33 +1,33 @@
 
-'some cast method'
-
-__author__ = 'Myriad Dreamin'
-
-from uiputils.loadfile import FileLoad
+'some types'
 
 
-class Contract:
-    # return a contract that can transact with web3
-    def __init__(self, web3, contract_addr="", contract_abi=None, contract_bytecode=None):
+class BlockchainNetwork:
+    def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
+        self.identifer = identifer
+        self.rpc_port = rpc_port
+        self.data_dir = data_dir
+        self.listen_port = listen_port
+        self.host = host
+        self.public = public
 
-        contract_abi = FileLoad.getabi(contract_abi)
-        contract_bytecode = FileLoad.getbytecode(contract_bytecode)
 
-        if contract_addr != "":
-            self.handle = web3.eth.contract(contract_addr, abi=contract_abi, bytecode=contract_bytecode)
-        else:
-            self.handle = web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
+class SmartContract:
+    # The abstracted structure of a SmartContract.
+    def __init__(self, bytecode="", domain="", name="", gas=hex(0), value=hex(0)):
+        self.bytecode = bytecode
+        self.domain = domain
+        self.name = name
+        self.gas = gas
+        self.value = value
 
-        self.web3 = web3
-        self.address = self.handle.address
-        self.abi = self.handle.abi
-        self.bytecode = self.handle.bytecode
-        self.functions = self.handle.functions
 
-    def func(self, funcname, *args):
-        # call a contract function
-        return self.handle.functions[funcname](*args).call()
+class StateProof:
+    # The Merkle Proof for a Blockchain state.
+    def __init__(self, value, block, proof):
+        self.value = value
+        self.block = block
+        self.proof = proof
 
-    def funcs(self):
-        # return all functions in self.abi
-        return self.handle.all_functions()
+    def __str__(self):
+        return "value: %s;block: %s;proof: %s;" % (self.value, self.block, self.proof)

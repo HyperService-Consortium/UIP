@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 import json, requests, time
-from uiputils.jsonrpc import JsonRPC
+from uiputils.eth import JsonRPC
 from uiputils.cast import uint64string
+from uiputils.types import StateProof, SmartContract
 
 BLOCKCHAIN_A = "private_A"
 BLOCKCHAIN_B = "private_B"
@@ -21,38 +22,6 @@ NETWORK_SETUP = {
 UNLOCK_PWD = "123456"
 HTTP_HEADERS = {'Content-Type': 'application/json'}
 ACCOUNT_UNLOCK_PERIOD = 3000
-ETHDB_PATH = "D:\\Go Ethereum\\data\\geth\\chaindata"
-
-
-class BlockchainNetwork:
-    def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
-        self.identifer = identifer
-        self.rpc_port = rpc_port
-        self.data_dir = data_dir
-        self.listen_port = listen_port
-        self.host = host
-        self.public = public
-
-
-class SmartContract:
-    # The abstracted structure of a SmartContract.
-    def __init__(self, bytecode="", domain="", name="", gas=hex(0), value=hex(0)):
-        self.bytecode = bytecode
-        self.domain = domain
-        self.name = name
-        self.gas = gas
-        self.value = value
-
-
-# The Merkle Proof for a Blockchain state.
-class StateProof:
-    def __init__(self, value, block, proof):
-        self.value = value
-        self.block = block
-        self.proof = proof
-
-    def __str__(self):
-        return "value: %s;block: %s;proof: %s;" % (self.value, self.block, self.proof);
 
 
 class HyperService:

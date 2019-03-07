@@ -1,7 +1,5 @@
 
-'some cast method'
-
-__author__ = 'Myriad Dreamin'
+'some cast methods'
 
 
 def uintxstring(num, x):
