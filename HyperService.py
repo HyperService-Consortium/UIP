@@ -6,18 +6,18 @@ from uiputils.cast import uint64string
 from uiputils.types import StateProof, SmartContract
 
 BLOCKCHAIN = {
-        "A": "private_A",
-        "B": "private_B",
-        "C": "Rinkeby",
-        "D": "Popsten"
+    "A": "private_A",
+    "B": "private_B",
+    "C": "Rinkeby",
+    "D": "Popsten"
 }
 
 NETWORK_SETUP = {
-        BLOCKCHAIN['A']: "http://127.0.0.1:8545",
-        BLOCKCHAIN['B']: "http://127.0.0.1:8599",
-        BLOCKCHAIN['C']: "http://127.0.0.1:8545",
-        BLOCKCHAIN['D']: "http://127.0.0.1:8545"
-        }
+    BLOCKCHAIN['A']: "http://127.0.0.1:8545",
+    BLOCKCHAIN['B']: "http://127.0.0.1:8599",
+    BLOCKCHAIN['C']: "http://127.0.0.1:8545",
+    BLOCKCHAIN['D']: "http://127.0.0.1:8545"
+}
 
 # Configuration.
 # "YourPassWord`"
@@ -62,6 +62,7 @@ class HyperService:
                     }
             response = self.DispatchRpcToDomain(url, unlock)
 
+
     def DeployContract(self, contract):
         if contract.domain not in self.domain_handles:
             raise Exception("Unsupported domain: " + contract.domain)
@@ -100,6 +101,7 @@ class HyperService:
 
             code_resp = self.DispatchRpcToDomain(url, get_code)
 
+            # print(code_resp)
             if code_resp['result'] == '0x':
                 raise IndexError("Contract deployment failed")
             return contract_addr
@@ -162,7 +164,7 @@ if __name__ == '__main__':
 
     with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
-        NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
+        NSBdata = serializeNSBData(NSBBytecode, ["0xe1300d8ea0909faa764c316436ad0ece571f62b2"], 1)
         NSB_contract = SmartContract(
             NSBdata, BLOCKCHAIN['A'],
             "NSBContract", hex(10000000))
