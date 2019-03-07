@@ -1,3 +1,100 @@
+# uiputils.eth
+
+## JSON-RPC
+
+start with:
+
+```python
+from uiputils.eth import JsonRPC
+```
+
+Read the document [ethereum wiki JSON-RPC][JSON-RPC] to know all the methods of JSON-RPC.
+
+Sample:
+
+```python
+>>> JsonRPC.ethCoinbase()
+{'jsonrpc': '2.0', 'method': 'eth_coinbase', 'params': [], 'id': 64}
+>>> JsonRPC.ethGetProof("0xe1300d8ea0909faa764c316436ad0ece571f62b2", ["0x0"])
+{'jsonrpc': '2.0', 'method': 'eth_getProof', 'params': ['0xe1300d8ea0909faa764c316436ad0ece571f62b2', ['0x0'], 'latest'], 'id': 1}
+```
+
+## Class Contract
+
+start with:
+
+```python
+from uiputils.eth import Contract
+```
+
+##### constructor(
+
+##### 	web3handle,
+
+##### 	contract address="",
+
+##### 	contract abi/contract abi address=None,
+
+##### 	contract bytecode/contract bytecode address=None
+
+##### )
+
+The constructor doesn't deploy the contract. If the contract has been deployed, you can use the following functions.
+
+##### attribute functions
+
+a object of the functions in contract abi.
+
+```python
+>>> nsb.functions.isOwner(Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")).call()
+False
+```
+
+function call() helps execute the function.
+
+##### attribute address
+
+##### attribute web3
+
+##### attribute abi
+
+##### attribute bytecode
+
+##### function funcs(void)
+
+return all the functions in contract abi
+
+```python
+>>> nsb.funcs()
+[<Function addAction(bytes32,bytes32,bytes32)>, ...]
+```
+
+##### function func(string functions name, *args)
+
+```python
+>>> nsb.func('isOwner', Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2"))
+False
+```
+
+## Load Files
+
+start with:
+
+```python
+from uiputils.eth import FileLoad
+```
+
+Sample:
+
+```python
+>>> FileLoad.getabi('./option_abi')
+[{'constant': False, 'inputs': [{'name': '_proposal', 'type': 'uint256'}], 'name': 'buyOption', 'outputs': [], 'payable': True, 'stateMutability': 'payable', 'type': 'function'}, ...]
+>>> FileLoad.getbytecode('./option_bytecode')
+b'0x60806040526040516020806107908339810180604052810190808051906020019092919050505034678ac7230489e80000811015151561003e57600080fd5b34600081905550816001819055503360026000610100...'
+```
+
+# uiputils.*
+
 ## Types
 
 ### Class BlockchainNetwork
@@ -143,3 +240,5 @@ return the type of GoBytes in C for setting the go-cDLL functions' arguments and
 ##### function frombytes(bytes)
 
 cast the bytes in python to the `[]byte` (Golang) in C.
+
+[JSON-RPC]:https://github.com/ethereum/wiki/wiki/JSON-RPC

@@ -1,7 +1,7 @@
 
 from web3 import Web3
 from hexbytes import HexBytes
-from uiputils.types import Contract
+from uiputils.eth import Contract
 # import plyvel
 
 web3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545", request_kwargs={'timeout': 10}))
@@ -10,7 +10,8 @@ broker_addr = Web3.toChecksumAddress("0xd7ea2b03da511799eb0c5a28989cf5268c869311
 broker_abi_addr = "broker_abi"
 broker_bytecode_addr = "broker_bytecode"
 
-nsb_addr = Web3.toChecksumAddress("0x4c8941bae3f7db6837f7b0bcad76d5fe416d9eb9")
+nsb_addr = Web3.toChecksumAddress("0x2df511bb1a798f93d1e5726bf4bbf92b304b3f25")
+# ("0x4c8941bae3f7db6837f7b0bcad76d5fe416d9eb9")
 nsb_abi_addr = "./nsb/nsb.abi"
 nsb_bytecode_addr = "./nsb/nsb.bin"
 nsb_db_addr = "./nsb/actiondaba"
