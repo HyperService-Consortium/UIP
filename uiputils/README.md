@@ -43,7 +43,7 @@ The constructor doesn't deploy the contract. If the contract has been deployed, 
 
 ##### attribute functions
 
-a object of the functions in contract abi.
+an object of the functions in contract abi.
 
 ```python
 >>> nsb.functions.isOwner(Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")).call()
