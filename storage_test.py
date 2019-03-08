@@ -5,12 +5,12 @@ from web3 import Web3
 from eth_hash.auto import keccak
 from hexbytes import  HexBytes
 
-addr = Web3.toChecksumAddress("0x97470438563859d09e744bcb136e8e298edc9ca9")
+addr = Web3.toChecksumAddress("0x85854fe3853b7a51576bfd78564ec1993f8820d1")
 
 
 if __name__ == '__main__':
     web3h = ServiceStart.startweb3('http://127.0.0.1:8545')
-    ask_string = keccak(HexBytes(uint32string(0))+HexBytes(uint32string(0)))
+    ask_string = HexBytes(uint32string(0))
     ask_string = HexBytes(ask_string).hex()
     print(ask_string)
     print(HexBytes(web3h.eth.getStorageAt(addr, ask_string)).hex())

@@ -13,7 +13,7 @@ broker_bytecode_addr = "broker_bytecode"
 
 eth_base_addr = Web3.toChecksumAddress("0x7019fa779024c0a0eac1d8475733eefe10a49f3b")
 
-nsb_addr = Web3.toChecksumAddress("0x97470438563859d09e744bcb136e8e298edc9ca9")
+nsb_addr = Web3.toChecksumAddress("0x85854fe3853b7a51576bfd78564ec1993f8820d1")
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
 nsb_abi_addr = "./nsb/nsb.abi"
@@ -28,15 +28,15 @@ if __name__ == '__main__':
     nsbt = NetStatusBlockchain(host_addr, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
     nsb = nsbt.handle
 
-    # print(nsb.funcs())
+    print(nsb.funcs())
 
     # print(nsb.func('isOwner', Web3.toChecksumAddress("0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e")))
 
     # print(nsb.funct('addOwner', tx, Web3.toChecksumAddress("0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e")))
 
-    print(nsb.func('isOwner', Web3.toChecksumAddress("0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e")))
+    # print(nsb.func('isOwner', Web3.toChecksumAddress("0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e")))
 
-    print(nsb.funct('addMerkleProof', tx, "A", "933b2499f931cef309f61259914d250c69446f55dcd9a6e85cebf0aed214ef36",
+    print(nsb.funct('addMerkleProof', tx, "B", "933b2499f931cef309f61259914d250c69446f55dcd9a6e85cebf0aed214ef36",
                     "0275b7a638427703f0dbe7bb9bbf987a2551717b34e79f33b5b1008d1fa01db9",
                     "0100000000000000000000000000000000000000000000000000000000000000"))
 
