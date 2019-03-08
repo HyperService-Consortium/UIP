@@ -4,7 +4,7 @@ contract NetworkStatusBlockChain {
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
 
     struct MerkleProof {
-        string blockaddr
+        string blockaddr;
         // storage roothash
         bytes32 storagehash;
         // storaged key
@@ -205,7 +205,7 @@ contract NetworkStatusBlockChain {
         }
         MerkleProof storage toGet = MerkleProofTree[waitingVerifyProof[ownersPointer[msg.sender]]];
         ownersPointer[msg.sender] ++;
-        a = toGet.blockaddr
+        a = toGet.blockaddr;
         s = toGet.storagehash;
         k = toGet.key;
         v = toGet.value;

@@ -8,7 +8,8 @@ import (
 	"./rlp"
     "encoding/hex"
     "C"
-    "unsafe"
+	"unsafe"
+	"strconv"
 )
 
 const (
@@ -152,7 +153,7 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 
 	//key consumed
 	if len(path) == 0 {
-		return "", errors.New("No exists")
+		return "", errors.New("consumed")
 	}
 
 	// get node from db
@@ -163,7 +164,7 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 
 		// compare to storagepath
 		if hex.EncodeToString(querynode) != storagepath[0] {
-			return "", errors.New("No exists")
+			return "", errors.New("No exists(differ from path), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
 		}
 
 		node := rlp.Unserialize(querynode)
@@ -175,7 +176,7 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 				//end of proofpath
 				if len(storagepath) == 1 {
 					if path != firstvar[consumed:] {
-						return "", errors.New("No exists")
+						return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
 					}
 					return secondvar, nil
 				}
@@ -183,7 +184,7 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 				//compare prefix of the path with node[0]
 				firstvarlen := len(firstvar)
 				if (firstvarlen > len(path)) || (firstvar != path[0:firstvarlen]) {
-					return "", errors.New("No exists")
+					return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
 				}
 
 				return findPath(db, secondvar, path[firstvarlen: ], storagepath[1 : ], consumed + firstvarlen)
@@ -194,7 +195,7 @@ func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []str
 				if len(tryquery) == HASHSTRINGLENGTH {
 					return findPath(db, tryquery, path[1 : ], storagepath[1 : ], consumed + 1)
 				}else {
-					return "", errors.New("No exists")
+					return "", errors.New("No exists, in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
 				}
 			}
 			default: {

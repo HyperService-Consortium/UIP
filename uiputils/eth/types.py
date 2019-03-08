@@ -1,7 +1,7 @@
 
 from .loadfile import FileLoad
 from .startservice import ServiceStart
-
+from hexbytes import HexBytes
 
 class Contract:
     # return a contract that can transact with web3
@@ -25,6 +25,11 @@ class Contract:
     def func(self, funcname, *args):
         # call a contract function
         return self.handle.functions[funcname](*args).call()
+
+    def funct(self, funcname, tx, *args):
+        # transact a contract function
+        tx_rec = self.handle.functions[funcname](*args).transact(tx)
+        return self.web3.eth.waitForTransactionReceipt(HexBytes(tx_rec).hex(), timeout=10)
 
     def funcs(self):
         # return all functions in self.abi
