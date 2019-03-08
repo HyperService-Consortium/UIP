@@ -143,7 +143,7 @@ func init() {
 }
 
 func main() {
-	rootHashStr := "0x923b2499f931cef309f61259914d250c69446f55dcd9a6e85cebf0aed214ef36"
+	rootHashStr := "0xab87a50da179c4b4be23614f87cb4bdc47ccdbbdc50e44365ff48c209c8505cac"
 
 	db, err := leveldb.OpenFile(EDB_PATH, nil)
     if err != nil {
@@ -156,6 +156,7 @@ func main() {
 			fmt.Println("query error")
 			fmt.Println(err)
 		}else {
+			fmt.Println(querynode)
 			node := rlp.Unserialize(querynode)
 			fmt.Println(hex.EncodeToString(querynode))
 			rlp.PrintListInString(node)

@@ -1,4 +1,7 @@
 
+import json, requests
+
+
 class JsonRPC(object):
     # JSON-RPC methods
     def __init__(self):
@@ -169,3 +172,11 @@ class JsonRPC(object):
                 "params": [transactionhash],
                 "id": 1
                 }
+
+    @staticmethod
+    def send(url, hed, dat):
+        response = requests.post(url, headers=hed, data=json.dumps(dat))
+        if response.status_code != 200 or 'error' in response.json():
+            print(json.dumps(dat))
+            raise Exception(response.json())
+        return response.json()

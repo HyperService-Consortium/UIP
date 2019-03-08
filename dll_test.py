@@ -1,28 +1,28 @@
 
 import uiputils.eth as eth
+from uiputils.eth import JsonRPC
+import time
+from hexbytes import HexBytes
+from uiputils.cast import uint64hexstring
+from eth_hash.auto import keccak
 
 EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
-
-
-# StorageHash = b"0x11e91152ab237ceff29728c03999ef2debadd7db0fc45b280657c6f7cc4c1ffa"
-# StoragePath = ["f8918080a06d032ff808e3a2b585df339916901d7b7d04c5bd18a088607093d3178172b7ee8080808080a0071b011fdbd4ad7d1e6f9762be4d1a88dffde614a6bd399bf3b5bad8f41249b5808080a01b56cc0a5b9b1ce34e9a14e896ea000c830bd64387573d238cbe3fa24ddfa2c3a0f5c2efa606e3a5be341f22bf1d5c8f4bce679719870c097a24abb38aec0a4855808080", "f8518080808080a06f643b8fd2176a403e2ccfae43808c4543289e1082078e91d821d1c7886d6f51808080a03822ab26403807d175522401e184b20b5aa8c7fcd802f4793970a70e810f4ce980808080808080", "e2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56333"]
-#
-# key = b"0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"
-# val = b"0x33"
-
-storageHash = b"0x923b2499f931cef309f61259914d250c69446f55dcd9a6e85cebf0aed214ef36"
-storageProof = {
-      "key": "0x0",
-      "proof": ["0xf90171a05351d0bdaf7629350795e428e993ee4b707dbe7a379bb8cc84f09542c6fcd6f780a0986315afb18f28876103a396952ad54f02d6f42dd06d961ab2f3447b19db700080a09c2327d6115c000560cb80981a5987f4870bc4d9af51299ab094d336569835a1a007b8cb56ebd843e36bae2c5debe24aaa99d105666b4e866ee35b3348bc068853a0dac018a190830b4bebc1d4251b8ba4c39ebf6509348b8bec30b32a4ebf4e548880a0ccc0afea123bc44b3e9910f72b50913b3b3e04f53e61953154ed53b0b17c12c6a03d5edbd5847ddf83206c002ec4bbdb3591aefa87bd8bb927281e75e2b3ecb18fa048eeaf0f63d6ca8810668d4876ac4a1580c92d55c378c424f68c2a41b2561d3ea0236e8f61ecde6abfebc6c529441f782f62469d8a2cc47b7aace2c136bd3b1ff0a0808e07e5c581373caf0c5d0715acb3e2ff71912b4e83a180693ecd33d07d213e8080a05bf81c8b24f4fa3e67e085f5c69459931b65cff3cd0f85c51157d76b4b7b3a2a80", "0xf85180a0c3eabd1acf1c74856e522228c47b5a7d9442d37e40d9980b90aea5d1a44aa17f80808080808080a0b1a25844651a7b33e9dc5af4bfde59a97bf4225ae8ab572e10b9ba57b4c8e7de80808080808080", "0xe2a0200decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e56302"],
-      "value": "0x2"
-  }
-
+url = "http://127.0.0.1:8545"
+HTTP_HEADER = {'Content-Type': 'application/json'}
+nsb_addr = "0x85854fe3853b7A51576bFd78564Ec1993f8820d1"
 
 if __name__ == '__main__':
+    response = JsonRPC.send(url, HTTP_HEADER, JsonRPC.ethGetProof(nsb_addr, ["0x0"], "latest"))['result']
+    storageProof = response['storageProof'][0]
+
+    time.sleep(5)
 
     prover = eth.Prover(EDB_PATH)
 
-    prover.verify(storageProof['key'], storageProof['value'], storageHash, storageProof['proof'])
-
+    prover.verify(HexBytes(keccak(HexBytes(uint64hexstring(int(storageProof['key'], 16))))).hex(),
+                  storageProof['value'],
+                  response['storageHash'],
+                  storageProof['proof']
+                  )
     prover.close()
 

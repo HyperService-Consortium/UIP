@@ -87,7 +87,7 @@ func stringtobytes(bytes string) []byte {
 	glen >>= 1
 	ofs := 0
 
-	if bytes[1] == 'x' {
+	if len(bytes) >= 2 &&  bytes[1] == 'x' {
 		ofs = 1
 	}
 
@@ -106,7 +106,7 @@ func stringtonibbles(nibbles string) []byte {
 	glen := len(nibbles)
 
 	ofs := 0
-	if nibbles[1] == 'x' {
+	if len(nibbles) >= 2 &&  nibbles[1] == 'x' {
 		ofs = 2
 	}
 	glen -= ofs
@@ -146,6 +146,25 @@ func bytesequal(nib1 []byte, nib2 []byte) bool {
 		}
 	}
 	return true
+}
+
+func comparehex(hexx string, hexy string) bool {
+	var ofsx, ofsy = 0, 0
+	if len(hexx) >= 2 &&  hexx[0:2] == "0x" {
+		ofsx = 2
+	}
+	if len(hexy) >= 2 &&  hexy[0:2] == "0x" {
+		ofsy = 2
+	}
+	var lenx, leny int
+	for lenx = len(hexx) - 1 ; ofsx < lenx && (hexx[ofsx] == '0') ; ofsx++ {
+
+	}
+	
+	for leny = len(hexy) - 1 ; ofsy < leny && (hexy[ofsy] == '0') ; ofsy++ {
+
+	}
+	return hexx[ofsx:] == hexy[ofsy:]
 }
 
 // get value of key on the trie
@@ -231,18 +250,24 @@ func closeDB(dbpi C.int) {
 }
 
 func _VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, storagepath []string) bool {
-	if key[0:2] == "0x" {
+	if len(key) >= 2 && key[0:2] == "0x" {
 		key = key[2:]
 	}
-	if value[0:2] == "0x" {
+	if len(value) >= 2 && value[0:2] == "0x" {
 		value = value[2:]
 	}
+	for _, str := range(storagepath) {
+		if len(str) >= 2 && str[0:2] == "0x" {
+			str = str[2:]
+		}
+	}
+
 	// key = append(make([]byte,0),2,9)
 	toval, err := findPath(db, rootHashStr, key, storagepath, 0)
 	if err != nil {
 		fmt.Println(err)
 	}else {
-		if value == toval {
+		if comparehex(value, toval) == true {
             fmt.Println("Proved")
             return true
 		}else {

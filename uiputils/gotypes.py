@@ -39,6 +39,19 @@ class GoString(object):
     def fromstr(pystr, enc):
         return ctypes.c_char_p(bytes(pystr.encode(enc)))
 
+    @staticmethod
+    def frombytes(pystr):
+        return ctypes.c_char_p(pystr)
+
+    @staticmethod
+    def trans(pystr, enc):
+        if isinstance(pystr, str):
+            return GoString.fromstr(pystr, enc)
+        elif isinstance(pystr, bytes):
+            return GoString.frombytes(pystr)
+        else:
+            return 'error'
+
 
 class GoStringSlice(object):
     # GoStringSlice in C
@@ -47,7 +60,15 @@ class GoStringSlice(object):
 
     @staticmethod
     def fromstrlist(strlist, enc):
-        strs = [ctypes.c_char_p(bytes(path.encode(enc))) for path in strlist]
+        strs = []
+        for hexstr in strlist:
+            # const hexstr, so const strlist
+            if hexstr[0:2] == '0x':
+                hexstr = hexstr[2:]
+            strptr = GoString.trans(hexstr, enc)
+            if strptr == 'error':
+                raise TypeError("hexstr-type in strlist needs str or bytes, but get", hexstr.__class__)
+            strs.append(strptr)
         charparray = ctypes.c_char_p * len(strlist)
         charlist = charparray(*strs)
         return ctypes.cast(charlist, GoStringSlice.Type)

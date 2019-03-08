@@ -2,7 +2,6 @@
 from ctypes import CDLL
 from uiputils.gotypes import GoString, GoInt32, GoStringSlice, GolevelDBptr
 
-
 PROVER_PATH = "./uiputils/include/verifyproof.dll"
 ENC = "utf-8"
 
@@ -25,8 +24,18 @@ class Prover:
         funcs.closeDB(self.ethdb)
 
     def verify(self, key, val, storagehash, storagepath):
-        funcs.VerifyProof(self.ethdb,
-                          storagehash,
-                          key, val,
-                          GoStringSlice.fromstrlist(storagepath, ENC),
-                          len(storagepath))
+        keyptr = GoString.trans(key, ENC)
+        if keyptr == 'error':
+            raise TypeError("key-type needs str or bytes, but get", key.__class__)
+
+        valptr = GoString.trans(val, ENC)
+        if valptr == 'error':
+            raise TypeError("val-type needs str or bytes, but get", val.__class__)
+
+        hashptr = GoString.trans(storagehash, ENC)
+        if hashptr == 'error':
+            raise TypeError("storageHash-type needs str or bytes, but get", storagehash.__class__)
+
+        path = GoStringSlice.fromstrlist(storagepath, ENC)
+
+        funcs.VerifyProof(self.ethdb, hashptr, keyptr, valptr, path, len(storagepath))

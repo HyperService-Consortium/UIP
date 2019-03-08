@@ -9,6 +9,42 @@ const(
 	BYTES
 	GLIST
 )
+// var hexmaps [256]uint64;
+// //input a string and return a byte slice
+// func stringtobytes(bytes string) []byte {
+// 	glen := len(bytes)
+// 	if  glen <= 1 || ((glen & 1) == 1) {
+// 		return nil
+// 	}
+
+// 	glen >>= 1
+// 	ofs := 0
+
+// 	if bytes[1] == 'x' {
+// 		ofs = 1
+// 	}
+
+// 	glen -= ofs
+
+// 	bres := make([]byte, glen, glen)
+// 	for idx := 0; idx < glen; idx++ {
+// 		bres[idx] |= byte(hexmaps[bytes[(idx + ofs) << 1 ]] << 4)
+// 		bres[idx] |= byte(hexmaps[bytes[(idx + ofs) << 1 | 1]])
+// 	}
+// 	return bres
+// }
+// func init() {
+// 	for idx := '0'; idx <= '9'; idx++ {
+// 		hexmaps[idx] = uint64(idx - '0')
+// 	}
+// 	for idx := 'a'; idx <= 'f'; idx++ {
+// 		hexmaps[idx] = uint64(idx - 'a' + 10)
+// 	}
+// 	for idx := 'A'; idx <= 'F'; idx++ {
+// 		hexmaps[idx] = uint64(idx - 'A' + 10)
+// 	}
+// }
+
 
 type Atom interface{}
 type Glist struct {
@@ -105,9 +141,9 @@ func Unserialize(dtr []byte) *Glist {
 	}
 }
 func decodelength(dtr []byte) int {
-	var len int
+	var len = 0
 	for _, t := range dtr {
-		len = (len<<4) | int(t)
+		len = (len<<8) | int(t)
 	}
 	return len
 }
@@ -182,21 +218,23 @@ func (g *Glist) Length() int {
 	}
 }
 func main(){
-	// var t []byte
-	// // t = append(t, 0xf8, 2, 33, 35, 37)
-	// // t = append(t, 0xc7, 0x83, 33, 35, 37, 0x82 , 32 , 33)
-	// // t = append(t,0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0)
-	// t=append(t, 0xf8, 0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0)
-	// // for i := 0 ;i < 56 ; i++ {
-	// // 	t = append(t, 123)
-	// // }
-	// fmt.Println(t)
-	// // var quer,qq Glist
-	// var qq *Glist
-	// qq = Unserialize(t)
-	// //fmt.Println((qq.dat.([]Atom))[0])
-	// //makeGlistContentBytes([]byte("21241241"))
-	// PrintList(qq)
+	// x := Unserialize(stringtobytes("f90191a0891757929ce116380174486268097769a2f30291732dd18582327788cd95250580a07c2a362d8127b83cbadc4363ff461ee6d72cbefc9a03e6080b739ca340d2860b80a08dad12008136bbe56bc544d8c6711b5c5a594e0f7bfd9a1851355f1fc199e131a0be512df0fee45c716a3ab87e2dffb2072ebaf0dc7f69784e6e7c7b0fae92841ca046b0b0ee9c8e7f0c37a5b8763280abf0c7e47caeb2ab4ff93f0c67fe26c8ad2ba0815bd660bd5e85681a9adab43e0a651e807ba5132f94bd210e9457ba055d538280a0663e186f98fff71d728118b5f788fa72506a4bd6e85aa2915b8ae40059f4ab86a092ef150745b4207ac88519318bd7bb007fe6157e719d459edf5b59f025fe16fda0236e8f61ecde6abfebc6c529441f782f62469d8a2cc47b7aace2c136bd3b1ff0a0d1a0d264eaf005589a3f1486b1dc51909c782272c969c6fcf362b122baf6d188a0303876dcca400618ab14b9d5ff6416ebfde7cd05bd17fd78cab31d79c2759187a0b3a005a4dd06158b44eea4bbfbcdadd5fab5f15f3fe59fe87a9da80ec08552908080"))
+	// PrintListInString(x)
+	// fmt.Println("")
+	// x = Unserialize(append(make([]byte,0), 0x0))
+	// PrintListInString(x)
+	// fmt.Println("")
+	// x = Unserialize(append(make([]byte,0), 0x83, 'd', 'o', 'g'))
+	// PrintListInString(x)
+	// fmt.Println("")
+	// x = Unserialize(append(make([]byte,0), 0xc0))
+	// PrintListInString(x)
+	// fmt.Println("")
+	// x = Unserialize(append(make([]byte,0), 0xc8, 0x83, 0x55, 0x83, 0x83, 0x83, 0x83, 0x83, 0x83))
+	// PrintListInString(x)
+	// fmt.Println("")
+	// x = Unserialize(append(make([]byte,0), 0xc7, 0xc0, 0xc1, 0xc0, 0xc3, 0xc0, 0xc1, 0xc0))
+	// PrintListInString(x)
 }
 /*
 [[],[[]],[[],[[]]]]
