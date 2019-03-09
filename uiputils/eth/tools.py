@@ -27,12 +27,22 @@ funcs.VerifyProof.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoStri
 
 class Prover:
     def __init__(self, path):
-        self.ethdb = funcs.openDB(bytes(path.encode(ENC)))
+        if path == "":
+            self.testmode = True
+        else:
+            self.testmode = False
+            self.ethdb = funcs.openDB(bytes(path.encode(ENC)))
 
     def close(self):
+        if self.testmode:
+            print("you are in testmode")
+            return None
         funcs.closeDB(self.ethdb)
 
     def verifyhaspath(self, key, val, storagehash, storagepath):
+        if self.testmode:
+            print("you are in testmode")
+            return None
         keyptr = GoString.trans(key, ENC)
         if keyptr == 'error':
             raise TypeError("key-type needs str or bytes, but get", key.__class__)
@@ -50,6 +60,9 @@ class Prover:
         funcs.VerifyProof(self.ethdb, hashptr, keyptr, valptr, path, len(storagepath))
 
     def verify(self, merkleproof):
+        if self.testmode:
+            print("you are in testmode")
+            return None
         keyptr = GoString.trans(merkleproof.key, ENC)
         if keyptr == 'error':
             raise TypeError("key-type needs str or bytes, but get", merkleproof.key.__class__)
@@ -97,6 +110,7 @@ def maplocation(slot, key):
 # the var of bytestoint(keccak(fillint32(SLOT_WAITING_QUEUE)))
 POS_WAITING_QUEUE = 18569430475105882587588266137607568536673111973893317399460219858819262702947
 POS_MERKLEPROOFTREE = b'\x00'*31 + b'\x06'
+POS_ACTIONTREE = b'\x00'*31 + b'\x08'
 
 
 class LocationTransLator(object):
@@ -109,6 +123,10 @@ class LocationTransLator(object):
     @staticmethod
     def merkleloc(keccakhash):
         return keccak(keccakhash + POS_MERKLEPROOFTREE)
+
+    @staticmethod
+    def actionloc(keccakhash):
+        return keccak(keccakhash + POS_ACTIONTREE)
 
     slicesto = slicelocation
 

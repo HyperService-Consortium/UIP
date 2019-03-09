@@ -9,28 +9,36 @@ import json
 host_addr = "http://127.0.0.1:8545"
 
 broker_addr = Web3.toChecksumAddress("0xd7ea2b03da511799eb0c5a28989cf5268c869311")
-broker_abi_addr = "broker_abi"
-broker_bytecode_addr = "broker_bytecode"
+broker_abi_dir = "broker_abi"
+broker_bytecode_dir = "broker_bytecode"
 
 eth_base_addr = Web3.toChecksumAddress("0x7019fa779024c0a0eac1d8475733eefe10a49f3b")
 
 nsb_addr = Web3.toChecksumAddress("0x43710274daadce0d8bdfe7ae6495140ea83cda6a")
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
-nsb_abi_addr = "./nsb/nsb.abi"
-nsb_bytecode_addr = "./nsb/nsb.bin"
-nsb_db_addr = "./nsb/actiondata"
+nsb_abi_dir = "./nsb/nsb.abi"
+nsb_bytecode_dir = "./nsb/nsb.bin"
+nsb_db_dir = "./nsb/actiondata"
 tx = {
     "from": eth_base_addr,
     "gas": hex(400000)
 }
 
 if __name__ == '__main__':
-    nsbt = NetStatusBlockchain(host_addr, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
+    nsbt = NetStatusBlockchain(eth_base_addr, host_addr, nsb_addr, nsb_abi_dir, "", nsb_bytecode_dir=nsb_bytecode_dir)
     nsb = nsbt.handle
 
-    print(HexBytes(nsbt.getQueueL()).hex(), HexBytes(nsbt.getQueueR()).hex())
-    nsbt.watchProofPool()
+    # 0x64e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107
+    # print(HexBytes(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00C').hex())
+
+    #  = nsbt.addAction("123456781234567812345678123456781")
+    # print(keccakhash)
+
+    # print(nsbt.getAction("0xbc7e08dc633826033d13aaab04b8e2196cd944351ea0046dae500d4e027939e2"))
+
+    # print(HexBytes(nsbt.getQueueL()).hex(), HexBytes(nsbt.getQueueR()).hex())
+    # nsbt.watchProofPool()
 
     # print(nsb_addr)
     #

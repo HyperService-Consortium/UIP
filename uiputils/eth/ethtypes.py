@@ -51,15 +51,22 @@ SLOT_MERKLEPROOFTREE = 6
 
 class NetStatusBlockchain:
     # Prot NSB in uip
-    def __init__(self, host_addr, nsb_addr, nsb_abi_addr, eth_db_addr, nsb_bytecode_addr=None):
+    def __init__(self, owner_addr, host_addr, nsb_addr, nsb_abi_dir, eth_db_dir="", gasuse=hex(400000), nsb_bytecode_dir=None):
         # , nsb_db_addr):
-        self.handle = Contract(host_addr, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
+        self.handle = Contract(host_addr, nsb_addr, nsb_abi_dir, nsb_bytecode_dir)
         self.web3 = self.handle.web3
         self.address = self.handle.address
         self.pf_pool = {}
-        print("test, so not linking to", eth_db_addr)
-        # self.prover = Prover(eth_db_addr)
+        self.tx = {
+            "from": owner_addr,
+            "gas": gasuse
+        }
+        print("test, so not linking to", eth_db_dir)
+        self.prover = Prover(eth_db_dir)
         pass
+
+    def setGas(self, gasuse):
+        self.tx['gas'] = gasuse
 
     def getQueueR(self):
         # return Queue[L,R) 's R
@@ -106,11 +113,40 @@ class NetStatusBlockchain:
             print("    hash: ", HexBytes(keccakhash).hex())
             if bytestoint(keccakhash) == 0:
                 continue
-            if keccakhash not in self.pf_pool:
+            if keccakhash not in self.pf_pool and not self.ownerVoted(keccakhash):
                 self.pf_pool[keccakhash] = self.getMekleProofByHash(self.getQueueContent(idx))
 
+    def proveProofs(self):
+        for keccakhash, merkleproof in self.pf_pool:
+            is_valid_merkleproof = self.prover.verify(merkleproof)
+            if is_valid_merkleproof is None:
+                print("testmode? Because is_valid_merkleproof is None")
+            else:
+                self.handle.funct('voteProofByHash', keccakhash, is_valid_merkleproof)
+                self.pf_pool.pop(keccakhash)
 
+    def addAction(self, signature):
+        return self.handle.funct('addAction', self.tx, signature)
 
+    def getAction(self, keccakhash):
+        print("getAction is not finished")
+        # print(self.handle.func('getAction', keccakhash[2:]))
+        return self.web3.eth.getStorageAt(self.address, LocationTransLator.actionloc(HexBytes(keccakhash)))
+
+    def validMerkleProoforNot(self, keccakhash):
+        return self.handle.func('validMerkleProoforNot', keccakhash) == 1
+
+    def getValidMerkleProof(self, keccakhash):
+        return self.handle.func('getValidMerkleProof', keccakhash)
+
+    def blockHeigth(self):
+        pass
+
+    def ownerVoted(self, keccakhash):
+        pass
 
     def work(self, work_time):
+        pass
+
+    def exec(self, contract):
         pass
