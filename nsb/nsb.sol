@@ -42,21 +42,21 @@ contract NetworkStatusBlockChain {
     mapping (bytes32 => bool) public verifiedMerkleProof; // slot 7
 
     // ActionTree (keccak256(Action) => Action)
-    mapping (bytes32 => Action) public ActionTree;
+    mapping (bytes32 => Action) public ActionTree; // slot 8
 
     // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
-    mapping (address => bool) public isOwner;
-    address[] public owners;
+    mapping (address => bool) public isOwner; // slot 9
+    address[] public owners; // slot 10
 
-    uint public requiredOwnerCount;
-    uint public requiredValidVotesCount;
+    uint public requiredOwnerCount; // slot 11
+    uint public requiredValidVotesCount; // slot 12
 
     // Maps used for adding and removing owners.
-    mapping (address => mapping (address => bool)) public addingOwnerProposal;
-    mapping (address => mapping (address => bool)) public removingOwnerProposal;
+    mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 13
+    mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 14
 
 
-    event addingMerkleProof(bytes32, bytes32, bytes32);
+    event addingMerkleProof(string, bytes32, bytes32, bytes32);
 
 
     modifier ownerDoesNotExist(address owner) {
@@ -189,12 +189,13 @@ contract NetworkStatusBlockChain {
 
         require(MerkleProofTree[keccakhash].storagehash == 0, "already in MerkleProofTree");
 
+        proofPointer[keccakhash] = uint32(waitingVerifyProof.length);
         waitingVerifyProof.push(keccakhash);
         MerkleProofTree[keccakhash] = toAdd;
         validCount.length ++;
         votedCount.length ++;
 
-        emit addingMerkleProof(storagehash, key, val);
+        emit addingMerkleProof(blockaddr, storagehash, key, val);
     }
 
     function voteProofByHash(bytes32 keccakhash, bool validProof)
@@ -213,9 +214,9 @@ contract NetworkStatusBlockChain {
         //judge if there is enough owners voted
         if (votedCount[curPointer] == requiredOwnerCount) {
             if (validCount[curPointer] >= requiredValidVotesCount) {
-                verifiedMerkleProof[waitingVerifyProof[curPointer]] = true;
+                verifiedMerkleProof[keccakhash] = true;
             } else {
-                delete MerkleProofTree[waitingVerifyProof[curPointer]];
+                delete MerkleProofTree[keccakhash];
             }
             delete waitingVerifyProof[curPointer];
             delete validCount[curPointer];

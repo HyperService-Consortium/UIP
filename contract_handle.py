@@ -1,6 +1,6 @@
 
 from web3 import Web3
-from uiputils.eth.types import NetStatusBlockchain
+from uiputils.eth.ethtypes import NetStatusBlockchain
 import json
 # import plyvel
 
@@ -13,7 +13,7 @@ broker_bytecode_addr = "broker_bytecode"
 
 eth_base_addr = Web3.toChecksumAddress("0x7019fa779024c0a0eac1d8475733eefe10a49f3b")
 
-nsb_addr = Web3.toChecksumAddress("0x85854fe3853b7a51576bfd78564ec1993f8820d1")
+nsb_addr = Web3.toChecksumAddress("0x43710274daadce0d8bdfe7ae6495140ea83cda6a")
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
 nsb_abi_addr = "./nsb/nsb.abi"

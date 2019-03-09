@@ -3,7 +3,7 @@
 import json, requests, time
 from uiputils.eth import JsonRPC
 from uiputils.cast import uint64string
-from uiputils.types import StateProof, SmartContract
+from uiputils.uiptypes import StateProof, SmartContract
 
 BLOCKCHAIN = {
     "A": "private_A",
