@@ -5,6 +5,7 @@ from hexbytes import HexBytes
 from .tools import Prover
 # import time
 
+
 class Contract:
     # return a contract that can transact with web3
     def __init__(self, web3_addr, contract_addr="", contract_abi=None, contract_bytecode=None):
@@ -38,17 +39,27 @@ class Contract:
         return self.handle.all_functions()
 
 
+SLOT_WAITING_QUEUE = 0
+SLOT_VOTEDPOINTER = 5
+
 class NetStatusBlockchain:
     # Prot NSB in uip
-    def __init__(self, host_addr, nsb_addr, nsb_abi_addr, nsb_db_addr, nsb_bytecode_addr=None):
+    def __init__(self, host_addr, nsb_addr, nsb_abi_addr, eth_db_addr, nsb_bytecode_addr=None):
         # , nsb_db_addr):
         self.handle = Contract(host_addr, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
-        self.prover = Prover(nsb_db_addr)
+        self.web3 = self.handle.web3
+        self.address = self.handle.address
+        print("test, so not linking to", eth_db_addr)
+        # self.prover = Prover(eth_db_addr)
         pass
 
-    def getQueuePointer(self):
-        # print(HexBytes(web3h.eth.getStorageAt(addr, ask_string)).hex())
-        pass
+    def getQueueR(self):
+        # return Queue[L,R) 's R
+        return self.web3.eth.getStorageAt(self.address, SLOT_WAITING_QUEUE)
+
+    def getQueueL(self):
+        # return Queue[L,R) 's L
+        return self.web3.eth.getStorageAt(self.address, SLOT_VOTEDPOINTER)
 
     def singleProve(self):
         pass

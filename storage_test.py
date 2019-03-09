@@ -9,7 +9,7 @@ from uiputils.eth.ethtypes import NetStatusBlockchain
 EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
 url = "http://127.0.0.1:8545"
 HTTP_HEADER = {'Content-Type': 'application/json'}
-nsb_addr = "0x85854fe3853b7A51576bFd78564Ec1993f8820d1"
+nsb_addr = "0x43710274DaADCe0D8bDFE7ae6495140eA83CDA6a"
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
 nsb_abi_addr = "./nsb/nsb.abi"
@@ -18,8 +18,11 @@ nsb_db_addr = "./nsb/actiondata"
 if __name__ == '__main__':
     web3h = ServiceStart.startweb3(url)
     # key = 0
-    nsbt = NetStatusBlockchain(url, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
+    nsbt = NetStatusBlockchain(url, nsb_addr, nsb_abi_addr, EDB_PATH, nsb_bytecode_addr)
     nsb = nsbt.handle
+
+    print(JsonRPC.send(url, HTTP_HEADER, JsonRPC.ethGetProof(nsb_addr, ["0x0"], "latest"))
+          ['result']['storageProof'][0]['value'])
 
     print(nsb.funcs())
 
