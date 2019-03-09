@@ -150,3 +150,9 @@ class NetStatusBlockchain:
 
     def exec(self, contract):
         pass
+
+    # def DiscreateTimer() override:
+
+    # def CloseureWatching():
+
+    # def CloseureClaim():
