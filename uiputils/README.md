@@ -41,7 +41,7 @@ from uiputils.eth import Contract
 
 The constructor doesn't deploy the contract. If the contract has been deployed, you can use the following functions.
 
-##### attribute functions
+##### property functions
 
 an object of the functions in contract abi.
 
@@ -56,9 +56,9 @@ function call() helps execute the function.
 
 ##### attribute web3
 
-##### attribute abi
+##### property abi
 
-##### attribute bytecode
+##### property bytecode
 
 ##### function funcs(void)
 
@@ -75,6 +75,62 @@ return all the functions in contract abi
 >>> nsb.func('isOwner', Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2"))
 False
 ```
+
+## Class Network Status Blockchain
+
+##### attribute handle
+
+##### attribute web3
+
+##### attribute prover
+
+##### attribute proof_pool
+
+##### attribute action_pool
+
+##### property address
+
+##### property tx
+
+##### function getMekleProofByHash
+
+##### function getMerkleProofByNumber
+
+todo.
+
+##### function watchProofPool
+
+##### function proveProofs
+
+##### function addAction
+
+##### function getAction
+
+##### function verifyAction
+
+##### function validMerkleProoforNot
+
+##### function getValidMerkleProof
+
+##### function blockHeight
+
+todo
+
+##### function ownerVoted
+
+todo
+
+##### function start
+
+todo
+
+##### function stop
+
+todo
+
+##### function exec
+
+todo
 
 ## Load Files
 
@@ -181,7 +237,7 @@ print(adder(1,2))
 
 the class of `string` (Golang) in C.
 
-##### attribute Type
+##### property Type
 
 return the type of GoString in C for setting the go-cDLL functions' arguments and results.
 
@@ -221,7 +277,7 @@ print(caster(1,GoString.fromstr("0x11e91152ab237ceff29728c03999ef2debadd7db0fc45
 
 the class of `string`(Golang) in C.
 
-##### attribute Type
+##### property Type
 
 return the type of GoStringSlice in C for setting the go-cDLL functions' arguments and results.
 
@@ -233,7 +289,7 @@ cast the stringlist in python to the `[]string` (Golang) in C.
 
 the class of `[]Byte`(Golang) in C.
 
-##### attribute Type
+##### property Type
 
 return the type of GoBytes in C for setting the go-cDLL functions' arguments and results.
 
