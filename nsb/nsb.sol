@@ -24,22 +24,22 @@ contract NetworkStatusBlockChain {
     
     // The MerkleProofTree
     // keccak256(string + storagehash + key + value) maps to MerkleProof
-    bytes32[] public waitingVerifyProof;
+    bytes32[] public waitingVerifyProof; // slot 0
     // corresponding valid votes' number
-    uint32[] public validCount;
+    uint32[] public validCount; // slot 1
     // corresponding votes' number
-    uint32[] public votedCount;
+    uint32[] public votedCount; // slot 2
     // keccakhash of MerkleProof mapsto index of MerkleProof in waitingVerifyProof
-    mapping (bytes32 => uint32) public proofPointer;
+    mapping (bytes32 => uint32) public proofPointer; // slot 3
     // if owner voted
-    mapping (address => mapping (bytes32 => bool)) ownerVoted;
+    mapping (address => mapping (bytes32 => bool)) ownerVoted; // slot 4
     // remained verifying MerkleProofs range [votedPointer, waitingVerifyProof.length)
-    uint32 votedPointer;
+    uint32 votedPointer; // slot 5
 
     // all the MerkleProofs on the contract
-    mapping (bytes32 => MerkleProof) public MerkleProofTree;
+    mapping (bytes32 => MerkleProof) public MerkleProofTree; // slot 6
     // if the MerkleProof Atte is valid, verifiedMerkleProof[Atte] == true
-    mapping (bytes32 => bool) public verifiedMerkleProof;
+    mapping (bytes32 => bool) public verifiedMerkleProof; // slot 7
 
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree;

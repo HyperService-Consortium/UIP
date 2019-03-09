@@ -2,6 +2,8 @@
 from .loadfile import FileLoad
 from .startservice import ServiceStart
 from hexbytes import HexBytes
+from .tools import Prover
+# import time
 
 class Contract:
     # return a contract that can transact with web3
@@ -38,8 +40,18 @@ class Contract:
 
 class NetStatusBlockchain:
     # Prot NSB in uip
-    def __init__(self, host_addr, nsb_addr, nsb_abi_addr, nsb_bytecode_addr=None):
+    def __init__(self, host_addr, nsb_addr, nsb_abi_addr, nsb_db_addr, nsb_bytecode_addr=None):
         # , nsb_db_addr):
         self.handle = Contract(host_addr, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
-        # self.db = plyvel.levelDB(nsb_db_addr, create_if_exists=True)
+        self.prover = Prover(nsb_db_addr)
+        pass
+
+    def getQueuePointer(self):
+        # print(HexBytes(web3h.eth.getStorageAt(addr, ask_string)).hex())
+        pass
+
+    def singleProve(self):
+        pass
+
+    def work(self, work_time):
         pass

@@ -1,9 +1,11 @@
-
 from ctypes import CDLL
 from uiputils.gotypes import GoString, GoInt32, GoStringSlice, GolevelDBptr
+from eth_hash.auto import keccak
+from uiputils.cast import fillbytes32, catbytes32
 
 PROVER_PATH = "./uiputils/include/verifyproof.dll"
 ENC = "utf-8"
+MOD256 = (1 << 256) - 1
 
 funcs = CDLL(PROVER_PATH)
 
@@ -39,3 +41,19 @@ class Prover:
         path = GoStringSlice.fromstrlist(storagepath, ENC)
 
         funcs.VerifyProof(self.ethdb, hashptr, keyptr, valptr, path, len(storagepath))
+
+
+def slicelocation32(bytesslot, index, element_size):
+    return catbytes32(bytes((int(keccak(bytesslot)) + (index * element_size))))
+
+
+def slicelocation(slot, index, element_size):
+    return catbytes32(bytes(int(keccak(fillbytes32(slot))) + (index * element_size)))
+
+
+def maplocation64(bytesslot, byteskey):
+    return keccak(bytesslot + byteskey)
+
+
+if __name__ == '__main__':
+    print(slicelocation())
