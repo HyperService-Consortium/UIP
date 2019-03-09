@@ -1,22 +1,46 @@
 
 from uiputils.eth import ServiceStart
-from uiputils.cast import uint32hexstring
 from web3 import Web3
-from eth_hash.auto import keccak
-from hexbytes import  HexBytes
+from uiputils.eth import JsonRPC
+from hexbytes import HexBytes
+from uiputils.eth.tools import slicelocation, maplocation
+from uiputils.eth.ethtypes import NetStatusBlockchain
 
-addr = Web3.toChecksumAddress("0x85854fe3853b7a51576bfd78564ec1993f8820d1")
+EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
+url = "http://127.0.0.1:8545"
+HTTP_HEADER = {'Content-Type': 'application/json'}
+nsb_addr = "0x85854fe3853b7A51576bFd78564Ec1993f8820d1"
+# ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
-
-
-
+nsb_abi_addr = "./nsb/nsb.abi"
+nsb_bytecode_addr = "./nsb/nsb.bin"
+nsb_db_addr = "./nsb/actiondata"
 if __name__ == '__main__':
-    web3h = ServiceStart.startweb3('http://127.0.0.1:8545')
+    web3h = ServiceStart.startweb3(url)
     # key = 0
-    ask_string = HexBytes(keccak(HexBytes(uint32hexstring(0))+HexBytes(uint32hexstring(32)))).hex()
-    print(ask_string)
-    # key = 0x29...
-    print(HexBytes(web3h.eth.getStorageAt(addr, ask_string)).hex())
+    nsbt = NetStatusBlockchain(url, nsb_addr, nsb_abi_addr, nsb_bytecode_addr)
+    nsb = nsbt.handle
 
-# 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-# 0xb1b278718f96e5394d19dcec6fb533b19e1d47c5d05b9411f37eed2f7b10f5c2
+    print(nsb.funcs())
+
+    print(HexBytes(nsb.func('waitingVerifyProof', 1)).hex())
+
+    ask_string = HexBytes(slicelocation(0, 1, 1)).hex()
+    print("cac", ask_string)
+    # key = 0x29...
+
+    print(JsonRPC.send(url, HTTP_HEADER, JsonRPC.ethGetProof(nsb_addr, [ask_string], "latest"))
+          ['result']['storageProof'][0]['value'])
+    print(HexBytes(web3h.eth.getStorageAt(nsb_addr, ask_string)).hex())
+
+    # hash of proof[1] = 0xe0b1f574a33e073946d003d8ab3727dd80ccac1d718e04e168b5f0a564e6b4bc
+
+    print(nsb.func('proofPointer', "e0b1f574a33e073946d003d8ab3727dd80ccac1d718e04e168b5f0a564e6b4bc"))
+
+    ask_string = HexBytes(maplocation(3, "e0b1f574a33e073946d003d8ab3727dd80ccac1d718e04e168b5f0a564e6b4bc")).hex()
+    print("cac", ask_string)
+    # key = 0x29...
+
+    print(JsonRPC.send(url, HTTP_HEADER, JsonRPC.ethGetProof(nsb_addr, [ask_string], "latest"))
+          ['result']['storageProof'][0]['value'])
+    print(HexBytes(web3h.eth.getStorageAt(nsb_addr, ask_string)).hex())
