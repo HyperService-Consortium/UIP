@@ -1,7 +1,7 @@
 from ctypes import CDLL
 from uiputils.gotypes import GoString, GoInt32, GoStringSlice, GolevelDBptr
 from eth_hash.auto import keccak
-from uiputils.cast import fillbytes32, catbytes32, bytestoint, fillint32, transbytes32, transint
+from uiputils.cast import fillbytes32, catbytes32, bytestoint, fillint32, transbytes32, catint32, transint
 from uiputils import INCLUDE_PATH
 from hexbytes import HexBytes
 # from sys import path as loadpathlist
@@ -32,7 +32,7 @@ class Prover:
     def close(self):
         funcs.closeDB(self.ethdb)
 
-    def verify(self, key, val, storagehash, storagepath):
+    def verifyhaspath(self, key, val, storagehash, storagepath):
         keyptr = GoString.trans(key, ENC)
         if keyptr == 'error':
             raise TypeError("key-type needs str or bytes, but get", key.__class__)
@@ -49,13 +49,33 @@ class Prover:
 
         funcs.VerifyProof(self.ethdb, hashptr, keyptr, valptr, path, len(storagepath))
 
+    def verify(self, merkleproof):
+        keyptr = GoString.trans(merkleproof.key, ENC)
+        if keyptr == 'error':
+            raise TypeError("key-type needs str or bytes, but get", merkleproof.key.__class__)
+
+        valptr = GoString.trans(merkleproof.value, ENC)
+        if valptr == 'error':
+            raise TypeError("val-type needs str or bytes, but get", merkleproof.value.__class__)
+
+        hashptr = GoString.trans(merkleproof.storagehash, ENC)
+        if hashptr == 'error':
+            raise TypeError("storageHash-type needs str or bytes, but get", merkleproof.storagehash.__class__)
+
+        print("TODO of verify")
+        # funcs.VerifyProof(self.ethdb, hashptr, keyptr, valptr, path, len(storagepath))
+
 
 def sliceloc32(bytesslot, index, element_size):
-    return catbytes32(fillint32(bytestoint(keccak(bytesslot)) + (index * element_size)))
+    return catint32(bytestoint(keccak(bytesslot)) + (index * element_size))
 
 
 def sliceloc(bytesslot, index, element_size):
-    return catbytes32(fillint32(bytestoint(keccak(fillbytes32(bytesslot))) + (index * element_size)))
+    return catint32(bytestoint(keccak(fillbytes32(bytesslot))) + (index * element_size))
+
+
+def slicelocbyint(intslot, index, element_size):
+    return catint32(bytestoint(keccak(fillint32(intslot))) + (index * element_size))
 
 
 def slicelocation(slot, index, element_size):
@@ -72,6 +92,27 @@ def maploc(bytesslot, byteskey):
 
 def maplocation(slot, key):
     return keccak(transbytes32(key) + transbytes32(slot))
+
+
+# the var of bytestoint(keccak(fillint32(SLOT_WAITING_QUEUE)))
+POS_WAITING_QUEUE = 18569430475105882587588266137607568536673111973893317399460219858819262702947
+POS_MERKLEPROOFTREE = b'\x00'*31 + b'\x06'
+
+
+class LocationTransLator(object):
+    # calculate varible's location of NSB
+
+    @staticmethod
+    def queueloc(index):
+        return catint32(POS_WAITING_QUEUE + index)
+
+    @staticmethod
+    def merkleloc(keccakhash):
+        return keccak(keccakhash + POS_MERKLEPROOFTREE)
+
+    slicesto = slicelocation
+
+    mapsto = maplocation
 
 
 if __name__ == '__main__':
