@@ -1,11 +1,18 @@
 from ctypes import CDLL
 from uiputils.gotypes import GoString, GoInt32, GoStringSlice, GolevelDBptr
 from eth_hash.auto import keccak
-from uiputils.cast import fillbytes32, catbytes32, bytestoint, fillint32, transbytes32, catint32, transint
+from uiputils.cast import (
+    fillbytes32,
+    catbytes32,
+    bytestoint,
+    fillint32,
+    transbytes32,
+    catint32,
+    transint
+)
 from uiputils import INCLUDE_PATH
 from hexbytes import HexBytes
 # from sys import path as loadpathlist
-from os import path as parsepath
 # if pathofinclude not in loadpathlist:
 #     loadpathlist.append(pathofinclude)
 # print("\n".join(loadpathlist))

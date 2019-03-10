@@ -1,10 +1,7 @@
 
 import uiputils.eth as eth
-from uiputils.eth import JsonRPC
-import time
 from hexbytes import HexBytes
 from uiputils.cast import uint64hexstring
-from eth_hash.auto import keccak
 import sys
 print(sys.path)
 

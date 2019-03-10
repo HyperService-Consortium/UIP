@@ -4,6 +4,7 @@
 from hexbytes import HexBytes
 from functools import partial
 
+MOD512 = (1 << 512) - 1
 MOD256 = (1 << 256) - 1
 MOD8 = (1 << 8) - 1
 
@@ -157,7 +158,7 @@ def fillint64(integer):
 
 
 def catint(integer, length):
-    return (integer & MOD256).to_bytes(length=length, byteorder="big")
+    return (integer & ((1 << (length << 3)) - 1)).to_bytes(length=length, byteorder="big")
 
 
 def catint32(integer):
@@ -165,7 +166,18 @@ def catint32(integer):
 
 
 def catint64(integer):
-    return (integer & MOD256).to_bytes(length=64, byteorder="big")
+    return (integer & MOD512).to_bytes(length=64, byteorder="big")
+
+
+def transbytes(anytype, length):
+    if isinstance(anytype, int):
+        return catstring(hex(anytype), length)
+    elif isinstance(anytype, str):
+        return catstring(anytype, length)
+    elif isinstance(anytype, bytes):
+        return catbytes(anytype, length)
+    else:
+        raise TypeError("Unexpected Type when translating element to bytes32", anytype.__class__)
 
 
 def transbytes32(anytype):
@@ -179,6 +191,20 @@ def transbytes32(anytype):
         raise TypeError("Unexpected Type when translating element to bytes32", anytype.__class__)
 
 
+def transbytes64(anytype):
+    if isinstance(anytype, int):
+        return catstring64(hex(anytype))
+    elif isinstance(anytype, str):
+        return catstring64(anytype)
+    elif isinstance(anytype, bytes):
+        return catbytes64(anytype)
+    else:
+        raise TypeError("Unexpected Type when translating element to bytes64", anytype.__class__)
+
+
+bytestoint = partial(int.from_bytes, byteorder="big")
+
+
 def transint(anytype):
     if isinstance(anytype, int):
         return anytype
@@ -190,7 +216,166 @@ def transint(anytype):
         raise TypeError("Unexpected Type when translating element to int")
 
 
-bytestoint = partial(int.from_bytes, byteorder="big")
+class Cast(object):
+    # use arbi.func(obj, len)
+    tostring = uintxstring
+
+    tohexstring = uintxhexstring
+
+    toint = transint
+
+    tointfrombytes = bytestoint
+
+    tobytes = transbytes
+
+    tobytesfrombytes = catbytes
+
+    tobytesfromstring = catstring
+
+    tobytesfromint = catint
+
+
+class Cast32(object):
+    # use Cast32.func(obj)
+    tostring = uint32string
+
+    tohexstring = uint32hexstring
+
+    toint = transint
+
+    tointfrombytes = bytestoint
+
+    tobytes = transbytes32
+
+    tobytesfrombytes = catbytes32
+
+    tobytesfromstring = catstring32
+
+    tobytesfromint = catint32
+
+
+class Cast64(object):
+    # use Cast64.func(obj)
+    tostring = uint64string
+
+    tohexstring = uint64hexstring
+
+    toint = transint
+
+    tointfrombytes = bytestoint
+
+    tobytes = transbytes64
+
+    tobytesfrombytes = catbytes64
+
+    tobytesfromstring = catstring64
+
+    tobytesfromint = catint64
+
+
+class Mult(object):
+    # use Must.cast(len, objs)
+    @staticmethod
+    def tostring(length, *args):
+        return [uintxstring(obj, length) for obj in args]
+
+    @staticmethod
+    def tohexstring(length, *args):
+        return [uintxhexstring(obj, length) for obj in args]
+
+    @staticmethod
+    def toint(*args):
+        return [transint(obj) for obj in args]
+
+    @staticmethod
+    def tointfrombytes(*args):
+        return [bytestoint(obj) for obj in args]
+
+    @staticmethod
+    def tobytes(length, *args):
+        return [transbytes(obj, length) for obj in args]
+
+    @staticmethod
+    def tobytesfrombytes(length, *args):
+        return [catbytes(obj, length) for obj in args]
+
+    @staticmethod
+    def tobytesfromstring(length, *args):
+        return [catstring(obj, length) for obj in args]
+
+    @staticmethod
+    def tobytesfromint(length, *args):
+        return [catint(obj, length) for obj in args]
+
+
+class Mult32(object):
+    # use Mult32.cast(objs)
+    @staticmethod
+    def tostring(*args):
+        return [uint32string(obj) for obj in args]
+
+    @staticmethod
+    def tohexstring(*args):
+        return [uint32hexstring(obj) for obj in args]
+
+    @staticmethod
+    def toint(*args):
+        return [transint(obj) for obj in args]
+
+    @staticmethod
+    def tointfrombytes(*args):
+        return [bytestoint(obj) for obj in args]
+
+    @staticmethod
+    def tobytes(*args):
+        return [transbytes32(obj) for obj in args]
+
+    @staticmethod
+    def tobytesfrombytes(*args):
+        return [catbytes32(obj) for obj in args]
+
+    @staticmethod
+    def tobytesfromstring(*args):
+        return [catstring32(obj) for obj in args]
+
+    @staticmethod
+    def tobytesfromint(*args):
+        return [catint32(obj) for obj in args]
+
+
+class Mult64(object):
+    # use Mult64.cast(objs)
+    @staticmethod
+    def tostring(*args):
+        return [uint64string(obj) for obj in args]
+
+    @staticmethod
+    def tohexstring(*args):
+        return [uint64hexstring(obj) for obj in args]
+
+    @staticmethod
+    def toint(*args):
+        return [transint(obj) for obj in args]
+
+    @staticmethod
+    def tointfrombytes(*args):
+        return [bytestoint(obj) for obj in args]
+
+    @staticmethod
+    def tobytes(*args):
+        return [transbytes64(obj) for obj in args]
+
+    @staticmethod
+    def tobytesfrombytes(*args):
+        return [catbytes64(obj) for obj in args]
+
+    @staticmethod
+    def tobytesfromstring(*args):
+        return [catstring64(obj) for obj in args]
+
+    @staticmethod
+    def tobytesfromint(*args):
+        return [catint64(obj) for obj in args]
 
 
 if __name__ == '__main__':
