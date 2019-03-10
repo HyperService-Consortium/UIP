@@ -2,7 +2,7 @@
 
 ## JSON-RPC
 
-start with:
+Start with:
 
 ```python
 from uiputils.eth import JsonRPC
@@ -162,7 +162,7 @@ see the [sample 1](#Sample-One)
             break
 ```
 
-result:
+Result:
 
 ```json
 {
@@ -188,6 +188,8 @@ result:
     query = JsonRPC.ethGetBlockByHash("0xfcaa6554604880ef255d502c542d8d66adb3358369cd3c81f3862615dd8d02a5", False)
     print(JsonRPC.send(query, HTTP_HEADER, host))
 ```
+
+Result:
 
 ```json
 {
@@ -218,11 +220,9 @@ result:
 }
 ```
 
-
-
 ## Class Contract
 
-start with:
+Start with:
 
 ```python
 from uiputils.eth import Contract
@@ -230,13 +230,13 @@ from uiputils.eth import Contract
 
 ##### constructor(
 
-##### web3handle,
+#####     web3_handle,
 
-##### contract address="",
+#####     contract_address="",
 
-##### contract abi/contract abi address=None,
+#####     contract_abi/contract_abi_dir=None,
 
-##### contract bytecode/contract bytecode address=None
+#####     contract_bytecode/contract bytecode_dir=None
 
 ##### )
 
@@ -244,33 +244,43 @@ The constructor doesn't deploy the contract. If the contract has been deployed, 
 
 ##### property functions
 
-an object of the functions in contract abi.
+An object of the functions in contract abi.
 
 ```python
 >>> nsb.functions.isOwner(Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")).call()
 False
 ```
 
-function call() helps execute the function.
+Function call() helps execute the function.
 
 ##### attribute address
 
+The address where the contract deployed at. 
+
 ##### attribute web3
+
+The RPC-host which control the blockchain that the contract belongs to.
 
 ##### property abi
 
+All the methods that the contract provides.
+
 ##### property bytecode
+
+The .bin file content of the contract's code.
 
 ##### function funcs(void)
 
-return all the functions in contract abi
+Return all the functions in the contract abi.
 
 ```python
 >>> nsb.funcs()
 [<Function addAction(bytes32,bytes32,bytes32)>, ...]
 ```
 
-##### function func(string functions name, *args)
+##### function func(string function_name, *args)
+
+Execute the function in the contract abi.
 
 ```python
 >>> nsb.func('isOwner', Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2"))
