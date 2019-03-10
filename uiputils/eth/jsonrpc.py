@@ -1,5 +1,6 @@
 
-import json, requests
+import json
+import requests
 
 
 class JsonRPC(object):
@@ -174,9 +175,41 @@ class JsonRPC(object):
                 }
 
     @staticmethod
-    def send(url, hed, dat):
-        response = requests.post(url, headers=hed, data=json.dumps(dat))
+    def send(dat, hed, host='http://127.0.0.1:8545'):
+        response = requests.post(host, headers=hed, data=json.dumps(dat))
         if response.status_code != 200 or 'error' in response.json():
             print(json.dumps(dat))
             raise Exception(response.json())
         return response.json()
+
+
+if __name__ == '__main__':
+    host = 'http://127.0.0.1:8545'
+    HTTP_HEADER = {'Content-Type': 'application/json'}
+
+    '''Sample One
+    transaction = {
+        "from": "0x7019fa779024c0a0eac1d8475733eefe10a49f3b",
+        "to": "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e",
+        "gas": "0x40000",
+        "value": "0x20"
+    }
+    packet_transaction = JsonRPC.ethSendTransaction(transaction)
+    tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, host)
+    tx_hash = tx_response['result']
+    query = JsonRPC.ethGetTransactionReceipt(tx_hash)
+
+    import time
+    while True:
+        time.sleep(1)
+        tx_result = JsonRPC.send(query, HTTP_HEADER, host)
+        if tx_result['result'] is None:
+            continue
+        else:
+            print(tx_result['result'])
+            break
+    '''
+    '''Sample Two
+    query = JsonRPC.ethGetBlockByHash("0xfcaa6554604880ef255d502c542d8d66adb3358369cd3c81f3862615dd8d02a5", False)
+    print(JsonRPC.send(query, HTTP_HEADER, host))
+    '''

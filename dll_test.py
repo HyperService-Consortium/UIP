@@ -1,7 +1,6 @@
 
 import uiputils.eth as eth
 from hexbytes import HexBytes
-from uiputils.cast import uint64hexstring
 import sys
 print(sys.path)
 
