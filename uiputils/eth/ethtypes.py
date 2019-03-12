@@ -156,3 +156,4 @@ class NetStatusBlockchain:
     # def CloseureWatching():
 
     # def CloseureClaim():
+
