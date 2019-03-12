@@ -291,7 +291,7 @@ False
 
 ##### attribute handle
 
-the NSB's [contract][#Class-Contract] on the blockchain. 
+the NSB's [contract](#Class-Contract) on the blockchain. 
 
 ##### attribute web3
 
@@ -371,7 +371,7 @@ match the `key` on the Storage Trie whose root-hash is `storagehash`. If the Mer
 
 ##### function verify(string key, MerkleProof merkleproof)
 
-See the details of class [MerkleProof][#Class-MerkleProof].
+See the details of class [MerkleProof](#Class-MerkleProof).
 
 match the `merkleproof.key` on the Storage Trie whose root-hash is `merkleproof.storagehash`. If the Merkle Proof is proved, return `0`. If the key doesn't exists, return `1`. If the value of key does not equal to `merkleproof.value`, return `2`.
 
