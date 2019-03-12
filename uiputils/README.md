@@ -230,28 +230,15 @@ from uiputils.eth import Contract
 
 ##### constructor(
 
-#####     web3_handle,
+#####     class web3_handle,
 
-#####     contract_address="",
+#####     string contract_address="",
 
-#####     contract_abi/contract_abi_dir=None,
+#####     list contract_abi/contract_abi_dir=None,
 
-#####     contract_bytecode/contract bytecode_dir=None
+#####     string contract_bytecode/contract bytecode_dir=None
 
 ##### )
-
-The constructor doesn't deploy the contract. If the contract has been deployed, you can use the following functions.
-
-##### property functions
-
-An object of the functions in contract abi.
-
-```python
->>> nsb.functions.isOwner(Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")).call()
-False
-```
-
-Function call() helps execute the function.
 
 ##### attribute address
 
@@ -268,6 +255,19 @@ All the methods that the contract provides.
 ##### property bytecode
 
 The .bin file content of the contract's code.
+
+The constructor doesn't deploy the contract. If the contract has been deployed, you can use the following functions.
+
+##### property functions
+
+An object of the functions in contract abi.
+
+```python
+>>> nsb.functions.isOwner(Web3.toChecksumAddress("0xe1300d8ea0909faa764c316436ad0ece571f62b2")).call()
+False
+```
+
+Function call() helps execute the function.
 
 ##### function funcs(void)
 
@@ -289,6 +289,24 @@ False
 
 ## Class Network Status Blockchain
 
+##### constructor(
+
+##### string owner_addr,
+
+##### url host,
+
+##### string nsb_addr
+
+##### string nsb_abi_dir
+
+##### string eth_dr_dir
+
+##### string gasuse=hex(400000)
+
+##### string nsb_bytecode_dir=None
+
+##### )
+
 ##### attribute handle
 
 the NSB's [contract](#Class-Contract) on the blockchain. 
@@ -299,7 +317,7 @@ Read the document [Web3.py](Web3.py) to know all the method of web3.
 
 ##### attribute prover
 
-the [prover][#Class-Prover] provides the methods to verify Merkle Proof.
+the [prover](#Class-Prover) provides the methods to verify Merkle Proof.
 
 ##### attribute proof_pool
 
@@ -307,7 +325,18 @@ the [prover][#Class-Prover] provides the methods to verify Merkle Proof.
 
 ##### property address
 
+the contract address of NSB.
+
 ##### property tx
+
+the transaction informaiton. It will be initialized like:
+
+```python
+self.tx = {
+    "from": owner_addr
+    "gas": gas_use
+}
+```
 
 ##### function getMekleProofByHash
 
