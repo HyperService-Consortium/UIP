@@ -51,9 +51,9 @@ SLOT_MERKLEPROOFTREE = 6
 
 class NetStatusBlockchain:
     # Prot NSB in uip
-    def __init__(self, owner_addr, host_addr, nsb_addr, nsb_abi_dir, eth_db_dir="", gasuse=hex(400000), nsb_bytecode_dir=None):
+    def __init__(self, owner_addr, host, nsb_addr, nsb_abi_dir, eth_db_dir="", gasuse=hex(400000), nsb_bytecode_dir=None):
         # , nsb_db_addr):
-        self.handle = Contract(host_addr, nsb_addr, nsb_abi_dir, nsb_bytecode_dir)
+        self.handle = Contract(host, nsb_addr, nsb_abi_dir, nsb_bytecode_dir)
         self.web3 = self.handle.web3
         self.address = self.handle.address
         self.pf_pool = {}

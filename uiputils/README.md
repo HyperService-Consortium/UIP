@@ -230,15 +230,31 @@ from uiputils.eth import Contract
 
 ##### constructor(
 
-#####     web3_handle,
+#####     class web3_handle,
 
-#####     contract_address="",
+#####     string contract_address="",
 
-#####     contract_abi/contract_abi_dir=None,
+#####     list contract_abi/contract_abi_dir=None,
 
-#####     contract_bytecode/contract bytecode_dir=None
+#####     string contract_bytecode/contract bytecode_dir=None
 
 ##### )
+
+##### attribute address
+
+The address where the contract has been deployed at. 
+
+##### attribute web3
+
+The RPC-host which controls the blockchain that the contract belongs to.
+
+##### property abi
+
+All the methods that the contract provides.
+
+##### property bytecode
+
+The .bin file content of the contract's code.
 
 The constructor doesn't deploy the contract. If the contract has been deployed, you can use the following functions.
 
@@ -252,22 +268,6 @@ False
 ```
 
 Function call() helps execute the function.
-
-##### attribute address
-
-The address where the contract deployed at. 
-
-##### attribute web3
-
-The RPC-host which control the blockchain that the contract belongs to.
-
-##### property abi
-
-All the methods that the contract provides.
-
-##### property bytecode
-
-The .bin file content of the contract's code.
 
 ##### function funcs(void)
 
@@ -289,11 +289,35 @@ False
 
 ## Class Network Status Blockchain
 
+##### constructor(
+
+##### string owner_addr,
+
+##### url host,
+
+##### string nsb_addr
+
+##### string nsb_abi_dir
+
+##### string eth_dr_dir
+
+##### string gasuse=hex(400000)
+
+##### string nsb_bytecode_dir=None
+
+##### )
+
 ##### attribute handle
+
+the NSB's [contract](#Class-Contract) on the blockchain. 
 
 ##### attribute web3
 
+Read the document [Web3.py](Web3.py) to know all the method of web3.
+
 ##### attribute prover
+
+the [prover](#Class-Prover) provides the methods to verify Merkle Proof.
 
 ##### attribute proof_pool
 
@@ -301,7 +325,18 @@ False
 
 ##### property address
 
+the contract address of NSB.
+
 ##### property tx
+
+the transaction informaiton. It will be initialized like:
+
+```python
+self.tx = {
+    "from": owner_addr
+    "gas": gas_use
+}
+```
 
 ##### function getMekleProofByHash
 
@@ -343,9 +378,55 @@ todo
 
 todo
 
+## Class Prover
+
+Start with:
+
+```python
+from uiputils.eth.tools import Prover
+```
+
+##### constructor(string eth_db_path)
+
+The prover open the ethereum-database to get MPT-nodes (so if the terminal where the NSB is deployed is not a full node, Prover doesn't work).
+
+##### function close()
+
+close the ethdb that the prover opened.
+
+##### function verifyWithPath(string key, string val, string storagehash, string[] storagepath)
+
+match the `key` on the Storage Trie whose root-hash is `storagehash`. If the Merkle Proof is proved, return `0`  If the key doesn't exists, return `1`. If the value of key does not equal to `val`, return `2`. If the path differs with `storagepath`, return `3`.
+
+##### function verify(string key, MerkleProof merkleproof)
+
+See the details of class [MerkleProof](#Class-MerkleProof).
+
+match the `merkleproof.key` on the Storage Trie whose root-hash is `merkleproof.storagehash`. If the Merkle Proof is proved, return `0`. If the key doesn't exists, return `1`. If the value of key does not equal to `merkleproof.value`, return `2`.
+
+## Class MerkleProof
+
+##### constructor(string blockchain, byte32 storagehash, byte32 key, byte32 value)
+
+##### attribute blockchain
+
+The name of blockchain where the MerkleProof exists.
+
+##### attribute storagehash
+
+The roothash of the Storage Trie
+
+##### attribute key
+
+The key which the MerkleProof proved.
+
+##### attribute value
+
+The value of the key.
+
 ## Load Files
 
-start with:
+Start with:
 
 ```python
 from uiputils.eth import FileLoad
@@ -509,3 +590,4 @@ return the type of GoBytes in C for setting the go-cDLL functions' arguments and
 cast the bytes in python to the `[]byte` (Golang) in C.
 
 [JSON-RPC]: https://github.com/ethereum/wiki/wiki/JSON-RPC
+[Web3.py]:https://web3py.readthedocs.io/en/stable/index.html
