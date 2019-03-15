@@ -5,6 +5,8 @@ from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
 from .uiperror import InitializeError, GenerateError
 
+from uiputils.eth.ethtypes import Transaction as eth_tx
+from uiputils.config import eth_blockchain_info
 class BlockchainNetwork:
     def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
         self.identifer = identifer
@@ -203,19 +205,38 @@ class TransactionIntent:
 
     def PaymentTxGenerate(self, op_intent, intent_tx):
         transactions = []
-        chain_type = op_intent.src['domain'].split('://')[0]
-        chain_type = op_intent.dst['domain'].split('://')[0]
-        print("The src-chain type is", chain_type)
-        print("The dst-chain type is", chain_type)
-        if chain_type == 'Ethereum':
-            pass
-        else:
-            raise GenerateError("unsupported chain-type: " + chain_type)
-        self.intents.append(op_intent)
+        src_chain_type, src_chain_id = op_intent.src['domain'].split('://')
+        dst_chain_type, dst_chain_id = op_intent.dst['domain'].split('://')
 
-        intent_tx[op_intent.name] = transactions
+        if src_chain_type == "Ethereum":
+            transactions.append(eth_tx(
+                "transfer",  # transaction type
+                src_chain_id,  # chain_id
+                eth_blockchain_info[src_chain_id]['user'][op_intent.src['user_name']],
+                eth_blockchain_info[src_chain_id]['relay'],  # dst_addr
+                op_intent.amount,  # fund
+                op_intent.unit  # fund_unit
+            ))
+        else:
+            raise GenerateError("unsupported chain-type: " + src_chain_type)
+
+        if dst_chain_type == "Ethereum":
+            transactions.append(eth_tx(
+                "transfer",  # transaction type
+                dst_chain_id,  # chain_id
+                eth_blockchain_info[dst_chain_id]['user'][op_intent.dst['user_name']],  # src_addr
+                eth_blockchain_info[dst_chain_id]['relay'],  # dst_addr
+                op_intent.amount,  # fund
+                op_intent.unit  # fund_unit
+            ))
+        else:
+            raise GenerateError("unsupported chain-type: " + src_chain_type)
+        self.intents += transactions
+
+        intent_tx[op_intent.name] = [len(self.intents) - 2, len(self.intents) - 1]
 
     def ContractInvocationTxGenerate(self, op_intent, intent_tx):
+        print(op_intent.__dict__)
         self.intents.append(op_intent)
         transactions = [op_intent]
         intent_tx[op_intent.name] = transactions

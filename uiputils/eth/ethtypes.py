@@ -6,9 +6,31 @@ from uiputils.cast import bytestoint, catint32
 from .tools import Prover, LocationTransLator
 from collections import namedtuple
 # import time
-
-
+from uiputils.config import eth_blockchain_info as blockchain_info
+from uiputils.config import eth_unit_factor as unit_factor
+from web3 import Web3
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
+
+
+class Transaction:
+    def __init__(self, transaction_type, *args):
+        self.chain_host = ""
+        self.tx_info = {}
+        getattr(self, transaction_type + 'Init')(*args)
+
+    def transferInit(self, chain_id, src_addr, dst_addr, fund, fund_unit):
+        self.chain_host = blockchain_info[chain_id]['host']
+        self.tx_info = {
+            'trans_type': 'transfer',
+            'chain': chain_id,
+            'source': Web3.toChecksumAddress(src_addr),
+            'dst': Web3.toChecksumAddress(dst_addr),
+            'fund': hex(fund * unit_factor[fund_unit]),
+            'unit': 'wei'
+        }
+
+    def __str__(self):
+        return 'chain_host: ' + str(self.chain_host) + '    transaction_intent: ' + str(self.tx_info)
 
 
 class Contract:
