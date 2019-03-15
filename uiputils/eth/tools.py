@@ -10,7 +10,7 @@ from uiputils.cast import (
     catint32,
     transint
 )
-from uiputils import INCLUDE_PATH
+from uiputils.config import INCLUDE_PATH
 from hexbytes import HexBytes
 # from sys import path as loadpathlist
 # if pathofinclude not in loadpathlist:

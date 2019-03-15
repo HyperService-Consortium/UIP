@@ -15,7 +15,7 @@ contract InsuranceSmartContract {
     
     struct dest {
         address addr;
-        uint256 amount;
+        uint256 amt;
     }
     
     //maybe private later
@@ -32,23 +32,31 @@ contract InsuranceSmartContract {
         _;
     }
     
-    modifier validConstructorInput(uint256 translen, uint256 addrlen, uint256 amnlen)
+    modifier validConstructorInput(uint256 translen, uint256 addrlen, uint256 amtlen)
     {
         uint256 mul6 = translen * 6;
         require(mul6 == addrlen, "no enough to-blame address list input");
-        require(mul6 == amnlen, "no enough to-blame address list input");
+        require(mul6 == amtlen, "no enough to-blame address list input");
         _;
     }
     
     constructor (address[] owners,uint[] funds,
-        bytes32[] transaction_id, address[] dest_addr, uint256[] dest_amount)
+        bytes32[] transaction_id, address[] dest_addr, uint256[] dest_amt)
     public
-    validConstructorInput(transaction_id.length, dest_addr.length, dest_amount.length)
+    validConstructorInput(transaction_id.length, dest_addr.length, dest_amt.length)
     {
         for(uint idx = 0; idx < owners.length; idx++)
         {
             require(!isowner[owners[idx]] && owners[idx] != 0, "owner exists or its address is invalid");
             ownerfunds[owners[idx]] = funds[idx];
+        }
+        for(uint idx = 0, basic_idx = 0; idx < dest_addr.length; idx += 6)
+        {
+            for(uint idy = 0; idy < 6; idy++)
+            {
+                require(isowner[dest_addr[idx + idy]], "to-blame address is not the ISC's onwer");
+
+            }
         }
     }
     

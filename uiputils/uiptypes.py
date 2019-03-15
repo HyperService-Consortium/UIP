@@ -3,6 +3,7 @@
 
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
+from .uiperror import InitializeError
 
 class BlockchainNetwork:
     def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
@@ -109,6 +110,7 @@ class VerifiableExecutionSystem:
     def stakefunded(self, isc, session_id):
         pass
 
+
 class InsuranceSmartContract:
     isc_data = {}
 
@@ -125,3 +127,62 @@ class InsuranceSmartContract:
 
     def settleContract(self, contract_id):
         pass
+
+
+class OpIntent:
+    Key_Attribute_All = ('name', 'intent_type')
+    Key_Attribute_Payment = ('amount', 'src', 'dst')
+    Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func', 'parameters')
+    Intent_Type = ('Payment', 'ContractInvocation')
+    Chain_Baseunit = {
+        'Ethereum': 'wei'
+    }
+
+    def __init__(self, intent_json):
+        self.intent_type = ""
+        for key_attr in OpIntent.Key_Attribute_All:
+            if key_attr in intent_json:
+                setattr(self, key_attr, intent_json[key_attr])
+            else:
+                raise InitializeError("the attribute " + key_attr + " must be included in the Op intent")
+
+        if self.intent_type not in OpIntent.Intent_Type:
+            raise InitializeError("unexpected intent_type: " + self.intent_type)
+
+        getattr(self, self.intent_type + 'Init')(intent_json)
+
+    def PaymentInit(self, intent_json):
+        for key_attr in OpIntent.Key_Attribute_Payment:
+            if key_attr in intent_json:
+                setattr(self, key_attr, intent_json[key_attr])
+            else:
+                raise InitializeError("the attribute " + key_attr + " must be included in the Payment intent")
+        if 'unit' in intent_json:
+            setattr(self, 'unit', intent_json['unit'])
+        else:
+            setattr(self, 'unit', OpIntent.Chain_Baseunit[getattr(self, 'src')['domain_type']])
+
+    def ContractInvocationInit(self, intent_json):
+        for key_attr in OpIntent.Key_Attribute_ContractInvocation:
+            if key_attr in intent_json:
+                setattr(self, key_attr, intent_json[key_attr])
+            else:
+                raise InitializeError("the attribute " + key_attr +\
+                                      " must be included in the ContractInvocation intent")
+        # "contract_addr": "addr",
+        #         "contract_code": "code",
+        compare_vector = ('contract_addr' not in intent_json or intent_json['contract_addr'] is None) << 1 |\
+                         ('contract_code' not in intent_json or intent_json['contract_code'] is None)
+        print(compare_vector)
+        if compare_vector == 3:
+            raise InitializeError("only one of contract_addr and contract_code can be in the ContractInvocation intent")
+        elif compare_vector == 0:
+            raise InitializeError("either contract_addr or contract_code must be in the ContractInvocation intent")
+        elif compare_vector == 2:  # code in intent
+            setattr(self, 'code', intent_json['contract_code'])
+        else:  # address in intent
+            setattr(self, 'address', intent_json['contract_addr'])
+
+
+def createopintents(op_intents_json):
+    return [OpIntent(op_intent_json) for op_intent_json in op_intents_json]
