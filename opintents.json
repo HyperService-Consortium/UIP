@@ -1,29 +1,33 @@
-[
-    {
-        "name": "Op1",
-        "intent_type": "Payment",
-        "src": {
-            "domain":"chain1",
-            "domain_type":"Ethereum",
-            "user_name": "X"
+{
+    "Op-intents": [
+        {
+            "name": "Op1",
+            "intent_type": "Payment",
+            "src": {
+                "domain":"Ethereum://chain1",
+                "user_name": "X"
+            },
+            "dst": {
+                "domain":"Ethereum://chain2",
+                "user_name": "Y"
+            },
+            "amount": 1000,
+            "unit": "wei"
         },
-        "dst": {
-            "domain":"chain2",
-            "domain_type":"Ethereum",
-            "user_name": "Y"
-        },
-        "amount": 1000,
-        "unit": "wei"
-    },
-    {
-        "intent_type": "ContractInvocation",
-        "name": "Op2",
-        "invoker": "address",
-        "contract_domain": "chain2",
-        "contract_addr": "addr",
-        "contract_code": null,
-        "func": "trans",
-        "parameters": ["arg1", "arg2", "..."]
-    }
-
-]
+        {
+            "intent_type": "ContractInvocation",
+            "name": "Op2",
+            "invoker": "address",
+            "contract_domain": "Ethereum://chain2",
+            "contract_addr": "addr",
+            "contract_code": null,
+            "func": "trans",
+            "parameters": ["arg1", "arg2", "..."]
+        }
+    ],
+    "dependencies": [{
+        "left": "Op1",
+        "right": "Op2",
+        "dep": "before"
+    }]
+}

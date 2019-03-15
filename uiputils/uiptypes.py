@@ -3,7 +3,7 @@
 
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
-from .uiperror import InitializeError
+from .uiperror import InitializeError, GenerateError
 
 class BlockchainNetwork:
     def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
@@ -134,7 +134,7 @@ class OpIntent:
     Key_Attribute_Payment = ('amount', 'src', 'dst')
     Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func', 'parameters')
     Intent_Type = ('Payment', 'ContractInvocation')
-    Chain_Baseunit = {
+    Chain_Default_Unit = {
         'Ethereum': 'wei'
     }
 
@@ -160,7 +160,8 @@ class OpIntent:
         if 'unit' in intent_json:
             setattr(self, 'unit', intent_json['unit'])
         else:
-            setattr(self, 'unit', OpIntent.Chain_Baseunit[getattr(self, 'src')['domain_type']])
+            chain_type = getattr(self, 'src')['domain'].split('://')[0]
+            setattr(self, 'unit', OpIntent.Chain_Default_Unit[chain_type])
 
     def ContractInvocationInit(self, intent_json):
         for key_attr in OpIntent.Key_Attribute_ContractInvocation:
@@ -169,11 +170,10 @@ class OpIntent:
             else:
                 raise InitializeError("the attribute " + key_attr +\
                                       " must be included in the ContractInvocation intent")
-        # "contract_addr": "addr",
-        #         "contract_code": "code",
+
         compare_vector = ('contract_addr' not in intent_json or intent_json['contract_addr'] is None) << 1 |\
                          ('contract_code' not in intent_json or intent_json['contract_code'] is None)
-        print(compare_vector)
+
         if compare_vector == 3:
             raise InitializeError("only one of contract_addr and contract_code can be in the ContractInvocation intent")
         elif compare_vector == 0:
@@ -186,3 +186,36 @@ class OpIntent:
 
 def createopintents(op_intents_json):
     return [OpIntent(op_intent_json) for op_intent_json in op_intents_json]
+
+
+class TransactionIntent:
+    def __init__(self, op_intents, dependencies):
+        self.intents = []
+        self.dependencies = []
+        intent_tx = {}
+        for op_intent in op_intents:
+            getattr(self, op_intent.intent_type + "TxGenerate")(op_intent, intent_tx)
+        for k, vs in intent_tx.items():
+            print(k)
+            for v in vs:
+                print("   ", v)
+        print(dependencies)
+
+    def PaymentTxGenerate(self, op_intent, intent_tx):
+        transactions = []
+        chain_type = op_intent.src['domain'].split('://')[0]
+        chain_type = op_intent.dst['domain'].split('://')[0]
+        print("The src-chain type is", chain_type)
+        print("The dst-chain type is", chain_type)
+        if chain_type == 'Ethereum':
+            pass
+        else:
+            raise GenerateError("unsupported chain-type: " + chain_type)
+        self.intents.append(op_intent)
+
+        intent_tx[op_intent.name] = transactions
+
+    def ContractInvocationTxGenerate(self, op_intent, intent_tx):
+        self.intents.append(op_intent)
+        transactions = [op_intent]
+        intent_tx[op_intent.name] = transactions
