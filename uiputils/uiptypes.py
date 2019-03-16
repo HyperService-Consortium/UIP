@@ -1,12 +1,16 @@
 
 'some types'
 
+import json
+
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
 from .uiperror import InitializeError, GenerateError
 
 from uiputils.eth.ethtypes import Transaction as eth_tx
 from uiputils.config import eth_blockchain_info
+
+
 class BlockchainNetwork:
     def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
         self.identifer = identifer
@@ -132,26 +136,26 @@ class InsuranceSmartContract:
 
 
 class OpIntent:
-    Key_Attribute_All = ('name', 'intent_type')
+    Key_Attribute_All = ('name', 'op_type')
     Key_Attribute_Payment = ('amount', 'src', 'dst')
     Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func', 'parameters')
-    Intent_Type = ('Payment', 'ContractInvocation')
+    Op_Type = ('Payment', 'ContractInvocation')
     Chain_Default_Unit = {
         'Ethereum': 'wei'
     }
 
     def __init__(self, intent_json):
-        self.intent_type = ""
+        self.op_type = ""
         for key_attr in OpIntent.Key_Attribute_All:
             if key_attr in intent_json:
                 setattr(self, key_attr, intent_json[key_attr])
             else:
                 raise InitializeError("the attribute " + key_attr + " must be included in the Op intent")
 
-        if self.intent_type not in OpIntent.Intent_Type:
-            raise InitializeError("unexpected intent_type: " + self.intent_type)
+        if self.op_type not in OpIntent.Op_Type:
+            raise InitializeError("unexpected op_type: " + self.op_type)
 
-        getattr(self, self.intent_type + 'Init')(intent_json)
+        getattr(self, self.op_type + 'Init')(intent_json)
 
     def PaymentInit(self, intent_json):
         for key_attr in OpIntent.Key_Attribute_Payment:
@@ -196,47 +200,126 @@ class TransactionIntent:
         self.dependencies = []
         intent_tx = {}
         for op_intent in op_intents:
-            getattr(self, op_intent.intent_type + "TxGenerate")(op_intent, intent_tx)
-        for k, vs in intent_tx.items():
-            print(k)
-            for v in vs:
-                print("   ", v)
-        print(dependencies)
+            getattr(self, op_intent.op_type + "TxGenerate")(op_intent, intent_tx)
+
+        # print generated OpX -> TxXs
+        # for k, vs in intent_tx.items():
+        #     print(k)
+        #     for v in vs:
+        #         print("   ", v)
+
+        for dependency in dependencies:
+            if 'left' not in dependency or 'right' not in dependency:
+                raise GenerateError("attribute left/right missing")
+
+            if 'dep' not in dependency or dependency['dep'] == 'before':  # OpX before OpY (default relation)
+                for u in intent_tx[dependency['left']]:
+                    for v in intent_tx[dependency['right']]:
+                        self.dependencies.append(u + "->" + v)
+            elif dependency['dep'] == 'after':  # OpX after OpY
+                for u in intent_tx[dependency['right']]:
+                    for v in intent_tx[dependency['left']]:
+                        self.dependencies.append(u + "->" + v)
+            else:
+                raise GenerateError('unsupported dependency-type: ' + dependency['dep'])
 
     def PaymentTxGenerate(self, op_intent, intent_tx):
-        transactions = []
         src_chain_type, src_chain_id = op_intent.src['domain'].split('://')
         dst_chain_type, dst_chain_id = op_intent.dst['domain'].split('://')
 
         if src_chain_type == "Ethereum":
-            transactions.append(eth_tx(
+            tx = eth_tx(
                 "transfer",  # transaction type
                 src_chain_id,  # chain_id
                 eth_blockchain_info[src_chain_id]['user'][op_intent.src['user_name']],
                 eth_blockchain_info[src_chain_id]['relay'],  # dst_addr
                 op_intent.amount,  # fund
                 op_intent.unit  # fund_unit
-            ))
+            )
+            self.intents.append(tx)
+            tx.tx_info['name'] = "T" + str(len(self.intents))
         else:
             raise GenerateError("unsupported chain-type: " + src_chain_type)
 
         if dst_chain_type == "Ethereum":
-            transactions.append(eth_tx(
+            tx = eth_tx(
                 "transfer",  # transaction type
                 dst_chain_id,  # chain_id
                 eth_blockchain_info[dst_chain_id]['user'][op_intent.dst['user_name']],  # src_addr
                 eth_blockchain_info[dst_chain_id]['relay'],  # dst_addr
                 op_intent.amount,  # fund
                 op_intent.unit  # fund_unit
-            ))
+            )
+            self.intents.append(tx)
+            tx.tx_info['name'] = "T" + str(len(self.intents))
         else:
             raise GenerateError("unsupported chain-type: " + src_chain_type)
-        self.intents += transactions
 
-        intent_tx[op_intent.name] = [len(self.intents) - 2, len(self.intents) - 1]
+        intent_tx[op_intent.name] = ["T" + str(len(self.intents) - 1), "T" + str(len(self.intents))]
 
     def ContractInvocationTxGenerate(self, op_intent, intent_tx):
-        print(op_intent.__dict__)
-        self.intents.append(op_intent)
-        transactions = [op_intent]
-        intent_tx[op_intent.name] = transactions
+        chain_type, chain_id = op_intent.contract_domain.split('://')
+
+        # assert (hasattr(op_intent, 'address') ^ hasattr(op_intent, 'code')) == 1
+
+        if chain_type == "Ethereum":
+            compare_vector = hasattr(op_intent, 'address') << 1 | hasattr(op_intent, 'func')
+            if compare_vector == 3:  # deployed address + invoke function
+                tx = eth_tx(
+                    "invoke",
+                    chain_id,
+                    op_intent.invoker,
+                    op_intent.address,
+                    op_intent.func,
+                    op_intent.parameters
+                )
+                self.intents.append(tx)
+                tx.tx_info['name'] = "T" + str(len(self.intents))
+                intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
+            elif compare_vector == 2:  # deployed address
+                print("warning: transaction", len(self.intents) + 1, "has no effect")
+                tx = eth_tx('void')
+                self.intents.append(tx)
+                tx.tx_info['name'] = "T" + str(len(self.intents))
+                intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
+            elif compare_vector == 1:  # deploy address + invoke function
+                tx = eth_tx(
+                    "deploy",
+                    chain_id,
+                    op_intent.code,
+                    gasuse=op_intent.gas
+                )
+                self.intents.append(tx)
+                tx.tx_info['name'] = "T" + str(len(self.intents))
+                tx = eth_tx(
+                    "invoke",
+                    chain_id,
+                    op_intent.invoker,
+                    "@T" + str(len(self.intents) + 1) + ".address",
+                    op_intent.func,
+                    op_intent.parameters
+                )
+                self.intents.append(tx)
+                tx.tx_info['name'] = "T" + str(len(self.intents))
+                intent_tx[op_intent.name] = ["T" + str(len(self.intents) - 1), "T" + str(len(self.intents))]
+            else:  # depoly address
+                tx = eth_tx(
+                    "deploy",
+                    chain_id,
+                    op_intent.code,
+                    gasuse=op_intent.gas
+                )
+                self.intents.append(tx)
+                tx.tx_info['name'] = "T" + str(len(self.intents))
+                intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
+        else:
+            raise GenerateError("unsupported chain-type: " + chain_type)
+
+    def dictize(self):
+        return {
+            'intents': [tx.__dict__ for tx in self.intents],
+            'dependencies': self.dependencies
+        }
+
+    def jsonize(self):
+        return json.dumps(self.dictize(), sort_keys=True, indent=4, separators=(', ', ': '))

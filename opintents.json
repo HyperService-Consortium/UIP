@@ -2,7 +2,7 @@
     "Op-intents": [
         {
             "name": "Op1",
-            "intent_type": "Payment",
+            "op_type": "Payment",
             "src": {
                 "domain":"Ethereum://chain1",
                 "user_name": "X"
@@ -15,7 +15,7 @@
             "unit": "wei"
         },
         {
-            "intent_type": "ContractInvocation",
+            "op_type": "ContractInvocation",
             "name": "Op2",
             "invoker": "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737",
             "contract_domain": "Ethereum://chain1",

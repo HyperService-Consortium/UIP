@@ -29,3 +29,5 @@ eth_unit_factor = {
     'finney': 1000000000000000,
     'ether':  1000000000000000000
 }
+
+eth_default_gasuse = hex(5000000)

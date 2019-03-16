@@ -8,25 +8,46 @@ from collections import namedtuple
 # import time
 from uiputils.config import eth_blockchain_info as blockchain_info
 from uiputils.config import eth_unit_factor as unit_factor
+from uiputils.config import eth_default_gasuse as default_gasuse
 from web3 import Web3
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
 
 
 class Transaction:
-    def __init__(self, transaction_type, *args):
+    def __init__(self, transaction_type, *args, **kwargs):
         self.chain_host = ""
         self.tx_info = {}
-        getattr(self, transaction_type + 'Init')(*args)
+        getattr(self, transaction_type + 'Init')(*args, **kwargs)
 
     def transferInit(self, chain_id, src_addr, dst_addr, fund, fund_unit):
         self.chain_host = blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'transfer',
-            'chain': chain_id,
-            'source': Web3.toChecksumAddress(src_addr),
-            'dst': Web3.toChecksumAddress(dst_addr),
+            'chain': chain_id + "@" + self.chain_host,
+            'source': src_addr,
+            'dst': dst_addr,
             'fund': hex(fund * unit_factor[fund_unit]),
             'unit': 'wei'
+        }
+
+    def deployInit(self, chain_id, code, gasuse=default_gasuse):
+        self.chain_host = blockchain_info[chain_id]['host']
+        self.tx_info = {
+            'trans_type': 'deploy',
+            'chain': chain_id + "@" + self.chain_host,
+            'code': code,
+            'gas': gasuse
+        }
+
+    def invokeInit(self, chain_id, invoker, contract_address, function_name, function_parameters):
+        self.chain_host = blockchain_info[chain_id]['host']
+        self.tx_info = {
+            'trans_type': 'invoke',
+            'chain': chain_id + "@" + self.chain_host,
+            'invoker': invoker,
+            'address': contract_address,
+            'func': function_name,
+            'parameters': function_parameters
         }
 
     def __str__(self):

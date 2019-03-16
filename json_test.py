@@ -13,3 +13,6 @@ if __name__ == '__main__':
     #         print(k + ": ", v)
     #     print("----------------------------------")
     tx_intent = TransactionIntent(op_intents, op_intents_json['dependencies'])
+
+    with open('txintents.json', 'w') as tx_intent_file:
+        tx_intent_file.write(tx_intent.jsonize())
