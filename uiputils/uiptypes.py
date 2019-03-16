@@ -55,6 +55,7 @@ class VerifiableExecutionSystem:
     # the ves in uip
     INVALID = 0
     INVALID_TXS = [{}]
+
     def __init__(self):
         self.txs_pool = {
             0: (
@@ -287,7 +288,7 @@ class TransactionIntent:
                     "deploy",
                     chain_id,
                     op_intent.code,
-                    gasuse=op_intent.gas
+                    gasuse=hex(200000)  # op_intent.gas
                 )
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
@@ -295,7 +296,7 @@ class TransactionIntent:
                     "invoke",
                     chain_id,
                     op_intent.invoker,
-                    "@T" + str(len(self.intents) + 1) + ".address",
+                    "@T" + str(len(self.intents)) + ".address",
                     op_intent.func,
                     op_intent.parameters
                 )
@@ -317,7 +318,7 @@ class TransactionIntent:
 
     def dictize(self):
         return {
-            'intents': [tx.__dict__ for tx in self.intents],
+            'intents': [tx.tx_info for tx in self.intents],
             'dependencies': self.dependencies
         }
 
