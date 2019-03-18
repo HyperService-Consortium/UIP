@@ -3,6 +3,8 @@ import os.path as parsepath
 
 INCLUDE_PATH = parsepath.dirname(__file__) + "/include"
 
+HTTP_HEADER = {'Content-Type': 'application/json'}
+
 eth_blockchain_info = {
     'chain1': {
         'host': 'http://127.0.0.1:8545',
@@ -30,4 +32,4 @@ eth_unit_factor = {
     'ether':  1000000000000000000
 }
 
-eth_default_gasuse = hex(5000000)
+eth_default_gasuse = hex(300000)

@@ -8,6 +8,7 @@
             "chain": "chain1@http://127.0.0.1:8545", 
             "dst": "0x7019fa779024c0a0eac1d8475733eefe10a49f3b", 
             "fund": "0x3e8", 
+            "gas": "0x493e0", 
             "name": "T1", 
             "source": "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e", 
             "trans_type": "transfer", 
@@ -17,6 +18,7 @@
             "chain": "chain2@http://127.0.0.1:8545", 
             "dst": "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737", 
             "fund": "0x3e8", 
+            "gas": "0x493e0", 
             "name": "T2", 
             "source": "0x91f030cfec606f9ff832aef20f768bf3a129b59c", 
             "trans_type": "transfer", 
@@ -26,14 +28,12 @@
             "address": "0x85854fe3853b7A51576bFd78564Ec1993f8820d1", 
             "chain": "chain1@http://127.0.0.1:8545", 
             "func": "isOwner", 
+            "gas": "0x493e0", 
             "invoker": "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737", 
             "name": "T3", 
             "parameters": [
                 "0x7019fa779024c0a0eac1d8475733eefe10a49f3b"
-            ],
-            "parameters_description": [
-                "address"
-            ],
+            ], 
             "trans_type": "invoke"
         }
     ]

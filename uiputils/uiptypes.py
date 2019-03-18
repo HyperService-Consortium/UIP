@@ -2,6 +2,7 @@
 'some types'
 
 import json
+import time
 
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
@@ -9,7 +10,7 @@ from .uiperror import InitializeError, GenerationError, Missing
 from uiputils.eth import JsonRPC
 
 from uiputils.eth.ethtypes import Transaction as EthTx
-from uiputils.config import eth_blockchain_info
+from uiputils.config import eth_blockchain_info, HTTP_HEADER
 
 
 class BlockchainNetwork:
@@ -140,7 +141,9 @@ class InsuranceSmartContract:
 class OpIntent:
     Key_Attribute_All = ('name', 'op_type')
     Key_Attribute_Payment = ('amount', 'src', 'dst')
-    Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func', 'parameters')
+    Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func')
+    Option_Attribute_Payment = ('unit',)
+    Option_Attribute_ContractInvocation = ('parameters', 'parameters_description')
     Op_Type = ('Payment', 'ContractInvocation')
     Chain_Default_Unit = {
         'Ethereum': 'wei'
@@ -165,8 +168,10 @@ class OpIntent:
                 setattr(self, key_attr, intent_json[key_attr])
             else:
                 raise InitializeError("the attribute " + key_attr + " must be included in the Payment intent")
-        if 'unit' in intent_json:
-            setattr(self, 'unit', intent_json['unit'])
+
+        for option_attr in OpIntent.Option_Attribute_Payment:
+            if option_attr in intent_json:
+                setattr(self, option_attr, intent_json[option_attr])
         else:
             chain_type = getattr(self, 'src')['domain'].split('://')[0]
             setattr(self, 'unit', OpIntent.Chain_Default_Unit[chain_type])
@@ -178,6 +183,10 @@ class OpIntent:
             else:
                 raise InitializeError("the attribute " + key_attr +\
                                       " must be included in the ContractInvocation intent")
+
+        for option_attr in OpIntent.Option_Attribute_ContractInvocation:
+            if option_attr in intent_json:
+                setattr(self, option_attr, intent_json[option_attr])
 
         compare_vector = ('contract_addr' not in intent_json or intent_json['contract_addr'] is None) << 1 |\
                          ('contract_code' not in intent_json or intent_json['contract_code'] is None)
@@ -196,7 +205,7 @@ def createopintents(op_intents_json):
     return [OpIntent(op_intent_json) for op_intent_json in op_intents_json]
 
 
-class TransactionIntent:
+class TransactionIntents:
     def __init__(self, op_intents, dependencies):
         self.intents = []
         self.dependencies = []
@@ -250,7 +259,7 @@ class TransactionIntent:
                 eth_blockchain_info[dst_chain_id]['user'][op_intent.dst['user_name']],  # src_addr
                 eth_blockchain_info[dst_chain_id]['relay'],  # dst_addr
                 op_intent.amount,  # fund
-                op_intent.unit  # fund_unit
+                getattr(op_intent, 'unit')  # option fund_unit
             )
             self.intents.append(tx)
             tx.tx_info['name'] = "T" + str(len(self.intents))
@@ -273,7 +282,8 @@ class TransactionIntent:
                     op_intent.invoker,
                     op_intent.address,
                     op_intent.func,
-                    op_intent.parameters
+                    getattr(op_intent, 'parameters'),
+                    getattr(op_intent, 'parameters_description')
                 )
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
@@ -299,7 +309,8 @@ class TransactionIntent:
                     op_intent.invoker,
                     "@T" + str(len(self.intents)) + ".address",
                     op_intent.func,
-                    op_intent.parameters
+                    op_intent.parameters,
+                    op_intent.parameters_description
                 )
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
@@ -326,18 +337,37 @@ class TransactionIntent:
     def jsonize(self):
         return json.dumps(self.dictize(), sort_keys=True, indent=4, separators=(', ', ': '))
 
+
 class DApp:
-    def __init__(self, addr):
+    def __init__(self, addr=None):
         self.address = addr
 
-    def send(self, trans):
-        chain_type, chain_id = trans['chain'].split('@')
-        if chain_type == 'Ethereum':
-            pass
-            # trans.
-            # packet_transaction = JsonRPC.ethSendTransaction(transaction)
-            # tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, host)
-            # tx_hash = tx_response['result']
-            # query = JsonRPC.ethGetTransactionReceipt(tx_hash)
+    def call(self, trans):
+        if trans.chain_type == 'Ethereum':
+            call_json = JsonRPC.ethCall(trans.jsonize())
+            tx_response = JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)
+            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+
         else:
-            raise TypeError("unsupported chain-type: ", + chain_type)
+            raise TypeError("unsupported chain-type: ", + trans.chain_type)
+
+    def send(self, trans, passphrase):
+        if trans.chain_type == 'Ethereum':
+            unlock = JsonRPC.personalUnlockAccount(self.address, passphrase, 20)
+            tx_response = JsonRPC.send(unlock, HTTP_HEADER, trans.chain_host)
+            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+            packet_transaction = JsonRPC.ethSendTransaction(trans.jsonize())
+            tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, trans.chain_host)
+            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+            tx_hash = tx_response['result']
+            query = JsonRPC.ethGetTransactionReceipt(tx_hash)
+            while True:
+                tx_response = JsonRPC.send(query, HTTP_HEADER, trans.chain_host)
+                if tx_response['result'] is None:
+                    print("transacting")
+                    time.sleep(2)
+                    continue
+                break
+            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+        else:
+            raise TypeError("unsupported chain-type: ", + trans.chain_type)

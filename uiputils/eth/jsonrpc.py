@@ -87,6 +87,16 @@ class JsonRPC(object):
                 }
 
     @staticmethod
+    def ethCall(obj):
+        # return the number of most recent block
+        return {
+            "jsonrpc": "2.0",
+            "method": "eth_call",
+            "params": [obj],
+            "id": 1
+        }
+
+    @staticmethod
     def ethGetBalance(addr, tag="latest"):
         # returns the balance of the account of given address
         # addr: address to check for balance
@@ -172,6 +182,19 @@ class JsonRPC(object):
                 "method": "eth_getTransactionReceipt",
                 "params": [transactionhash],
                 "id": 1
+                }
+
+    @staticmethod
+    def personalUnlockAccount(addr, passphrase, duration=600):
+        # unlock an account of ethereum
+        # addr: the account's address
+        # passphrase: (! the account's password !)
+        # duration: unlock duration
+        return {
+                "jsonrpc": "2.0",
+                "method": "personal_unlockAccount",
+                "params": [addr, passphrase, duration],
+                "id": 64
                 }
 
     @staticmethod

@@ -1,0 +1,1 @@
+find . "(" -name "*.sol" -or -name "*.py" -or -name "*.json" -or -name "*.go" -or -name "*.js" ")" -print | xargs wc -l

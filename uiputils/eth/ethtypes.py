@@ -35,6 +35,7 @@ MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
 class Transaction:
     def __init__(self, transaction_type, *args, **kwargs):
         self.chain_host = ""
+        self.chain_type = "Ethereum"
         self.tx_info = {}
         getattr(self, transaction_type + 'Init')(*args, **kwargs)
 
