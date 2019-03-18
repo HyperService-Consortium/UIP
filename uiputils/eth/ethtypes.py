@@ -1,16 +1,33 @@
 
+
+# python package
+from collections import namedtuple
+import re
+# import time
+
+# uip package
 from .loadfile import FileLoad
 from .startservice import ServiceStart
-from hexbytes import HexBytes
 from uiputils.cast import bytestoint, catint32
 from .tools import Prover, LocationTransLator
-from collections import namedtuple
-# import time
+from uiputils.uiperror import GenerationError
+
+# ethereum package
+from hexbytes import HexBytes
+from eth_hash.auto import keccak
+# from web3 import Web3
+
+
+# config
 from uiputils.config import eth_blockchain_info as blockchain_info
 from uiputils.config import eth_unit_factor as unit_factor
 from uiputils.config import eth_default_gasuse as default_gasuse
-from web3 import Web3
+
+
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
+
+
+hex_match = re.compile(r'\b[0-9a-fA-F]+\b')
 
 
 class Transaction:
@@ -19,7 +36,7 @@ class Transaction:
         self.tx_info = {}
         getattr(self, transaction_type + 'Init')(*args, **kwargs)
 
-    def transferInit(self, chain_id, src_addr, dst_addr, fund, fund_unit):
+    def transferInit(self, chain_id, src_addr, dst_addr, fund, fund_unit, gasuse=default_gasuse):
         self.chain_host = blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'transfer',
@@ -27,7 +44,8 @@ class Transaction:
             'source': src_addr,
             'dst': dst_addr,
             'fund': hex(fund * unit_factor[fund_unit]),
-            'unit': 'wei'
+            'unit': 'wei',
+            'gas': gasuse
         }
 
     def deployInit(self, chain_id, code, gasuse=default_gasuse):
@@ -39,7 +57,9 @@ class Transaction:
             'gas': gasuse
         }
 
-    def invokeInit(self, chain_id, invoker, contract_address, function_name, function_parameters):
+    def invokeInit(self, chain_id, invoker, contract_address,
+                   function_name, function_parameters=None, function_parameters_description=None,
+                   gasuse=default_gasuse):
         self.chain_host = blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'invoke',
@@ -47,8 +67,59 @@ class Transaction:
             'invoker': invoker,
             'address': contract_address,
             'func': function_name,
-            'parameters': function_parameters
+            'gas': gasuse
         }
+        if function_parameters_description is None:
+            if len(function_name) == 8 and hex_match.match(function_name) is None:
+                raise GenerationError('function_parameters_description is not \
+                                      given but function-name is not ')
+
+
+    def jsonize(self):
+        return getattr(self, self.tx_info['trans_type'] + 'Jsonize')()
+    '''
+    {
+        "from": "0x7019fa779024c0a0eac1d8475733eefe10a49f3b",
+        "to": "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e",
+        "gas": "0x40000",
+        "value": "0x20"
+    }
+    '''
+    def transferJsonize(self):
+        return {
+            "from": self.tx_info['source'],
+            "to": self.tx_info['dst'],
+            "gas": self.tx_info['gas'],
+            "value": self.tx_info['fund']
+        }
+
+    def deployJsonize(self):
+        return {
+            "from": "0x7019fa779024c0a0eac1d8475733eefe10a49f3b",
+            "data": self.tx_info['code'],
+            "gas": self.tx_info['gas'],
+        }
+
+    def invokeJsonize(self):
+        # self.tx_info['parameters']
+        res = {
+            "from": self.tx_info['invoker'],
+            "to": self.tx_info['address'],
+            "data": "",
+        }
+        if 'parameters_description' in self.tx_info:
+            res['data'] = keccak(
+                HexBytes(self.tx_info['func'] +
+                         '(' +
+                         self.tx_info['parameters_description'].join(',') +
+                         ')'
+                )
+            )[0:10]
+        elif 'parameters' in self.tx_info:
+            pass
+        if 'value' in self.tx_info:
+            res['value'] = self.tx_info['value']
+        return res
 
     def __str__(self):
         return 'chain_host: ' + str(self.chain_host) + '    transaction_intent: ' + str(self.tx_info)

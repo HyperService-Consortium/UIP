@@ -5,9 +5,10 @@ import json
 
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
-from .uiperror import InitializeError, GenerateError
+from .uiperror import InitializeError, GenerationError, Missing
+from uiputils.eth import JsonRPC
 
-from uiputils.eth.ethtypes import Transaction as eth_tx
+from uiputils.eth.ethtypes import Transaction as EthTx
 from uiputils.config import eth_blockchain_info
 
 
@@ -211,7 +212,7 @@ class TransactionIntent:
 
         for dependency in dependencies:
             if 'left' not in dependency or 'right' not in dependency:
-                raise GenerateError("attribute left/right missing")
+                raise GenerationError("attribute left/right missing")
 
             if 'dep' not in dependency or dependency['dep'] == 'before':  # OpX before OpY (default relation)
                 for u in intent_tx[dependency['left']]:
@@ -222,14 +223,14 @@ class TransactionIntent:
                     for v in intent_tx[dependency['left']]:
                         self.dependencies.append(u + "->" + v)
             else:
-                raise GenerateError('unsupported dependency-type: ' + dependency['dep'])
+                raise GenerationError('unsupported dependency-type: ' + dependency['dep'])
 
     def PaymentTxGenerate(self, op_intent, intent_tx):
         src_chain_type, src_chain_id = op_intent.src['domain'].split('://')
         dst_chain_type, dst_chain_id = op_intent.dst['domain'].split('://')
 
         if src_chain_type == "Ethereum":
-            tx = eth_tx(
+            tx = EthTx(
                 "transfer",  # transaction type
                 src_chain_id,  # chain_id
                 eth_blockchain_info[src_chain_id]['user'][op_intent.src['user_name']],
@@ -240,10 +241,10 @@ class TransactionIntent:
             self.intents.append(tx)
             tx.tx_info['name'] = "T" + str(len(self.intents))
         else:
-            raise GenerateError("unsupported chain-type: " + src_chain_type)
+            raise GenerationError("unsupported chain-type: " + src_chain_type)
 
         if dst_chain_type == "Ethereum":
-            tx = eth_tx(
+            tx = EthTx(
                 "transfer",  # transaction type
                 dst_chain_id,  # chain_id
                 eth_blockchain_info[dst_chain_id]['user'][op_intent.dst['user_name']],  # src_addr
@@ -254,7 +255,7 @@ class TransactionIntent:
             self.intents.append(tx)
             tx.tx_info['name'] = "T" + str(len(self.intents))
         else:
-            raise GenerateError("unsupported chain-type: " + src_chain_type)
+            raise GenerationError("unsupported chain-type: " + src_chain_type)
 
         intent_tx[op_intent.name] = ["T" + str(len(self.intents) - 1), "T" + str(len(self.intents))]
 
@@ -266,7 +267,7 @@ class TransactionIntent:
         if chain_type == "Ethereum":
             compare_vector = hasattr(op_intent, 'address') << 1 | hasattr(op_intent, 'func')
             if compare_vector == 3:  # deployed address + invoke function
-                tx = eth_tx(
+                tx = EthTx(
                     "invoke",
                     chain_id,
                     op_intent.invoker,
@@ -279,12 +280,12 @@ class TransactionIntent:
                 intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
             elif compare_vector == 2:  # deployed address
                 print("warning: transaction", len(self.intents) + 1, "has no effect")
-                tx = eth_tx('void')
+                tx = EthTx('void')
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
                 intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
             elif compare_vector == 1:  # deploy address + invoke function
-                tx = eth_tx(
+                tx = EthTx(
                     "deploy",
                     chain_id,
                     op_intent.code,
@@ -292,7 +293,7 @@ class TransactionIntent:
                 )
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
-                tx = eth_tx(
+                tx = EthTx(
                     "invoke",
                     chain_id,
                     op_intent.invoker,
@@ -304,7 +305,7 @@ class TransactionIntent:
                 tx.tx_info['name'] = "T" + str(len(self.intents))
                 intent_tx[op_intent.name] = ["T" + str(len(self.intents) - 1), "T" + str(len(self.intents))]
             else:  # depoly address
-                tx = eth_tx(
+                tx = EthTx(
                     "deploy",
                     chain_id,
                     op_intent.code,
@@ -314,7 +315,7 @@ class TransactionIntent:
                 tx.tx_info['name'] = "T" + str(len(self.intents))
                 intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
         else:
-            raise GenerateError("unsupported chain-type: " + chain_type)
+            raise GenerationError("unsupported chain-type: " + chain_type)
 
     def dictize(self):
         return {
@@ -324,3 +325,18 @@ class TransactionIntent:
 
     def jsonize(self):
         return json.dumps(self.dictize(), sort_keys=True, indent=4, separators=(', ', ': '))
+
+class DApp:
+    def __init__(self, addr):
+        self.address = addr
+
+    def send(self, trans):
+        chain_type, chain_id = trans['chain'].split('@')
+        if chain_type == 'Ethereum':
+            trans.
+            packet_transaction = JsonRPC.ethSendTransaction(transaction)
+            tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, host)
+            tx_hash = tx_response['result']
+            query = JsonRPC.ethGetTransactionReceipt(tx_hash)
+        else:
+            raise TypeError("unsupported chain-type: ", + chain_type)

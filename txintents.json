@@ -30,7 +30,10 @@
             "name": "T3", 
             "parameters": [
                 "0x7019fa779024c0a0eac1d8475733eefe10a49f3b"
-            ], 
+            ],
+            "parameters_description": [
+                "address"
+            ],
             "trans_type": "invoke"
         }
     ]
