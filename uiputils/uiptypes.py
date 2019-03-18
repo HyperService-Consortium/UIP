@@ -333,10 +333,11 @@ class DApp:
     def send(self, trans):
         chain_type, chain_id = trans['chain'].split('@')
         if chain_type == 'Ethereum':
-            trans.
-            packet_transaction = JsonRPC.ethSendTransaction(transaction)
-            tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, host)
-            tx_hash = tx_response['result']
-            query = JsonRPC.ethGetTransactionReceipt(tx_hash)
+            pass
+            # trans.
+            # packet_transaction = JsonRPC.ethSendTransaction(transaction)
+            # tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, host)
+            # tx_hash = tx_response['result']
+            # query = JsonRPC.ethGetTransactionReceipt(tx_hash)
         else:
             raise TypeError("unsupported chain-type: ", + chain_type)

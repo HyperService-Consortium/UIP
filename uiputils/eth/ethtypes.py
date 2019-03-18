@@ -1,22 +1,25 @@
 
-
-# python package
+# python modules
 from collections import namedtuple
-import re
 # import time
 
-# uip package
+# uip modules
 from .loadfile import FileLoad
 from .startservice import ServiceStart
 from uiputils.cast import bytestoint, catint32
-from .tools import Prover, LocationTransLator
+from .tools import (
+    Prover,
+    LocationTransLator,
+    AbiEncoder,
+    hex_match,
+    hex_match_withprefix
+)
 from uiputils.uiperror import GenerationError
 
-# ethereum package
+# ethereum modules
 from hexbytes import HexBytes
 from eth_hash.auto import keccak
 # from web3 import Web3
-
 
 # config
 from uiputils.config import eth_blockchain_info as blockchain_info
@@ -25,9 +28,6 @@ from uiputils.config import eth_default_gasuse as default_gasuse
 
 
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
-
-
-hex_match = re.compile(r'\b[0-9a-fA-F]+\b')
 
 
 class Transaction:
@@ -60,6 +60,7 @@ class Transaction:
     def invokeInit(self, chain_id, invoker, contract_address,
                    function_name, function_parameters=None, function_parameters_description=None,
                    gasuse=default_gasuse):
+        # if function parameters' description is not given, the function_parameters must be in format string
         self.chain_host = blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'invoke',
@@ -67,16 +68,27 @@ class Transaction:
             'invoker': invoker,
             'address': contract_address,
             'func': function_name,
+            'parameters': function_parameters,
             'gas': gasuse
         }
-        if function_parameters_description is None:
-            if len(function_name) == 8 and hex_match.match(function_name) is None:
-                raise GenerationError('function_parameters_description is not \
-                                      given but function-name is not ')
 
+        # generate signature
+        if len(function_name) == 8 and hex_match.match(function_name):
+            setattr(self, 'signature', function_name)
+        elif len(function_name) == 10 and hex_match_withprefix.match(function_name):
+            setattr(self, 'signature', function_name)
+        elif function_parameters_description:
+            to_hash = HexBytes(self.tx_info['func'] + '(' + ','.join(self.tx_info['parameters_description']) + ')')
+            signature = keccak(to_hash)[0:10]
+            setattr(self, 'signature', signature)
+        else:  # function_parameters_description is None
+            raise GenerationError('function-signatrue can\'t be generated')
+
+        setattr(self, 'parameters_description', function_parameters_description)
 
     def jsonize(self):
         return getattr(self, self.tx_info['trans_type'] + 'Jsonize')()
+
     '''
     {
         "from": "0x7019fa779024c0a0eac1d8475733eefe10a49f3b",
@@ -85,6 +97,7 @@ class Transaction:
         "value": "0x20"
     }
     '''
+
     def transferJsonize(self):
         return {
             "from": self.tx_info['source'],
@@ -107,16 +120,12 @@ class Transaction:
             "to": self.tx_info['address'],
             "data": "",
         }
-        if 'parameters_description' in self.tx_info:
-            res['data'] = keccak(
-                HexBytes(self.tx_info['func'] +
-                         '(' +
-                         self.tx_info['parameters_description'].join(',') +
-                         ')'
-                )
-            )[0:10]
-        elif 'parameters' in self.tx_info:
-            pass
+        if 'parameters' in self.tx_info:
+            parameters = AbiEncoder.encodes(self.tx_info['parameters'], getattr(self, 'parameters_description'))
+            res['data'] = getattr(self, 'signature') + parameters
+        else:  # raw-function called
+            res['data'] = self.tx_info['func']
+
         if 'value' in self.tx_info:
             res['value'] = self.tx_info['value']
         return res
@@ -165,7 +174,8 @@ SLOT_MERKLEPROOFTREE = 6
 
 class NetStatusBlockchain:
     # Prot NSB in uip
-    def __init__(self, owner_addr, host, nsb_addr, nsb_abi_dir, eth_db_dir="", gasuse=hex(400000), nsb_bytecode_dir=None):
+    def __init__(self, owner_addr, host, nsb_addr, nsb_abi_dir, eth_db_dir="", gasuse=hex(400000),
+                 nsb_bytecode_dir=None):
         # , nsb_db_addr):
         self.handle = Contract(host, nsb_addr, nsb_abi_dir, nsb_bytecode_dir)
         self.web3 = self.handle.web3
@@ -270,4 +280,3 @@ class NetStatusBlockchain:
     # def CloseureWatching():
 
     # def CloseureClaim():
-
