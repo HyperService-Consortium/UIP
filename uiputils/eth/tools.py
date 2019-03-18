@@ -1,6 +1,14 @@
+# python modules
+import re
 from ctypes import CDLL
-from uiputils.gotypes import GoString, GoInt32, GoStringSlice, GolevelDBptr
-from eth_hash.auto import keccak
+
+# uip modules
+from uiputils.gotypes import (
+    GoString,
+    GoInt32,
+    GoStringSlice,
+    GolevelDBptr
+)
 from uiputils.cast import (
     fillbytes32,
     catbytes32,
@@ -10,17 +18,22 @@ from uiputils.cast import (
     catint32,
     transint
 )
-from uiputils.config import INCLUDE_PATH
+from uiputils.uiperror import Mismatch, SolidityTypeError
+
+# ethereum modules
+from eth_hash.auto import keccak
 from hexbytes import HexBytes
-# from sys import path as loadpathlist
-# if pathofinclude not in loadpathlist:
-#     loadpathlist.append(pathofinclude)
-# print("\n".join(loadpathlist))
 
+# self-package modules
 
+# config
+from uiputils.config import INCLUDE_PATH
+
+# constant
 ENC = "utf-8"
-MOD256 = (1 << 256) - 1
+INTM = [(1 << (bit_size << 3)) for bit_size in range(33)]
 
+# Prover functions setting
 funcs = CDLL(INCLUDE_PATH + "/verifyproof.dll")
 
 funcs.openDB.restype = GolevelDBptr
@@ -30,6 +43,23 @@ funcs.closeDB.argtype = GolevelDBptr
 
 funcs.VerifyProof.restype = GoInt32
 funcs.VerifyProof.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type, GoStringSlice.Type, GoInt32)
+
+# constant
+MOD256 = (1 << 256) - 1
+MOD6 = (1 << 6) - 1
+BYTE32_LENGTH = 64
+
+# the var of bytestoint(keccak(fillint32(SLOT_WAITING_QUEUE)))
+POS_WAITING_QUEUE = 18569430475105882587588266137607568536673111973893317399460219858819262702947
+
+# Merkleprooftree position
+POS_MERKLEPROOFTREE = b'\x00' * 31 + b'\x06'
+
+# Actiontree position
+POS_ACTIONTREE = b'\x00' * 31 + b'\x08'
+
+hex_match = re.compile(r'\b[0-9a-fA-F]+\b')
+hex_match_withprefix = re.compile(r'\b0x[0-9a-fA-F]+\b')
 
 
 class Prover:
@@ -114,12 +144,6 @@ def maplocation(slot, key):
     return keccak(transbytes32(key) + transbytes32(slot))
 
 
-# the var of bytestoint(keccak(fillint32(SLOT_WAITING_QUEUE)))
-POS_WAITING_QUEUE = 18569430475105882587588266137607568536673111973893317399460219858819262702947
-POS_MERKLEPROOFTREE = b'\x00'*31 + b'\x06'
-POS_ACTIONTREE = b'\x00'*31 + b'\x08'
-
-
 class LocationTransLator(object):
     # calculate varible's location of NSB
 
@@ -140,10 +164,127 @@ class LocationTransLator(object):
     mapsto = maplocation
 
 
+class AbiEncoder:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def encode(para_type, para):
+        if para_type == 'address':
+            return AbiEncoder.encode('uint160', para)
+        elif para_type == 'string':
+            return AbiEncoder.encode('bytes', para.encode('utf-8'))
+        elif para_type == 'byte':
+            return AbiEncoder.encode('bytes1', para)
+        elif para_type == 'bool':
+            return AbiEncoder.encode('uint8', para)
+        elif para_type[-1] == ']':  # Array
+            if not hasattr(para, '__iter__'):
+                raise TypeError("not iteraable parameter " + str(para) + " for Array type " + para_type)
+            array_type, array_size = para_type[:-1].split('[')
+            if array_size != "":
+                if int(array_size) < len(para):  # != ?
+                    raise Mismatch('parameters mismatch with parameters_type')
+                return ''.join((AbiEncoder.encode(array_type, ele) for ele in para))
+            else:  # bug __iter__ -> __len__ ?
+                return AbiEncoder.encode('uint256', len(para)) + \
+                       ''.join((AbiEncoder.encode(array_type, ele) for ele in para))
+        elif para_type[0:3] == 'int':
+            numstr, negative_flag = para, '0'
+            numsize = para_type[3:]
+            if numsize == "":
+                numsize = 32
+            else:
+                numsize = int(numsize)
+                if (numsize & 7) != 0 or numsize > 256 or numsize < 0:
+                    raise SolidityTypeError("invalid given-datatype: " + para_type)
+                numsize >>= 2
+            if isinstance(para, str):
+                if not hex_match.match(para) and not hex_match_withprefix.match(para):
+                    raise TypeError("invalid hexstring" + para + " for initializing datatype " + para_type)
+            elif isinstance(para, int):
+                if para < 0:
+                    negative_flag = 'f'
+                    numstr = hex(INTM[numsize >> 1] + para)[2:]
+                else:
+                    numstr = hex(numstr)[2:]
+            else:
+                raise TypeError("unexpected type " + type(para) + " for initializing datatype " + para_type)
+            if len(numstr) > numsize:
+                raise OverflowError("too large number " + str(para) + " to fill in type" + para_type)
+            return negative_flag * (BYTE32_LENGTH - len(numstr)) + numstr
+        elif para_type[0:4] == 'uint':
+            if isinstance(para, str):
+                numstr = para
+                if not hex_match.match(para) and not hex_match_withprefix.match(para):
+                    raise TypeError("invalid hexstring " + para + " for initializing datatype " + para_type)
+            elif isinstance(para, int):
+                if para < 0:
+                    raise ValueError("negative number " + str(para) + " for initializing datatype " + para_type)
+                numstr = hex(para)[2:]
+            else:
+                raise TypeError("unexpected type " + type(para) + " for initializing datatype " + para_type)
+            numsize = para_type[4:]
+            if numsize == "":
+                numsize = 64
+            else:
+                numsize = int(numsize)
+                if (numsize & 7) != 0 or numsize > 256 or numsize < 0:
+                    raise SolidityTypeError("invalid datatype: " + para_type)
+                numsize >>= 2
+            if len(numstr) > numsize:
+                raise OverflowError("too large number " + str(para) + " to fill in type " + para_type)
+            return '0' * (BYTE32_LENGTH - len(numstr)) + numstr
+        elif para_type[0:5] == 'bytes':
+            if isinstance(para, bytes):
+                para = HexBytes(para).hex()[2:]
+            elif isinstance(para, str):
+                if not hex_match.match(para) and not hex_match_withprefix.match(para):
+                    raise TypeError("not hexstring " + para + " for initializing datatype " + para_type)
+                if para[1] == 'x':
+                    para = para[2:]
+            bytes_size = para_type[5:]
+            if bytes_size == "":
+                if len(para) & 1:
+                    raise Mismatch("odd-length byte-array is invalid")
+                return AbiEncoder.encode('uint256', len(para) >> 1) + para +\
+                    '0' * ((-len(para)) & MOD6)
+            else:
+                bytes_size = int(bytes_size)
+                if len(para) != (bytes_size << 1):
+                    raise Mismatch("parameter " + para + " doesn't match the datatype " + para_type)
+                if bytes_size > 32:
+                    raise SolidityTypeError("invalid given-datatype " + para_type)
+                return para + '0' * ((-len(para)) & MOD6)
+        raise SolidityTypeError("unexpected or invalid given-datatype: " + para_type)
+
+    @staticmethod
+    def encodes(para_list, para_type_list):
+        if len(para_list) != len(para_type_list):
+            raise Mismatch('parameters mismatch with parameters_type_list')
+        res = ""
+        for para_type, para in zip(para_type_list, para_list):
+            res += AbiEncoder.encode(para_type, para)
+
+
 if __name__ == '__main__':
-    print(HexBytes(sliceloc(b'\x01', 1, 8)).hex())
-    print(HexBytes(slicelocation(b'\x01', 1, 8)).hex())
-    print(HexBytes(slicelocation(1, 1, 16)).hex())
-    print(HexBytes(slicelocation("1", 1, 8)).hex())
-    print(HexBytes(slicelocation("0x1", 1, 8)).hex())
-    print(HexBytes(maploc(b'\x00', b'\x00')).hex())
+    pass
+    # print(hex(INTM[32] - 2))
+    # print(AbiEncoder.encode('string', "tannekawaii"))
+    # print(AbiEncoder.encode('int256', -1))
+    # print(AbiEncoder.encode('int32', -1))
+    # print(AbiEncoder.encode('uint256', 1))
+    # print(AbiEncoder.encode('int32', 123))
+    # print(AbiEncoder.encode('byte', "0x01"))
+    # print(AbiEncoder.encode('bytes1', "0x01"))
+    # print(AbiEncoder.encode('bytes2', "0x0102"))
+    # print(AbiEncoder.encode('bytes3', "0x000102"))
+    # print(AbiEncoder.encode('bytes', "0x000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e
+    # 0f000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"))
+    # print("1234567890abcdef" * 12)
+    # print(HexBytes(sliceloc(b'\x01', 1, 8)).hex())
+    # print(HexBytes(slicelocation(b'\x01', 1, 8)).hex())
+    # print(HexBytes(slicelocation(1, 1, 16)).hex())
+    # print(HexBytes(slicelocation("1", 1, 8)).hex())
+    # print(HexBytes(slicelocation("0x1", 1, 8)).hex())
+    # print(HexBytes(maploc(b'\x00', b'\x00')).hex())
