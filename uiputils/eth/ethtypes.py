@@ -14,7 +14,7 @@ from .tools import (
     hex_match,
     hex_match_withprefix
 )
-from uiputils.uiperror import GenerationError
+from uiputils.uiperror import GenerationError, Mismatch, Missing
 
 # ethereum modules
 from hexbytes import HexBytes
@@ -26,6 +26,8 @@ from uiputils.config import eth_blockchain_info as blockchain_info
 from uiputils.config import eth_unit_factor as unit_factor
 from uiputils.config import eth_default_gasuse as default_gasuse
 
+# constant
+MOD6 = (1 << 6) - 1
 
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
 
@@ -78,8 +80,10 @@ class Transaction:
         elif len(function_name) == 10 and hex_match_withprefix.match(function_name):
             setattr(self, 'signature', function_name)
         elif function_parameters_description:
-            to_hash = HexBytes(self.tx_info['func'] + '(' + ','.join(self.tx_info['parameters_description']) + ')')
-            signature = keccak(to_hash)[0:10]
+            to_hash = bytes(
+                (self.tx_info['func'] + '(' + ','.join(function_parameters_description) + ')').encode('utf-8')
+            )
+            signature = HexBytes(keccak(to_hash)[0:4]).hex()
             setattr(self, 'signature', signature)
         else:  # function_parameters_description is None
             raise GenerationError('function-signatrue can\'t be generated')
@@ -119,10 +123,27 @@ class Transaction:
             "from": self.tx_info['invoker'],
             "to": self.tx_info['address'],
             "data": "",
+            "gas": self.tx_info['gas']
         }
         if 'parameters' in self.tx_info:
-            parameters = AbiEncoder.encodes(self.tx_info['parameters'], getattr(self, 'parameters_description'))
-            res['data'] = getattr(self, 'signature') + parameters
+            if hasattr(self, 'parameters_description'):
+                parameters = AbiEncoder.encodes(self.tx_info['parameters'], getattr(self, 'parameters_description'))
+                res['data'] = getattr(self, 'signature') + parameters
+            else:  # without parameters_description
+                if isinstance(self.tx_info['parameters'], str):
+                    if not hex_match.match(self.tx_info['parameters']) and \
+                            not hex_match_withprefix.match(self.tx_info['parameters']):
+                        raise TypeError("bad encoded parameters given: not hexstring")
+                    if self.tx_info['parameters'][1] == 'x':
+                        if (len(self.tx_info['parameters']) - 2) & MOD6:
+                            raise Mismatch("bad encoded parameters given: not multiple of 64(32 bytes)")
+                        res['data'] = getattr(self, 'signature') + self.tx_info['parameters'][2:]
+                    else:
+                        if len(self.tx_info['parameters']) & MOD6:
+                            raise Mismatch("bad encoded parameters given: not multiple of 64(32 bytes)")
+                        res['data'] = getattr(self, 'signature') + self.tx_info['parameters']
+                else:
+                    raise Missing("no parameters_description to help encode the parameters")
         else:  # raw-function called
             res['data'] = self.tx_info['func']
 
@@ -131,7 +152,8 @@ class Transaction:
         return res
 
     def __str__(self):
-        return 'chain_host: ' + str(self.chain_host) + '    transaction_intent: ' + str(self.tx_info)
+        return 'chain_host: ' + str(self.chain_host) +\
+               '\ntransaction_intent: ' + str(self.tx_info)
 
 
 class Contract:

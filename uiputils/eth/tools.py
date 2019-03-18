@@ -215,9 +215,12 @@ class AbiEncoder:
             return negative_flag * (BYTE32_LENGTH - len(numstr)) + numstr
         elif para_type[0:4] == 'uint':
             if isinstance(para, str):
-                numstr = para
                 if not hex_match.match(para) and not hex_match_withprefix.match(para):
                     raise TypeError("invalid hexstring " + para + " for initializing datatype " + para_type)
+                if para[1] == 'x':
+                    numstr = para[2:]
+                else:
+                    numstr = para
             elif isinstance(para, int):
                 if para < 0:
                     raise ValueError("negative number " + str(para) + " for initializing datatype " + para_type)
@@ -259,16 +262,30 @@ class AbiEncoder:
         raise SolidityTypeError("unexpected or invalid given-datatype: " + para_type)
 
     @staticmethod
+    def isArrayType(para_type):
+        return para_type[-1] == ']' or para_type == 'bytes' or para_type == 'string'
+
+    @staticmethod
     def encodes(para_list, para_type_list):
         if len(para_list) != len(para_type_list):
             raise Mismatch('parameters mismatch with parameters_type_list')
-        res = ""
+        args_count, args_head, args_arrays = (len(para_type_list) << 5), "", ""
+
         for para_type, para in zip(para_type_list, para_list):
-            res += AbiEncoder.encode(para_type, para)
+            ret = AbiEncoder.encode(para_type, para)
+            if AbiEncoder.isArrayType(para_type):
+                args_head += AbiEncoder.encode('uint256', args_count)
+                args_arrays += ret
+                args_count += (len(ret) >> 1)
+            else:
+                args_head += ret
+        return args_head + args_arrays
 
 
 if __name__ == '__main__':
-    pass
+    print(AbiEncoder.encodes([123123, ['0x0142'], ['0x1420'], 1123, -1, ["0x1042"]],
+                             ['uint256', 'bytes2[]', 'bytes2[]', 'uint256', 'int256', 'bytes2[]']))
+    # print(AbiEncoder.encodes(['tannekawaii', 'daisuki'], ['string', 'string']))
     # print(hex(INTM[32] - 2))
     # print(AbiEncoder.encode('string', "tannekawaii"))
     # print(AbiEncoder.encode('int256', -1))
@@ -279,12 +296,28 @@ if __name__ == '__main__':
     # print(AbiEncoder.encode('bytes1', "0x01"))
     # print(AbiEncoder.encode('bytes2', "0x0102"))
     # print(AbiEncoder.encode('bytes3', "0x000102"))
-    # print(AbiEncoder.encode('bytes', "0x000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e
-    # 0f000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"))
-    # print("1234567890abcdef" * 12)
+    # print(AbiEncoder.encode('bytes', "0x000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f00010203040506
+    # 0708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"))
+    print("1234567890abcdef" * 0x30)  # 0x30 * 8 = 0x180
     # print(HexBytes(sliceloc(b'\x01', 1, 8)).hex())
     # print(HexBytes(slicelocation(b'\x01', 1, 8)).hex())
     # print(HexBytes(slicelocation(1, 1, 16)).hex())
     # print(HexBytes(slicelocation("1", 1, 8)).hex())
     # print(HexBytes(slicelocation("0x1", 1, 8)).hex())
     # print(HexBytes(maploc(b'\x00', b'\x00')).hex())
+
+# 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+# data                                                             # byte
+# 000000000000000000000000000000000000000000000000000000000001e0f3 # 00
+# 00000000000000000000000000000000000000000000000000000000000000c0 # 20
+# 0000000000000000000000000000000000000000000000000000000000000100 # 40
+# 0000000000000000000000000000000000000000000000000000000000000463 # 60
+# ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff # 80
+# 0000000000000000000000000000000000000000000000000000000000000140 # a0
+# 0000000000000000000000000000000000000000000000000000000000000001 # c0
+# 1402000000000000000000000000000000000000000000000000000000000000 # e0
+# 0000000000000000000000000000000000000000000000000000000000000001 # 100
+# 1420000000000000000000000000000000000000000000000000000000000000 # 120
+# 0000000000000000000000000000000000000000000000000000000000000001 # 140
+# 1042000000000000000000000000000000000000000000000000000000000000 # 160
+#                                                                    180
