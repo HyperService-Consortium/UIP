@@ -65,11 +65,13 @@ extern "C" {
 #endif
 
 
-extern int openDB(char* p0);
+extern int OpenDB(char* p0);
 
-extern void closeDB(int p0);
+extern void CloseDB(int p0);
 
 extern int VerifyProof(int p0, char* p1, char* p2, char* p3, char** p4, size_t p5);
+
+extern int VerifyProofWithoutPath(int p0, char* p1, char* p2, char* p3);
 
 #ifdef __cplusplus
 }

@@ -13,11 +13,20 @@ import (
 )
 
 const (
+	// test-db dir
 	EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
+	// size of a secure-MPT's short-node
 	SHORTNODE = 2
+	// size of a secure-MPT's full-node
 	FULLNODE = 17
-    HASHSTRINGLENGTH = 64
-    CHAR_P_SIZE = 8
+	// length of a keccak256hash in string (16^64 = 256^32)
+	HASHSTRINGLENGTH = 64
+	// bytes of a char* (C pointer)
+	CHAR_P_SIZE = 8
+	// max number of onload-dbs
+	MXONLOADDB = 64
+	// Hash byte-Array's length
+	HashLength = 32
 )
 
 
@@ -28,13 +37,14 @@ var (
 	headBlockKey = []byte("LastBlock")
 	//Got a BlockHeader
 	headerPrefix = []byte("h")
+	//onload-db array
+	dbPacket = make([]*leveldb.DB, 0, MXONLOADDB)
+	//dbfree reference
+	dbpi = 0
+	// char maps to bit integer
+	hexmaps [128]uint64
 )
 
-// Hash byte-Array's length
-const HashLength = 32
-
-// char maps to bit integer
-var hexmaps [128]uint64
 
 // common.Hash
 type Hash [HashLength]byte
@@ -123,6 +133,7 @@ func stringtoheaderkey(number uint64, hashstr string) []byte {
 	return append(append(headerPrefix, uint64tobytes(number)...), stringtohash(hashstr).bytes()...);
 }
 
+// input a char*[] and return string[] (slice)
 func stringPtrToStringSlice(stringPtr **C.char, slicelen C.size_t) []string {
     strslice := make([]string, 0, slicelen)
     var unblock unsafe.Pointer
@@ -148,7 +159,8 @@ func bytesequal(nib1 []byte, nib2 []byte) bool {
 	return true
 }
 
-func comparehex(hexx string, hexy string) bool {
+// compare to hexstring without leading-zero
+func hexstringequal(hexx string, hexy string) bool {
 	var ofsx, ofsy = 0, 0
 	if len(hexx) >= 2 &&  hexx[0:2] == "0x" {
 		ofsx = 2
@@ -167,68 +179,9 @@ func comparehex(hexx string, hexy string) bool {
 	return hexx[ofsx:] == hexy[ofsy:]
 }
 
-// get value of key on the trie
-func findPath(db *leveldb.DB, rootHashStr string, path string, storagepath []string, consumed int) (string ,error) {
 
-	//key consumed
-	if len(path) == 0 {
-		return "", errors.New("consumed")
-	}
-
-	// get node from db
-	querynode, err := db.Get(stringtohash(rootHashStr).bytes(), nil)
-	if err != nil {
-		return "", err;
-	}else {
-
-		// compare to storagepath
-		if hex.EncodeToString(querynode) != storagepath[0] {
-			return "", errors.New("No exists(differ from path), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
-		}
-
-		node := rlp.Unserialize(querynode)
-
-		switch node.Length() {
-			case SHORTNODE: {
-				firstvar, secondvar := node.Get(0).AsString(), node.Get(1).AsString()
-
-				//end of proofpath
-				if len(storagepath) == 1 {
-					if path != firstvar[consumed:] {
-						return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
-					}
-					return secondvar, nil
-				}
-
-				//compare prefix of the path with node[0]
-				firstvarlen := len(firstvar)
-				if (firstvarlen > len(path)) || (firstvar != path[0:firstvarlen]) {
-					return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
-				}
-
-				return findPath(db, secondvar, path[firstvarlen: ], storagepath[1 : ], consumed + firstvarlen)
-			}
-			case FULLNODE: {
-				tryquery := node.Get(int(hexmaps[path[0]])).AsString()
-
-				if len(tryquery) == HASHSTRINGLENGTH {
-					return findPath(db, tryquery, path[1 : ], storagepath[1 : ], consumed + 1)
-				}else {
-					return "", errors.New("No exists, in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ rootHashStr)
-				}
-			}
-			default: {
-				return "", errors.New("Unknown node types")
-			}
-		}
-	}
-}
-
-var dbPacket = make([]*leveldb.DB, 0, 64)
-var dbpi = 0
-
-//export openDB
-func openDB(dbpath *C.char) C.int {
+//export OpenDB
+func OpenDB(dbpath *C.char) C.int {
     db, err := leveldb.OpenFile(C.GoString(dbpath), nil)
     if err != nil {
 		fmt.Println("link error")
@@ -243,11 +196,70 @@ func openDB(dbpath *C.char) C.int {
 }
 
 
-//export closeDB
-func closeDB(dbpi C.int) {
+//export CloseDB
+func CloseDB(dbpi C.int) {
     db := dbPacket[dbpi]
     db.Close();
 }
+
+
+// get value of key on the trie
+func findPath(db *leveldb.DB, roothash string, path string, storagepath []string, consumed int) (string, error) {
+
+	//key consumed
+	if len(path) == 0 {
+		return "", errors.New("consumed")
+	}
+
+	// get node from db
+	querynode, err := db.Get(stringtohash(roothash).bytes(), nil)
+	if err != nil {
+		return "", err;
+	}else {
+
+		// compare to storagepath
+		if hex.EncodeToString(querynode) != storagepath[0] {
+			return "", errors.New("No exists(differ from path), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ roothash)
+		}
+
+		node := rlp.Unserialize(querynode)
+
+		switch node.Length() {
+			case SHORTNODE: {
+				firstvar, secondvar := node.Get(0).AsString(), node.Get(1).AsString()
+
+				//end of proofpath
+				if len(storagepath) == 1 {
+					if path != firstvar[consumed:] {
+						return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ roothash)
+					}
+					return secondvar, nil
+				}
+
+				//compare prefix of the path with node[0]
+				firstvarlen := len(firstvar)
+				if (firstvarlen > len(path)) || (firstvar != path[0:firstvarlen]) {
+					return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ roothash)
+				}
+
+				return findPath(db, secondvar, path[firstvarlen: ], storagepath[1 : ], consumed + firstvarlen)
+			}
+			case FULLNODE: {
+				tryquery := node.Get(int(hexmaps[path[0]])).AsString()
+
+				if len(tryquery) == HASHSTRINGLENGTH {
+					return findPath(db, tryquery, path[1 : ], storagepath[1 : ], consumed + 1)
+				}else {
+					return "", errors.New("No exists, in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ roothash)
+				}
+			}
+			default: {
+				return "", errors.New("Unknown node types")
+			}
+		}
+	}
+}
+
 
 func _VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, storagepath []string) bool {
 	if len(key) >= 2 && key[0:2] == "0x" {
@@ -267,7 +279,7 @@ func _VerifyProof(db *leveldb.DB, rootHashStr string, key string, value string, 
 	if err != nil {
 		fmt.Println(err)
 	}else {
-		if comparehex(value, toval) == true {
+		if hexstringequal(value, toval) == true {
             fmt.Println("Proved")
             return true
 		}else {
@@ -292,6 +304,95 @@ func VerifyProof(dbPtr C.int,
     }
     return 0
 }
+
+func verifyKey(db *leveldb.DB, roothash string, path string, consumed int) (string, error) {
+	
+	//key consumed
+	if len(path) == 0 {
+		return "", errors.New("consumed")
+	}
+
+	// get node from db
+	querynode, err := db.Get(stringtohash(roothash).bytes(), nil)
+	if err != nil {
+		return "", err;
+	}else {
+
+		// compare to storagepath
+		// compare to rlp-hash
+		// TODO
+
+		node := rlp.Unserialize(querynode)
+
+		switch node.Length() {
+			case SHORTNODE: {
+				firstvar, secondvar := node.Get(0).AsString(), node.Get(1).AsString()
+
+				//end of proofpath
+				if path == firstvar[consumed:] {
+					return secondvar, nil
+				}
+
+				//compare prefix of the path with node[0]
+				firstvarlen := len(firstvar)
+				if (firstvarlen > len(path)) || (firstvar != path[0:firstvarlen]) {
+					return "", errors.New("No exists(no this branch), in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ roothash)
+				}
+
+				return verifyKey(db, secondvar, path[firstvarlen: ], consumed + firstvarlen)
+			}
+			case FULLNODE: {
+				tryquery := node.Get(int(hexmaps[path[0]])).AsString()
+
+				if len(tryquery) == HASHSTRINGLENGTH {
+					return verifyKey(db, tryquery, path[1 : ], consumed + 1)
+				}else {
+					return "", errors.New("No exists, in depth" + strconv.FormatInt(int64(consumed), 10) + ", querying"+ roothash)
+				}
+			}
+			default: {
+				return "", errors.New("Unknown node types")
+			}
+		}
+	}
+}
+
+func _VerifyProofWithoutPath(db *leveldb.DB, rootHashStr string, key string, value string) bool {
+	if len(key) >= 2 && key[0:2] == "0x" {
+		key = key[2:]
+	}
+	if len(value) >= 2 && value[0:2] == "0x" {
+		value = value[2:]
+	}
+
+	// key = append(make([]byte,0),2,9)
+	toval, err := verifyKey(db, rootHashStr, key, 0)
+	if err != nil {
+		fmt.Println(err)
+	}else {
+		if hexstringequal(value, toval) == true {
+            fmt.Println("Proved")
+            return true
+		}else {
+            fmt.Println("key maps to", "0x" + toval + ", not", "0x" + value)
+            return false
+		}
+    }
+    return false
+}
+//export VerifyProofWithoutPath
+func VerifyProofWithoutPath(dbPtr C.int, rootHashStrPtr *C.char, keyPtr *C.char, valuePtr *C.char) C.int {
+    db := dbPacket[dbPtr]
+    rootHashStr := C.GoString(rootHashStrPtr)
+    key := C.GoString(keyPtr)
+    value := C.GoString(valuePtr)
+
+    if _VerifyProofWithoutPath(db, rootHashStr, key, value) {
+        return 1
+    }
+    return 0
+}
+
 func init() {
 	for idx := '0'; idx <= '9'; idx++ {
 		hexmaps[idx] = uint64(idx - '0')
