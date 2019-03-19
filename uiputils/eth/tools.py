@@ -282,9 +282,106 @@ class AbiEncoder:
         return args_head + args_arrays
 
 
+class AbiDecoder:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def decode(ret_type, raw_ret):
+        if ret_type == 'address':
+            return AbiDecoder.decode('uint160', raw_ret)
+        elif ret_type == 'byte':
+            return AbiDecoder.decode('bytes1', raw_ret)
+        elif ret_type == 'bool':
+            return AbiDecoder.decode('uint8', raw_ret) != 0
+        elif ret_type[-1] == ']':  # Array
+            array_type, array_size = ret_type[:-1].split('[')
+            if array_size != "":
+                print("TODO array-type:", ret_type)
+                pass
+            else:
+                raise SolidityTypeError("unsupported atom-solidity type" + ret_type)
+        elif ret_type[0:3] == 'int':
+            if raw_ret[0] == 'f':
+                return int(raw_ret, 16) - INTM[32]
+            return int(raw_ret, 16)
+        elif ret_type[0:4] == 'uint':
+            return int(raw_ret, 16)
+        elif ret_type[0:5] == 'bytes':
+            bytes_size = int(ret_type[5:])
+            if bytes_size == "":
+                raise SolidityTypeError("unsupported atom-solidity type: bytes")
+            return HexBytes(raw_ret[0:(bytes_size << 1)])
+        elif ret_type == 'string':
+            raise SolidityTypeError("unsupported atom-solidity type: string")
+
+        raise SolidityTypeError("unexpected or invalid given-datatype: " + ret_type)
+
+    @staticmethod
+    def isArrayType(para_type):
+        return para_type[-1] == ']' or para_type == 'bytes' or para_type == 'string'
+
+    @staticmethod
+    def decodeArray(ret_type, raw_rets):
+        if 64 > len(raw_rets):
+            raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) + " but expect at least 64")
+        if ret_type == 'bytes':
+            ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
+            if 64 + (ret_size << 1) > len(raw_rets):
+                raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) +\
+                                    " but expect at least " + str(64 + (ret_size << 1)))
+            return HexBytes(raw_rets[64:64+(ret_size << 1)])
+        elif ret_type == 'string':
+            ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
+            if 64 + (ret_size << 1) > len(raw_rets):
+                raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) + \
+                                    " but expect at least " + str(64 + (ret_size << 1)))
+            return raw_rets[64:64+(ret_size << 1)].encode('utf-8')
+        else:
+            if ret_type[-2:] == '[]':
+                if ret_type[-3] == ']':
+                    print("TODO array-type:", ret_type)
+                    return
+                ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
+                if 64 + (ret_size << 6) > len(raw_rets):
+                    raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) + \
+                                        " but expect at least " + str(64 + (ret_size << 1)))
+                return [
+                    AbiDecoder.decode(ret_type[:-2], raw_rets[(idx << 6):(idx + 1) << 6])
+                    for idx in range(1, ret_size + 1)
+                ]
+            else:
+                print("TODO array-type:", ret_type)
+                return
+
+
+    @staticmethod
+    def decodes(raw_rets, rets_type_list):
+        if len(raw_rets) & MOD6:
+            raise ValueError("data damaged")
+        rets, ret_counter = [], 0
+
+        for ret_type in rets_type_list:
+            if AbiDecoder.isArrayType(ret_type):
+                ret = AbiDecoder.decodeArray(
+                    ret_type,
+                    raw_rets[(AbiDecoder.decode('uint256', raw_rets[ret_counter:ret_counter+64]) << 1):]
+                )
+                rets.append(ret)
+            else:
+                ret = AbiDecoder.decode(ret_type, raw_rets[ret_counter:ret_counter+64])
+                rets.append(ret)
+            ret_counter += 64
+        return rets
+
+
+
 if __name__ == '__main__':
-    print(AbiEncoder.encodes([123123, ['0x0142'], ['0x1420'], 1123, -1, ["0x1042"]],
-                             ['uint256', 'bytes2[]', 'bytes2[]', 'uint256', 'int256', 'bytes2[]']))
+    type_list = ['uint256', 'bytes2[]', 'bytes2[]', 'uint256', 'int256', 'bytes2[]']
+    encodetest = AbiEncoder.encodes([123123, ['0x0142'], ['0x1420'], 1123, -1, ["0x1042"]], type_list)
+    print("1234567890abcdef" * 0x30)  # 0x30 * 8 = 0x180
+    print(encodetest)
+    print(AbiDecoder.decodes(encodetest, type_list))
     # print(AbiEncoder.encodes(['tannekawaii', 'daisuki'], ['string', 'string']))
     # print(hex(INTM[32] - 2))
     # print(AbiEncoder.encode('string', "tannekawaii"))
@@ -298,7 +395,6 @@ if __name__ == '__main__':
     # print(AbiEncoder.encode('bytes3', "0x000102"))
     # print(AbiEncoder.encode('bytes', "0x000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f00010203040506
     # 0708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"))
-    print("1234567890abcdef" * 0x30)  # 0x30 * 8 = 0x180
     # print(HexBytes(sliceloc(b'\x01', 1, 8)).hex())
     # print(HexBytes(slicelocation(b'\x01', 1, 8)).hex())
     # print(HexBytes(slicelocation(1, 1, 16)).hex())
