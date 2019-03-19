@@ -50,10 +50,21 @@ class ChainDNS:
 
     @staticmethod
     def checkrelay(chain_id):
-        if 'relay' in blockchain_info[chain_id]:
-            return blockchain_info[chain_id]['relay']
+        if chain_id in blockchain_info:
+            if 'relay' in blockchain_info[chain_id]:
+                return blockchain_info[chain_id]['relay']
+            else:
+                raise Missing('this chain has not relay-address' + chain_id)
         else:
-            raise Missing('this chain has not relay-address' + chain_id)
+            raise Missing('no such chainID: ' + chain_id)
+
+
+    @staticmethod
+    def gethost(chain_id):
+        if chain_id in blockchain_info:
+            return blockchain_info[chain_id]['host']
+        else:
+            raise Missing('no such chainID: ' + chain_id)
 
 
 class Transaction:

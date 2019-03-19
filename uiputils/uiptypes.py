@@ -4,10 +4,16 @@
 # python modules
 import json
 import time
+import rlp
 from random import randint
 
+# ethereum modules
+from eth_keys import keys, KeyAPI
+from eth_hash.auto import keccak
+from hexbytes import HexBytes
+
 # uip modules
-from .uiperror import InitializeError, GenerationError
+from .uiperror import InitializeError, GenerationError, Missing
 
 # eth modules
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
@@ -19,11 +25,20 @@ from uiputils.eth.ethtypes import(
 
 # config
 from uiputils.config import eth_blockchain_info, HTTP_HEADER
+ENC = 'utf-8'
 
+
+def adduser_f00(user):
+    user_name, chain_domain = (split_str[::-1] for split_str in user[::-1].split('.', 1))
+    chain_type, chain_id = chain_domain.split('://')
+    return ChainDNS.checkuser(chain_type, chain_id, user_name)
 
 class ChainDNS:
     DNSmethod = {
        'Ethereum': EthChainDNS
+    }
+    adduser = {
+        'dot-concated': adduser_f00
     }
 
     @staticmethod
@@ -35,6 +50,23 @@ class ChainDNS:
     def checkrelay(chain_type, chain_id):
         # this function doesn't check chain_type
         return ChainDNS.DNSmethod[chain_type].checkrelay(chain_id)
+
+    @staticmethod
+    def gethost(chain_type, chain_id):
+        return ChainDNS.DNSmethod[chain_type].gethost(chain_id)
+
+    @staticmethod
+    def gatherusers(users, userformat=None):
+        if userformat is None:
+            # TODO: multi-format of ChainDNS.gatherusers
+            pass
+        users_address = []
+        if userformat == 'dot-concated':
+            for formated_user in users:
+                users_address.append(ChainDNS.adduser['dot-concated'](formated_user))
+        else:
+            raise KeyError(userformat + ' unsupported now')
+        return users_address
 
 
 class BlockchainNetwork:
@@ -88,10 +120,15 @@ class VerifiableExecutionSystem:
     }
 
     def __init__(self):
+        # temporary private-key
+        self.key = keys.PrivateKey(b'\x01' * 32)
+        ########################################
+
         self.txs_pool = {
             VerifiableExecutionSystem.INVALID: VerifiableExecutionSystem.INVALID_SESSION
         }
         self.isc = InsuranceSmartContract
+        self.user_pool = {}
         pass
 
     # async receiveIntents(self, intents):
@@ -109,13 +146,29 @@ class VerifiableExecutionSystem:
         self.txs_pool[session_id] = VerifiableExecutionSystem.INVALID_SESSION
 
         # build eligible Op intents
-        op_intents = OpIntent.createopintents(op_intents_json['Op-intents'])
+        op_intents, op_owners = OpIntent.createopintents(op_intents_json['Op-intents'])
+
         # Generate Transaction intents and Dependency Graph
         tx_intents = TransactionIntents(op_intents, op_intents_json['dependencies'])
 
-        # TODO: build ISC
+        # TODO: Sort Graph
 
-        # TODO: Send Approve Atte_V
+        # TODO: build ISC
+        isc = InsuranceSmartContract(tx_intents, ChainDNS.gatherusers(op_owners, userformat='dot-concated'))
+
+        wait_user = set()
+        for owner in op_owners:
+            # test updateFunds
+            isc.updateFunds(adduser_f00(owner), 0)
+            ######################################
+
+            if owner not in self.user_pool:
+                raise Missing(owner + " is not in user-pool")
+            wait_user.add(self.user_pool[owner])
+
+        sign_content = [str(session_id), tx_intents.purejson(), isc.address]
+        atte_v = self.sign(rlp.encode(sign_content))
+        return sign_content, atte_v
 
     def sessionSetupUpdate(self, session_id):
         # TODO: Wait Approve Atte_V_D
@@ -143,6 +196,9 @@ class VerifiableExecutionSystem:
     def stakefunded(self, isc, session_id):
         pass
 
+    def sign(self, msg):
+        return self.key.sign_msg(msg)
+
     def watching(self, session_id):
         pass
 
@@ -152,17 +208,30 @@ class VerifiableExecutionSystem:
     def addMerkleProof(self, session_id, merk):
         pass
 
+    # tmp function
+    def appenduserlink(self, users):
+        if isinstance(users, list):
+            for user in users:
+                self.appenduserlink(user)
+        else:  # assuming be class dApp
+            self.user_pool[users.name] = users
+
 
 class InsuranceSmartContract:
-    isc_data = {}
-
     def __init__(self, info, owners):
+
+        # TODO : contract construct
+        self.address = '0xca35b7d915458ef540ade6068dfe2f44e8fa733c'
+        self.contract = info
+        self.owners = owners
         # self.handle = ethISC(...)
         # Insurance Smart Contract is a contract on the blockchain
         pass
 
-    def updateFunds(self):
-        pass
+    def updateFunds(self, owner, fund):
+        if owner not in self.owners:
+            raise Missing('this address is not owner')
+        print(owner, "updated fund:", fund)
 
     def insuranceClaim(self, contract_id, atte):
         pass
@@ -184,6 +253,7 @@ class OpIntent:
 
     def __init__(self, intent_json):
         self.op_type = ""
+        self.owners = []
         for key_attr in OpIntent.Key_Attribute_All:
             if key_attr in intent_json:
                 setattr(self, key_attr, intent_json[key_attr])
@@ -197,7 +267,12 @@ class OpIntent:
 
     @staticmethod
     def createopintents(op_intents_json):
-        return [OpIntent(op_intent_json) for op_intent_json in op_intents_json]
+        op_intents, op_owners = [], set()
+        for op_intent_json in op_intents_json:
+            op_intent = OpIntent(op_intent_json)
+            op_intents.append(op_intent)
+            op_owners.update(op_intent.owners)
+        return op_intents, op_owners
 
     def PaymentInit(self, intent_json):
         for key_attr in OpIntent.Key_Attribute_Payment:
@@ -205,7 +280,10 @@ class OpIntent:
                 setattr(self, key_attr, intent_json[key_attr])
             else:
                 raise InitializeError("the attribute " + key_attr + " must be included in the Payment intent")
-
+        self.owners.extend([
+            getattr(self, 'src')['domain'] + '.' + getattr(self, 'src')['user_name'],
+            getattr(self, 'dst')['domain'] + '.' + getattr(self, 'dst')['user_name']
+        ])
         for option_attr in OpIntent.Option_Attribute_Payment:
             if option_attr in intent_json:
                 setattr(self, option_attr, intent_json[option_attr])
@@ -220,7 +298,7 @@ class OpIntent:
             else:
                 raise InitializeError("the attribute " + key_attr +\
                                       " must be included in the ContractInvocation intent")
-
+        self.owners.append(getattr(self, 'contract_domain') + '.' + getattr(self, 'invoker'))
         for option_attr in OpIntent.Option_Attribute_ContractInvocation:
             if option_attr in intent_json:
                 setattr(self, option_attr, intent_json[option_attr])
@@ -373,14 +451,51 @@ class TransactionIntents:
             'dependencies': self.dependencies
         }
 
+    def purejson(self):
+        return json.dumps(self.dictize(), sort_keys=True)
+
     def jsonize(self):
         return json.dumps(self.dictize(), sort_keys=True, indent=4, separators=(', ', ': '))
 
+    def hash(self):
+        return HexBytes(keccak(bytes(json.dumps(self.dictize(), sort_keys=True).encode(ENC)))).hex()
 
 class DApp:
-    def __init__(self, addr=None, passphrase=None):
-        self.address = addr
-        self.password = passphrase
+    def __init__(self, user_loc):
+        self.info = {}
+        chain_type, chain_id = user_loc['domain'].split('://')
+        self.address = ChainDNS.checkuser(chain_type, chain_id, user_loc['name'])
+        self.chain_host = ChainDNS.gethost(chain_type, chain_id)
+        self.name = user_loc['domain'] + '.' + user_loc['name']
+        if 'passphrase' in user_loc:
+            self.password = user_loc['passphrase']
+        # for loc in user_loc:
+        #     chain_type, chain_id = loc['chain'].split('://')
+        #     if chain_type == 'Ethereum':
+        #         self.address = ChainDNS.checkuser(chain_type, chain_id, loc['name'])
+        #         self.chain_host = ChainDNS.gethost(chain_type, chain_id)
+        #         if 'passphrase' in loc:
+        #             self.password = loc['passphrase']
+        #     self.info[chain_type] = {
+        #         'address': ChainDNS.checkuser(chain_type, chain_id, loc['name']),
+        #         'host': ChainDNS.gethost(chain_type, chain_id),
+        #         'password': None
+        #     }
+        #     if 'passphrase' in loc:
+        #         self.info[chain_type]['password'] = loc['passphrase']
+
+    def unlockself(self):
+        unlock = JsonRPC.personalUnlockAccount(self.address, self.password, 20)
+        response = JsonRPC.send(unlock, HTTP_HEADER, self.chain_host)
+        if not response['result']:
+            raise ValueError("unlock failed. wrong password?")
+
+    def sign(self, msg):
+        # assuming self.address is on Ethereum
+        self.unlockself()
+        sign_json = JsonRPC.ethSign(self.address, msg)
+        response = JsonRPC.send(sign_json, HTTP_HEADER, self.chain_host)['result']
+        print(response)
 
     def call(self, trans):
         if trans.chain_type == 'Ethereum':

@@ -17,8 +17,8 @@
         {
             "op_type": "ContractInvocation",
             "name": "Op2",
-            "invoker": "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737",
-            "contract_domain": "Ethereum://chain1",
+            "invoker": "Y",
+            "contract_domain": "Ethereum://chain2",
             "contract_addr": "0x85854fe3853b7A51576bFd78564Ec1993f8820d1",
             "contract_code": null,
             "func": "isOwner",

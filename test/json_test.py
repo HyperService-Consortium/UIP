@@ -6,7 +6,7 @@ from uiputils.uiptypes import DApp, OpIntent, TransactionIntents
 
 
 if __name__ == '__main__':
-
+    # load Sample.json
     op_intents_json = FileLoad.getopintents("opintents.json")
 
     # build eligible Op intents
