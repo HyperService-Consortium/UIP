@@ -19,6 +19,7 @@ from uiputils.uiperror import GenerationError, Mismatch, Missing
 # ethereum modules
 from hexbytes import HexBytes
 from eth_hash.auto import keccak
+from eth_utils import is_address
 # from web3 import Web3
 
 # config
@@ -30,6 +31,29 @@ from uiputils.config import eth_default_gasuse as default_gasuse
 MOD6 = (1 << 6) - 1
 
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
+
+
+class ChainDNS:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def checkuser(chain_id, user_name):
+        if is_address(user_name):
+            return user_name
+        if chain_id in blockchain_info:
+            if user_name in blockchain_info[chain_id]['user']:
+                return blockchain_info[chain_id]['user'][user_name]
+            raise Missing('no user named ' + user_name + ' in ' + chain_id)
+        else:
+            raise Missing('no such chainID: ' + chain_id)
+
+    @staticmethod
+    def checkrelay(chain_id):
+        if 'relay' in blockchain_info[chain_id]:
+            return blockchain_info[chain_id]['relay']
+        else:
+            raise Missing('this chain has not relay-address' + chain_id)
 
 
 class Transaction:

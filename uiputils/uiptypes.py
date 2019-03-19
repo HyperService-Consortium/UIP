@@ -1,16 +1,40 @@
 
 'some types'
 
+# python modules
 import json
 import time
-
-from .eth.ethtypes import NetStatusBlockchain as ethNSB
 from random import randint
-from .uiperror import InitializeError, GenerationError, Missing
-from uiputils.eth import JsonRPC
 
-from uiputils.eth.ethtypes import Transaction as EthTx
+# uip modules
+from .uiperror import InitializeError, GenerationError
+
+# eth modules
+from .eth.ethtypes import NetStatusBlockchain as ethNSB
+from uiputils.eth import JsonRPC
+from uiputils.eth.ethtypes import(
+    Transaction as EthTx,
+    ChainDNS as EthChainDNS
+)
+
+# config
 from uiputils.config import eth_blockchain_info, HTTP_HEADER
+
+
+class ChainDNS:
+    DNSmethod = {
+       'Ethereum': EthChainDNS
+    }
+
+    @staticmethod
+    def checkuser(chain_type, chain_id, user_name):
+        # this function doesn't check chain_type
+        return ChainDNS.DNSmethod[chain_type].checkuser(chain_id, user_name)
+
+    @staticmethod
+    def checkrelay(chain_type, chain_id):
+        # this function doesn't check chain_type
+        return ChainDNS.DNSmethod[chain_type].checkrelay(chain_id)
 
 
 class BlockchainNetwork:
@@ -57,13 +81,15 @@ class VerifiableExecutionSystem:
     # the ves in uip
     INVALID = 0
     INVALID_TXS = [{}]
+    INVALID_SESSION = {
+        'tx_intents': INVALID_TXS,
+        'Atte': {},
+        'Merk': {}
+    }
 
     def __init__(self):
         self.txs_pool = {
-            0: (
-                VerifiableExecutionSystem.INVALID,
-                VerifiableExecutionSystem.INVALID_TXS
-            )
+            VerifiableExecutionSystem.INVALID: VerifiableExecutionSystem.INVALID_SESSION
         }
         self.isc = InsuranceSmartContract
         pass
@@ -74,40 +100,38 @@ class VerifiableExecutionSystem:
     # async receiveTransactions(self, txs):
     #     pass
 
-    def sessionSetup(self, txs):
+    def sessionSetupPrepare(self, op_intents_json):
         session_id = 0
         while session_id in self.txs_pool:
             session_id = randint(0, 0xffffffff)
-        tx_graph = self.buildGraph(txs)
 
-        # send atte_1 and get atte_12
+        # pre-register
+        self.txs_pool[session_id] = VerifiableExecutionSystem.INVALID_SESSION
 
-        nsb_info, isc_info, dapp_info = self.generateTxInfo(tx_graph)
+        # build eligible Op intents
+        op_intents = OpIntent.createopintents(op_intents_json['Op-intents'])
+        # Generate Transaction intents and Dependency Graph
+        tx_intents = TransactionIntents(op_intents, op_intents_json['dependencies'])
 
-        tosend_dapps = set()
-        for tx in txs:
-            if 'from' in tx:
-                tosend_dapps.add(tx['from'])
-            if 'to' in tx:
-                tosend_dapps.add(tx['to'])
+        # TODO: build ISC
 
-        tovote = len(tosend_dapps)
+        # TODO: Send Approve Atte_V
 
-        for dapp in tosend_dapps:
-            tovote -= 1
-            if dapp != "":
-                pass
+    def sessionSetupUpdate(self, session_id):
+        # TODO: Wait Approve Atte_V_D
+        dapps_approved = 1
 
-        if tovote == 0:
-            self.sendTxInfoToNSB(nsb_info)
-            isc = self.isc(isc_info, tosend_dapps)
-            if self.stakefunded(isc, session_id):
-                self.txs_pool[session_id]= session_id, txs
+        # log off invalid session
+        if not dapps_approved:
+            self.txs_pool.pop(session_id)
 
-    def buildGraph(self, txs):
+    def sessionSetupFinish(self, session_id):
+        # TODO: Send Request(Tx-intents) NSB
+
+        # TODO: Stake Funds
         pass
 
-    def generateTxInfo(self, tx_graph):
+    def buildGraph(self, tx_intents):
         pass
 
     def sendTxInfoToNSB(self, info):
@@ -117,6 +141,15 @@ class VerifiableExecutionSystem:
         pass
 
     def stakefunded(self, isc, session_id):
+        pass
+
+    def watching(self, session_id):
+        pass
+
+    def addAttestation(self, session_id, atte):
+        pass
+
+    def addMerkleProof(self, session_id, merk):
         pass
 
 
@@ -162,6 +195,10 @@ class OpIntent:
 
         getattr(self, self.op_type + 'Init')(intent_json)
 
+    @staticmethod
+    def createopintents(op_intents_json):
+        return [OpIntent(op_intent_json) for op_intent_json in op_intents_json]
+
     def PaymentInit(self, intent_json):
         for key_attr in OpIntent.Key_Attribute_Payment:
             if key_attr in intent_json:
@@ -201,10 +238,6 @@ class OpIntent:
             setattr(self, 'address', intent_json['contract_addr'])
 
 
-def createopintents(op_intents_json):
-    return [OpIntent(op_intent_json) for op_intent_json in op_intents_json]
-
-
 class TransactionIntents:
     def __init__(self, op_intents, dependencies):
         self.intents = []
@@ -219,6 +252,7 @@ class TransactionIntents:
         #     for v in vs:
         #         print("   ", v)
 
+        # build Dependencies
         for dependency in dependencies:
             if 'left' not in dependency or 'right' not in dependency:
                 raise GenerationError("attribute left/right missing")
@@ -242,8 +276,8 @@ class TransactionIntents:
             tx = EthTx(
                 "transfer",  # transaction type
                 src_chain_id,  # chain_id
-                eth_blockchain_info[src_chain_id]['user'][op_intent.src['user_name']],
-                eth_blockchain_info[src_chain_id]['relay'],  # dst_addr
+                ChainDNS.checkuser(src_chain_type, src_chain_id, op_intent.src['user_name']),  #src_addr
+                ChainDNS.checkrelay(src_chain_type, src_chain_id),  # dst_addr
                 op_intent.amount,  # fund
                 op_intent.unit  # fund_unit
             )
@@ -256,17 +290,19 @@ class TransactionIntents:
             tx = EthTx(
                 "transfer",  # transaction type
                 dst_chain_id,  # chain_id
-                eth_blockchain_info[dst_chain_id]['user'][op_intent.dst['user_name']],  # src_addr
-                eth_blockchain_info[dst_chain_id]['relay'],  # dst_addr
+                ChainDNS.checkuser(dst_chain_type, dst_chain_id, op_intent.dst['user_name']),  # src_addr
+                ChainDNS.checkrelay(dst_chain_type, dst_chain_id),  # dst_addr
                 op_intent.amount,  # fund
                 getattr(op_intent, 'unit')  # option fund_unit
             )
             self.intents.append(tx)
             tx.tx_info['name'] = "T" + str(len(self.intents))
         else:
-            raise GenerationError("unsupported chain-type: " + src_chain_type)
+            raise GenerationError("unsupported chain-type: " + dst_chain_type)
 
-        intent_tx[op_intent.name] = ["T" + str(len(self.intents) - 1), "T" + str(len(self.intents))]
+        t_fr, t_to = "T" + str(len(self.intents) - 1), "T" + str(len(self.intents))
+        intent_tx[op_intent.name] = [t_fr, t_to]
+        self.dependencies.append(t_fr + "->" + t_to)
 
     def ContractInvocationTxGenerate(self, op_intent, intent_tx):
         chain_type, chain_id = op_intent.contract_domain.split('://')
@@ -274,12 +310,13 @@ class TransactionIntents:
         # assert (hasattr(op_intent, 'address') ^ hasattr(op_intent, 'code')) == 1
 
         if chain_type == "Ethereum":
+            invoker_address = ChainDNS.checkuser(chain_type, chain_id, op_intent.invoker)
             compare_vector = hasattr(op_intent, 'address') << 1 | hasattr(op_intent, 'func')
             if compare_vector == 3:  # deployed address + invoke function
                 tx = EthTx(
                     "invoke",
                     chain_id,
-                    op_intent.invoker,
+                    invoker_address,
                     op_intent.address,
                     op_intent.func,
                     getattr(op_intent, 'parameters'),
@@ -306,7 +343,7 @@ class TransactionIntents:
                 tx = EthTx(
                     "invoke",
                     chain_id,
-                    op_intent.invoker,
+                    invoker_address,
                     "@T" + str(len(self.intents)) + ".address",
                     op_intent.func,
                     op_intent.parameters,
@@ -314,7 +351,9 @@ class TransactionIntents:
                 )
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
-                intent_tx[op_intent.name] = ["T" + str(len(self.intents) - 1), "T" + str(len(self.intents))]
+                t_fr, t_to = "T" + str(len(self.intents) - 1), "T" + str(len(self.intents))
+                intent_tx[op_intent.name] = [t_fr, t_to]
+                self.dependencies.append(t_fr + "->" + t_to)
             else:  # depoly address
                 tx = EthTx(
                     "deploy",
@@ -339,8 +378,9 @@ class TransactionIntents:
 
 
 class DApp:
-    def __init__(self, addr=None):
+    def __init__(self, addr=None, passphrase=None):
         self.address = addr
+        self.password = passphrase
 
     def call(self, trans):
         if trans.chain_type == 'Ethereum':
