@@ -218,59 +218,59 @@ def transint(anytype):
 
 class Cast(object):
     # use arbi.func(obj, len)
-    tostring = uintxstring
+    tostring = staticmethod(uintxstring)
 
-    tohexstring = uintxhexstring
+    tohexstring = staticmethod(uintxhexstring)
 
-    toint = transint
+    toint = staticmethod(transint)
 
-    tointfrombytes = bytestoint
+    tointfrombytes = staticmethod(bytestoint)
 
-    tobytes = transbytes
+    tobytes = staticmethod(transbytes)
 
-    tobytesfrombytes = catbytes
+    tobytesfrombytes = staticmethod(catbytes)
 
-    tobytesfromstring = catstring
+    tobytesfromstring = staticmethod(catstring)
 
-    tobytesfromint = catint
+    tobytesfromint = staticmethod(catint)
 
 
 class Cast32(object):
     # use Cast32.func(obj)
-    tostring = uint32string
+    tostring = staticmethod(uint32string)
 
-    tohexstring = uint32hexstring
+    tohexstring = staticmethod(uint32hexstring)
 
-    toint = transint
+    toint = staticmethod(transint)
 
-    tointfrombytes = bytestoint
+    tointfrombytes = staticmethod(bytestoint)
 
-    tobytes = transbytes32
+    tobytes = staticmethod(transbytes32)
 
-    tobytesfrombytes = catbytes32
+    tobytesfrombytes = staticmethod(catbytes32)
 
-    tobytesfromstring = catstring32
+    tobytesfromstring = staticmethod(catstring32)
 
-    tobytesfromint = catint32
+    tobytesfromint = staticmethod(catint32)
 
 
 class Cast64(object):
     # use Cast64.func(obj)
-    tostring = uint64string
+    tostring = staticmethod(uint64string)
 
-    tohexstring = uint64hexstring
+    tohexstring = staticmethod(uint64hexstring)
 
-    toint = transint
+    toint = staticmethod(transint)
 
-    tointfrombytes = bytestoint
+    tointfrombytes = staticmethod(bytestoint)
 
-    tobytes = transbytes64
+    tobytes = staticmethod(transbytes64)
 
-    tobytesfrombytes = catbytes64
+    tobytesfrombytes = staticmethod(catbytes64)
 
-    tobytesfromstring = catstring64
+    tobytesfromstring = staticmethod(catstring64)
 
-    tobytesfromint = catint64
+    tobytesfromint = staticmethod(catint64)
 
 
 class Mult(object):
