@@ -1,3 +1,4 @@
+
 # python modules
 import re
 from ctypes import CDLL
@@ -38,13 +39,16 @@ INTM = [(1 << (bit_size << 3)) for bit_size in range(33)]
 # Prover functions setting
 funcs = CDLL(INCLUDE_PATH + "/verifyproof.dll")
 
-funcs.openDB.restype = GolevelDBptr
-funcs.openDB.argtype = GoString.Type
+funcs.OpenDB.restype = GolevelDBptr
+funcs.OpenDB.argtype = GoString.Type
 
-funcs.closeDB.argtype = GolevelDBptr
+funcs.CloseDB.argtype = GolevelDBptr
 
 funcs.VerifyProof.restype = GoInt32
 funcs.VerifyProof.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type, GoStringSlice.Type, GoInt32)
+
+funcs.VerifyProofWithoutPath.restype = GoInt32
+funcs.VerifyProofWithoutPath.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type)
 
 # constant
 MOD256 = (1 << 256) - 1
@@ -70,13 +74,13 @@ class Prover:
             self.testmode = True
         else:
             self.testmode = False
-            self.ethdb = funcs.openDB(bytes(path.encode(ENC)))
+            self.ethdb = funcs.OpenDB(bytes(path.encode(ENC)))
 
     def close(self):
         if self.testmode:
             print("you are in testmode")
             return None
-        funcs.closeDB(self.ethdb)
+        funcs.CloseDB(self.ethdb)
 
     def verifyhaspath(self, key, val, storagehash, storagepath):
         if self.testmode:
@@ -114,8 +118,7 @@ class Prover:
         if hashptr == 'error':
             raise TypeError("storageHash-type needs str or bytes, but get", merkleproof.storagehash.__class__)
 
-        print("TODO of verify")
-        # funcs.VerifyProof(self.ethdb, hashptr, keyptr, valptr, path, len(storagepath))
+        funcs.VerifyProofWithoutPath(self.ethdb, hashptr, keyptr, valptr)
 
 
 def sliceloc32(bytesslot, index, element_size):
