@@ -5,6 +5,8 @@ INCLUDE_PATH = parsepath.dirname(__file__) + "/include"
 
 HTTP_HEADER = {'Content-Type': 'application/json'}
 
+ETHSIGN_HEADER = b"\x19Ethereum Signed Message:\n"
+
 eth_blockchain_info = {
     'chain1': {
         'host': 'http://127.0.0.1:8545',

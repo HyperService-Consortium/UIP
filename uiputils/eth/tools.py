@@ -23,11 +23,13 @@ from uiputils.uiperror import Mismatch, SolidityTypeError
 # ethereum modules
 from eth_hash.auto import keccak
 from hexbytes import HexBytes
+from eth_keys import KeyAPI
+from web3 import Web3
 
 # self-package modules
 
 # config
-from uiputils.config import INCLUDE_PATH
+from uiputils.config import INCLUDE_PATH, ETHSIGN_HEADER
 
 # constant
 ENC = "utf-8"
@@ -250,8 +252,8 @@ class AbiEncoder:
             if bytes_size == "":
                 if len(para) & 1:
                     raise Mismatch("odd-length byte-array is invalid")
-                return AbiEncoder.encode('uint256', len(para) >> 1) + para +\
-                    '0' * ((-len(para)) & MOD6)
+                return AbiEncoder.encode('uint256', len(para) >> 1) + para + \
+                       '0' * ((-len(para)) & MOD6)
             else:
                 bytes_size = int(bytes_size)
                 if len(para) != (bytes_size << 1):
@@ -328,15 +330,15 @@ class AbiDecoder:
         if ret_type == 'bytes':
             ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
             if 64 + (ret_size << 1) > len(raw_rets):
-                raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) +\
+                raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) + \
                                     " but expect at least " + str(64 + (ret_size << 1)))
-            return HexBytes(raw_rets[64:64+(ret_size << 1)])
+            return HexBytes(raw_rets[64:64 + (ret_size << 1)])
         elif ret_type == 'string':
             ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
             if 64 + (ret_size << 1) > len(raw_rets):
                 raise OverflowError("superflours decode for array: input " + str(len(raw_rets)) + \
                                     " but expect at least " + str(64 + (ret_size << 1)))
-            return raw_rets[64:64+(ret_size << 1)].encode('utf-8')
+            return raw_rets[64:64 + (ret_size << 1)].encode('utf-8')
         else:
             if ret_type[-2:] == '[]':
                 if ret_type[-3] == ']':
@@ -354,7 +356,6 @@ class AbiDecoder:
                 print("TODO array-type:", ret_type)
                 return
 
-
     @staticmethod
     def decodes(raw_rets, rets_type_list):
         if len(raw_rets) & MOD6:
@@ -365,15 +366,58 @@ class AbiDecoder:
             if AbiDecoder.isArrayType(ret_type):
                 ret = AbiDecoder.decodeArray(
                     ret_type,
-                    raw_rets[(AbiDecoder.decode('uint256', raw_rets[ret_counter:ret_counter+64]) << 1):]
+                    raw_rets[(AbiDecoder.decode('uint256', raw_rets[ret_counter:ret_counter + 64]) << 1):]
                 )
                 rets.append(ret)
             else:
-                ret = AbiDecoder.decode(ret_type, raw_rets[ret_counter:ret_counter+64])
+                ret = AbiDecoder.decode(ret_type, raw_rets[ret_counter:ret_counter + 64])
                 rets.append(ret)
             ret_counter += 64
         return rets
 
+
+class SignatrueVerifier:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def initEthSignature(raw_signature):
+        return KeyAPI.Signature(HexBytes(hex(int(raw_signature, 16) - 27)))
+
+    @staticmethod
+    def initSignature(sig):
+        if isinstance(sig, str):
+            if sig[-2:] != '01':
+                sig = hex(int(sig, 16) - 27)
+            try:
+                sig = KeyAPI.Signature(HexBytes(sig))
+            except Exception:
+                raise TypeError(type(sig) + "is not verifiable signature")
+        elif isinstance(sig, bytes) or isinstance(sig, HexBytes):
+            if sig[-1] != 1:
+                sig = bytestoint(sig)
+                sig -= 27
+            sig = HexBytes(hex(sig))
+            try:
+                sig = KeyAPI.Signature(sig)
+            except Exception:
+                raise TypeError(type(sig) + "is not verifiable signature")
+        elif not isinstance(sig, KeyAPI.Signature):
+            raise TypeError(type(sig) + "is not verifiable signature")
+        return sig
+
+    @staticmethod
+    def verifyByRawMessage(sig, msg, addr):
+        if isinstance(msg, str):
+            msg = bytes(msg.encode(ENC))
+        msg = ETHSIGN_HEADER + bytes(str(len(msg)).encode(ENC)) + msg
+        sig = SignatrueVerifier.initSignature(sig)
+        return sig.recover_public_key_from_msg(msg).to_checksum_address() == Web3.toChecksumAddress(addr)
+
+    @staticmethod
+    def verifyByHashedMessage(sig, msg, addr):
+        sig = SignatrueVerifier.initSignature(sig)
+        return sig.recover_public_key_from_msg_hash(msg).to_checksum_address() == Web3.toChecksumAddress(addr)
 
 
 if __name__ == '__main__':

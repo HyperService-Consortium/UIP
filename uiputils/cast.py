@@ -205,6 +205,10 @@ def transbytes64(anytype):
 bytestoint = partial(int.from_bytes, byteorder="big")
 
 
+def showbytes(hex_bytes):
+    return [hex_bytes[x] for x in range(len(hex_bytes))]
+
+
 def transint(anytype):
     if isinstance(anytype, int):
         return anytype
