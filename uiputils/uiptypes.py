@@ -345,8 +345,10 @@ class DApp:
     def call(self, trans):
         if trans.chain_type == 'Ethereum':
             call_json = JsonRPC.ethCall(trans.jsonize())
-            tx_response = JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)
-            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+            tx_response = JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)['result']
+            # print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+
+            print(tx_response)
 
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)

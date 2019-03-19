@@ -22,11 +22,15 @@ if __name__ == '__main__':
         tx_intents_file.write(tx_intents.jsonize())
     idx = 0
     for tx_intent in tx_intents.intents:
+        idx += 1
         print(tx_intent.chain_host)
         print(json.dumps(tx_intent.jsonize(), sort_keys=True, indent=4, separators=(', ', ': ')))
         dappx = DApp(tx_intent.jsonize()['from'])
-        if idx != 2:
-            dappx.send(tx_intent, "123456")
+        if idx != 3:
+            continue
+            # dappx.send(tx_intent, "123456")
         else:
             dappx.call(tx_intent)
-        idx += 1
+
+# 0x2f54bf6e0000000000000000000000007019fa779024c0a0eac1d8475733eefe10a49f3b
+# 0x2f54bf6e000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c

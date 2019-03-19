@@ -87,12 +87,15 @@ class JsonRPC(object):
                 }
 
     @staticmethod
-    def ethCall(obj):
-        # return the number of most recent block
+    def ethCall(obj, tag="latest"):
+        # call a contract-function without on-chain operation
+        # obj: transaction object
+        # tag: block id(known as the default block parameter)
+        # can be "latest","earliest","pending", or the interger block number
         return {
             "jsonrpc": "2.0",
             "method": "eth_call",
-            "params": [obj],
+            "params": [obj, tag],
             "id": 1
         }
 
