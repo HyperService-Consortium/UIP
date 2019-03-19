@@ -20,9 +20,9 @@ eth_base_addr = Web3.toChecksumAddress("0x7019fa779024c0a0eac1d8475733eefe10a49f
 nsb_addr = Web3.toChecksumAddress("0x43710274daadce0d8bdfe7ae6495140ea83cda6a")
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
-nsb_abi_dir = "./nsb/nsb.abi"
-nsb_bytecode_dir = "./nsb/nsb.bin"
-nsb_db_dir = "./nsb/actiondata"
+nsb_abi_dir = "../nsb/nsb.abi"
+nsb_bytecode_dir = "../nsb/nsb.bin"
+nsb_db_dir = "../nsb/actiondata"
 tx = {
     "from": eth_base_addr,
     "gas": hex(400000)

@@ -12,9 +12,9 @@ HTTP_HEADER = {'Content-Type': 'application/json'}
 nsb_addr = "0x43710274DaADCe0D8bDFE7ae6495140eA83CDA6a"
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
-nsb_abi_addr = "./nsb/nsb.abi"
-nsb_bytecode_addr = "./nsb/nsb.bin"
-nsb_db_addr = "./nsb/actiondata"
+nsb_abi_addr = "../nsb/nsb.abi"
+nsb_bytecode_addr = "../nsb/nsb.bin"
+nsb_db_addr = "../nsb/actiondata"
 if __name__ == '__main__':
     web3h = ServiceStart.startweb3(url)
     # key = 0

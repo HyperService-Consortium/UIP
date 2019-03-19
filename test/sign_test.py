@@ -1,9 +1,7 @@
 
 from eth_hash.auto import keccak
 from hexbytes import HexBytes
-from eth_keys import keys, KeyAPI
-
-from uiputils.cast import showbytes
+from eth_keys import KeyAPI
 
 from uiputils.config import ETHSIGN_HEADER
 
