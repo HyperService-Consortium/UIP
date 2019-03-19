@@ -1,9 +1,14 @@
 
 'some cast methods'
 
-from hexbytes import HexBytes
+# python modules
+import json
 from functools import partial
 
+# ethereum modules
+from hexbytes import HexBytes
+
+# constant
 MOD512 = (1 << 512) - 1
 MOD256 = (1 << 256) - 1
 MOD8 = (1 << 8) - 1
@@ -381,6 +386,8 @@ class Mult64(object):
     def tobytesfromint(*args):
         return [catint64(obj) for obj in args]
 
+def formated_json(inputdict):
+    return json.dumps(inputdict, sort_keys=True, indent=4, separators=(', ', ': '))
 
 if __name__ == '__main__':
     # print(uintxstring(15, 8))

@@ -112,11 +112,12 @@ class NetworkStatusBlockChain:
 class VerifiableExecutionSystem:
     # the ves in uip
     INVALID = 0
-    INVALID_TXS = [{}]
-    INVALID_SESSION = {
-        'tx_intents': INVALID_TXS,
+    INITIAL_SESSION = {
+        'tx_intents': None,
         'Atte': {},
-        'Merk': {}
+        'Merk': {},
+        'ack_dict': {},
+        'ack_counter': 0
     }
 
     def __init__(self):
@@ -125,7 +126,7 @@ class VerifiableExecutionSystem:
         ########################################
 
         self.txs_pool = {
-            VerifiableExecutionSystem.INVALID: VerifiableExecutionSystem.INVALID_SESSION
+            VerifiableExecutionSystem.INVALID: VerifiableExecutionSystem.INITIAL_SESSION
         }
         self.isc = InsuranceSmartContract
         self.user_pool = {}
@@ -143,10 +144,12 @@ class VerifiableExecutionSystem:
             session_id = randint(0, 0xffffffff)
 
         # pre-register
-        self.txs_pool[session_id] = VerifiableExecutionSystem.INVALID_SESSION
+        self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
 
         # build eligible Op intents
         op_intents, op_owners = OpIntent.createopintents(op_intents_json['Op-intents'])
+        # initalize ack_dict
+        self.txs_pool[session_id]['ack_dict'] = dict((owner, None) for owner in op_owners)
 
         # Generate Transaction intents and Dependency Graph
         tx_intents = TransactionIntents(op_intents, op_intents_json['dependencies'])
@@ -155,7 +158,6 @@ class VerifiableExecutionSystem:
 
         # TODO: build ISC
         isc = InsuranceSmartContract(tx_intents, ChainDNS.gatherusers(op_owners, userformat='dot-concated'))
-
         wait_user = set()
         for owner in op_owners:
             # test updateFunds
@@ -168,15 +170,21 @@ class VerifiableExecutionSystem:
 
         sign_content = [str(session_id), tx_intents.purejson(), isc.address]
         atte_v = self.sign(rlp.encode(sign_content))
+        self.txs_pool[session_id]['ack_dict']['self_first'] = atte_v.to_hex()
+
+        # TODO: async - send tx_intents
         return sign_content, atte_v
 
-    def sessionSetupUpdate(self, session_id):
+    def sessionSetupUpdate(self, session_id, ack_user_name, ack_signature):
         # TODO: Wait Approve Atte_V_D
-        dapps_approved = 1
-
-        # log off invalid session
-        if not dapps_approved:
+        if session_id not in self.txs_pool:
+            return KeyError("session (id=" + str(session_id) + ") is not valid anymore")
+        if ack_signature is None:
             self.txs_pool.pop(session_id)
+
+        # TODO: Verify ack_signature
+
+        self.txs_pool[session_id]['ack_dict'][ack_user_name] = ack_signature
 
     def sessionSetupFinish(self, session_id):
         # TODO: Send Request(Tx-intents) NSB
@@ -528,3 +536,10 @@ class DApp:
             print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
+
+    def ackinit(self, ves: VerifiableExecutionSystem, content: list, sig: KeyAPI.Signature):
+        # TODO: verify signature
+
+        # TODO: sign
+        signatrue = "123456"
+        ves.sessionSetupUpdate(int(content[0]), self.name, signatrue)

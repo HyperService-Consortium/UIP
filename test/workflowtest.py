@@ -1,7 +1,7 @@
 
 from uiputils.eth import FileLoad
 from uiputils.uiptypes import VerifiableExecutionSystem, DApp, ChainDNS
-
+from uiputils.cast import formated_json
 #config
 info_x = {
     'domain': "Ethereum://chain1",
@@ -28,5 +28,10 @@ if __name__ == '__main__':
     session_content, session_signature = ves.sessionSetupPrepare(op_intents_json)
     print('session_content:', session_content)
     print('session_signature:', session_signature)
+
+    dapp_x.ackinit(ves, session_content, session_signature)
+    dapp_y.ackinit(ves, session_content, session_signature)
+
+    print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
 
     # print(tx_intents.intents)
