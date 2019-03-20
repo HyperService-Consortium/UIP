@@ -31,7 +31,7 @@ tx = {
 if __name__ == '__main__':
     nsbt = NetStatusBlockchain(eth_base_addr, host_addr, nsb_addr, nsb_abi_dir, "", nsb_bytecode_dir=nsb_bytecode_dir)
     nsb = nsbt.handle
-    unlock = JsonRPC.personalUnlockAccount(eth_base_addr, "123456", 20)
+    unlock = JsonRPC.personal_unlock_account(eth_base_addr, "123456", 20)
     tx_response = JsonRPC.send(unlock, HTTP_HEADER, "http://127.0.0.1:8545")
 
     # 0x64e604787cbf194841e7b68d7cd28786f6c9a0a3ab9f8b0a0e87cb4387ab0107

@@ -46,7 +46,7 @@ class HyperService:
 
     def EstablishBNVisibility(self, domains):
         for domain in domains:
-            coinbase = JsonRPC.ethCoinbase()
+            coinbase = JsonRPC.eth_coinbase()
 
             url = NETWORK_SETUP[domain]
             response = self.DispatchRpcToDomain(url, coinbase)
@@ -76,7 +76,7 @@ class HyperService:
                     "value": contract.value,
                     }
 
-        deploy = JsonRPC.ethSendTransaction(transaction)
+        deploy = JsonRPC.eth_send_transaction(transaction)
 
         url = NETWORK_SETUP[contract.domain]
         response = self.DispatchRpcToDomain(url, deploy)
@@ -86,7 +86,7 @@ class HyperService:
         self.contracts[contract_addr] = contract
 
     def RetrieveContractAddress(self, url, tx_hash):
-        get_tx = JsonRPC.ethGetTransactionReceipt(tx_hash)
+        get_tx = JsonRPC.eth_get_transaction_receipt(tx_hash)
 
         while True:
             response = self.DispatchRpcToDomain(url, get_tx)
@@ -97,7 +97,7 @@ class HyperService:
 
             block_number = response['result']['blockNumber']
             contract_addr = response['result']['contractAddress']
-            get_code = JsonRPC.ethGetCode(contract_addr, block_number)
+            get_code = JsonRPC.eth_get_code(contract_addr, block_number)
 
             code_resp = self.DispatchRpcToDomain(url, get_code)
 
@@ -117,12 +117,12 @@ class HyperService:
         
         domain = self.contracts[contract].domain
         url = NETWORK_SETUP[domain]
-        get_state = JsonRPC.ethGetStorageAt(contract, hex(index), block)
+        get_state = JsonRPC.eth_get_storage_at(contract, hex(index), block)
 
         value_response = self.DispatchRpcToDomain(url, get_state)
 
 
-        get_proof = JsonRPC.ethGetProof(contract, [hex(index)], block)
+        get_proof = JsonRPC.eth_get_proof(contract, [hex(index)], block)
 
         proof_response = self.DispatchRpcToDomain(url, get_proof)
         state_proof = proof_response['result']['storageProof']
