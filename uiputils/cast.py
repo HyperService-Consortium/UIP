@@ -386,8 +386,10 @@ class Mult64(object):
     def tobytesfromint(*args):
         return [catint64(obj) for obj in args]
 
+
 def formated_json(inputdict):
     return json.dumps(inputdict, sort_keys=True, indent=4, separators=(', ', ': '))
+
 
 if __name__ == '__main__':
     # print(uintxstring(15, 8))

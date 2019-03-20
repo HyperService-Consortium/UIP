@@ -3,12 +3,8 @@
 
 # python modules
 import json
-import time
-import rlp
-from random import randint
 
 # ethereum modules
-from eth_keys import keys, KeyAPI
 from eth_hash.auto import keccak
 from hexbytes import HexBytes
 
@@ -17,14 +13,12 @@ from .uiperror import InitializeError, GenerationError, Missing
 
 # eth modules
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
-from uiputils.eth import JsonRPC
 from uiputils.eth.ethtypes import(
     Transaction as EthTx,
     ChainDNS as EthChainDNS
 )
 
-# config
-from uiputils.config import eth_blockchain_info, HTTP_HEADER
+# constant
 ENC = 'utf-8'
 
 
@@ -32,6 +26,7 @@ def adduser_f00(user):
     user_name, chain_domain = (split_str[::-1] for split_str in user[::-1].split('.', 1))
     chain_type, chain_id = chain_domain.split('://')
     return ChainDNS.checkuser(chain_type, chain_id, user_name)
+
 
 class ChainDNS:
     DNSmethod = {
@@ -107,122 +102,6 @@ class NetworkStatusBlockChain:
         else:
             self.handle = None
             raise TypeError("other NSB type not implemented")
-
-
-class VerifiableExecutionSystem:
-    # the ves in uip
-    INVALID = 0
-    INITIAL_SESSION = {
-        'tx_intents': None,
-        'Atte': {},
-        'Merk': {},
-        'ack_dict': {},
-        'ack_counter': 0
-    }
-
-    def __init__(self):
-        # temporary private-key
-        self.key = keys.PrivateKey(b'\x01' * 32)
-        ########################################
-
-        self.txs_pool = {
-            VerifiableExecutionSystem.INVALID: VerifiableExecutionSystem.INITIAL_SESSION
-        }
-        self.isc = InsuranceSmartContract
-        self.user_pool = {}
-        pass
-
-    # async receiveIntents(self, intents):
-    #     pass
-
-    # async receiveTransactions(self, txs):
-    #     pass
-
-    def sessionSetupPrepare(self, op_intents_json):
-        session_id = 0
-        while session_id in self.txs_pool:
-            session_id = randint(0, 0xffffffff)
-
-        # pre-register
-        self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
-
-        # build eligible Op intents
-        op_intents, op_owners = OpIntent.createopintents(op_intents_json['Op-intents'])
-        # initalize ack_dict
-        self.txs_pool[session_id]['ack_dict'] = dict((owner, None) for owner in op_owners)
-
-        # Generate Transaction intents and Dependency Graph
-        tx_intents = TransactionIntents(op_intents, op_intents_json['dependencies'])
-
-        # TODO: Sort Graph
-
-        # TODO: build ISC
-        isc = InsuranceSmartContract(tx_intents, ChainDNS.gatherusers(op_owners, userformat='dot-concated'))
-        wait_user = set()
-        for owner in op_owners:
-            # test updateFunds
-            isc.updateFunds(adduser_f00(owner), 0)
-            ######################################
-
-            if owner not in self.user_pool:
-                raise Missing(owner + " is not in user-pool")
-            wait_user.add(self.user_pool[owner])
-
-        sign_content = [str(session_id), tx_intents.purejson(), isc.address]
-        atte_v = self.sign(rlp.encode(sign_content))
-        self.txs_pool[session_id]['ack_dict']['self_first'] = atte_v.to_hex()
-
-        # TODO: async - send tx_intents
-        return sign_content, atte_v
-
-    def sessionSetupUpdate(self, session_id, ack_user_name, ack_signature):
-        # TODO: Wait Approve Atte_V_D
-        if session_id not in self.txs_pool:
-            return KeyError("session (id=" + str(session_id) + ") is not valid anymore")
-        if ack_signature is None:
-            self.txs_pool.pop(session_id)
-
-        # TODO: Verify ack_signature
-
-        self.txs_pool[session_id]['ack_dict'][ack_user_name] = ack_signature
-
-    def sessionSetupFinish(self, session_id):
-        # TODO: Send Request(Tx-intents) NSB
-
-        # TODO: Stake Funds
-        pass
-
-    def buildGraph(self, tx_intents):
-        pass
-
-    def sendTxInfoToNSB(self, info):
-        pass
-
-    def sendTxInfoTodApp(self, info):
-        pass
-
-    def stakefunded(self, isc, session_id):
-        pass
-
-    def sign(self, msg):
-        return self.key.sign_msg(msg)
-
-    def watching(self, session_id):
-        pass
-
-    def addAttestation(self, session_id, atte):
-        pass
-
-    def addMerkleProof(self, session_id, merk):
-        pass
-
-    # tmp function
-    def appenduserlink(self, users):
-        if isinstance(users, list):
-            for user in users:
-                self.appenduserlink(user)
-        else:  # assuming be class dApp
-            self.user_pool[users.name] = users
 
 
 class InsuranceSmartContract:
@@ -467,79 +346,3 @@ class TransactionIntents:
 
     def hash(self):
         return HexBytes(keccak(bytes(json.dumps(self.dictize(), sort_keys=True).encode(ENC)))).hex()
-
-class DApp:
-    def __init__(self, user_loc):
-        self.info = {}
-        chain_type, chain_id = user_loc['domain'].split('://')
-        self.address = ChainDNS.checkuser(chain_type, chain_id, user_loc['name'])
-        self.chain_host = ChainDNS.gethost(chain_type, chain_id)
-        self.name = user_loc['domain'] + '.' + user_loc['name']
-        if 'passphrase' in user_loc:
-            self.password = user_loc['passphrase']
-        # for loc in user_loc:
-        #     chain_type, chain_id = loc['chain'].split('://')
-        #     if chain_type == 'Ethereum':
-        #         self.address = ChainDNS.checkuser(chain_type, chain_id, loc['name'])
-        #         self.chain_host = ChainDNS.gethost(chain_type, chain_id)
-        #         if 'passphrase' in loc:
-        #             self.password = loc['passphrase']
-        #     self.info[chain_type] = {
-        #         'address': ChainDNS.checkuser(chain_type, chain_id, loc['name']),
-        #         'host': ChainDNS.gethost(chain_type, chain_id),
-        #         'password': None
-        #     }
-        #     if 'passphrase' in loc:
-        #         self.info[chain_type]['password'] = loc['passphrase']
-
-    def unlockself(self):
-        unlock = JsonRPC.personalUnlockAccount(self.address, self.password, 20)
-        response = JsonRPC.send(unlock, HTTP_HEADER, self.chain_host)
-        if not response['result']:
-            raise ValueError("unlock failed. wrong password?")
-
-    def sign(self, msg):
-        # assuming self.address is on Ethereum
-        self.unlockself()
-        sign_json = JsonRPC.ethSign(self.address, msg)
-        response = JsonRPC.send(sign_json, HTTP_HEADER, self.chain_host)['result']
-        print(response)
-
-    def call(self, trans):
-        if trans.chain_type == 'Ethereum':
-            call_json = JsonRPC.ethCall(trans.jsonize())
-            tx_response = JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)['result']
-            # print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
-
-            print(tx_response)
-
-        else:
-            raise TypeError("unsupported chain-type: ", + trans.chain_type)
-
-    def send(self, trans, passphrase):
-        if trans.chain_type == 'Ethereum':
-            unlock = JsonRPC.personalUnlockAccount(self.address, passphrase, 20)
-            tx_response = JsonRPC.send(unlock, HTTP_HEADER, trans.chain_host)
-            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
-            packet_transaction = JsonRPC.ethSendTransaction(trans.jsonize())
-            tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, trans.chain_host)
-            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
-            tx_hash = tx_response['result']
-            query = JsonRPC.ethGetTransactionReceipt(tx_hash)
-            while True:
-                tx_response = JsonRPC.send(query, HTTP_HEADER, trans.chain_host)
-                if tx_response['result'] is None:
-                    print("transacting")
-                    time.sleep(2)
-                    continue
-                break
-            print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
-        else:
-            raise TypeError("unsupported chain-type: ", + trans.chain_type)
-
-    def ackinit(self, ves: VerifiableExecutionSystem, content: list, sig: KeyAPI.Signature):
-        # TODO: verify signature
-
-        # TODO: sign
-        signatrue = "123456"
-        ves.sessionSetupUpdate(int(content[0]), self.name, signatrue)
