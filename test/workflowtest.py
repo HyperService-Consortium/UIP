@@ -1,8 +1,10 @@
 
+# uip modules
 from uiputils.eth import FileLoad
-from uiputils.uiptypes import VerifiableExecutionSystem, DApp, ChainDNS
+from uiputils import VerifiableExecutionSystem, DApp, ChainDNS
 from uiputils.cast import formated_json
-#config
+
+# config
 info_x = {
     'domain': "Ethereum://chain1",
     'name': "X",
@@ -13,6 +15,7 @@ info_y = {
     'name': "Y",
     'passphrase': "123456"
 }
+
 
 if __name__ == '__main__':
 

@@ -1,8 +1,12 @@
 
+# python modules
 import json
 
+# uip modules
+from uiputils import DApp, OpIntent, TransactionIntents
+
+# eth modules
 from uiputils.eth import FileLoad
-from uiputils.uiptypes import DApp, OpIntent, TransactionIntents
 
 
 if __name__ == '__main__':
