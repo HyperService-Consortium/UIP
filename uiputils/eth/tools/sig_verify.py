@@ -1,6 +1,5 @@
 
-# python modules
-
+# uip modules
 from uiputils.cast import bytestoint
 
 # ethereum modules
@@ -8,14 +7,11 @@ from hexbytes import HexBytes
 from eth_keys import KeyAPI
 from web3 import Web3
 
-# self-package modules
-
 # config
 from uiputils.config import ETHSIGN_HEADER
 
 # constant
 ENC = "utf-8"
-MOD256 = (1 << 256) - 1
 
 
 class SignatrueVerifier:
@@ -23,11 +19,11 @@ class SignatrueVerifier:
         pass
 
     @staticmethod
-    def initEthSignature(raw_signature):
+    def eth_signature(raw_signature):
         return KeyAPI.Signature(HexBytes(hex(int(raw_signature, 16) - 27)))
 
     @staticmethod
-    def initSignature(sig):
+    def init_signature(sig):
         if isinstance(sig, str):
             if sig[-2:] != '01':
                 sig = hex(int(sig, 16) - 27)
@@ -49,16 +45,16 @@ class SignatrueVerifier:
         return sig
 
     @staticmethod
-    def verifyByRawMessage(sig, msg, addr):
+    def verify_by_raw_message(sig, msg, addr):
         if isinstance(msg, str):
             msg = bytes(msg.encode(ENC))
         msg = ETHSIGN_HEADER + bytes(str(len(msg)).encode(ENC)) + msg
-        sig = SignatrueVerifier.initSignature(sig)
+        sig = SignatrueVerifier.init_signature(sig)
         return sig.recover_public_key_from_msg(msg).to_checksum_address() == Web3.toChecksumAddress(addr)
 
     @staticmethod
-    def verifyByHashedMessage(sig, msg, addr):
-        sig = SignatrueVerifier.initSignature(sig)
+    def verify_by_hashed_message(sig, msg, addr):
+        sig = SignatrueVerifier.init_signature(sig)
         return sig.recover_public_key_from_msg_hash(msg).to_checksum_address() == Web3.toChecksumAddress(addr)
 
 

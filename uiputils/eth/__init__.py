@@ -4,8 +4,7 @@
 
 __author__ = 'Myriad Dreamin'
 
-from .loadfile import FileLoad
+from uiputils.eth.tools.loadfile import FileLoad
 from .tools import Prover
 from .ethtypes import Contract
-from .jsonrpc import JsonRPC
-from .startservice import ServiceStart
+from uiputils.eth.tools.jsonrpc import JsonRPC

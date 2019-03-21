@@ -7,4 +7,4 @@ from .abi_covt import AbiEncoder, AbiDecoder
 
 from .patterns import hex_match, hex_match_withprefix
 
-from .tools import SignatrueVerifier
+from .sig_verify import SignatrueVerifier
