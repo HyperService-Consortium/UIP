@@ -6,7 +6,7 @@ from uiputils.uiperror import Mismatch, SolidityTypeError
 from hexbytes import HexBytes
 
 # __init__ provided parterns
-from uiputils.eth.tools.patterns import hex_match, hex_match_withprefix
+from .patterns import hex_match, hex_match_withprefix
 
 # constant
 #   X & MOD6 == X % 64
