@@ -26,6 +26,16 @@ Merkle Proof Storage System is responsible for managing Merkle Proofs from VES/d
 
 ### `checkMerkleProof`
 
+### `Struct MerkleProof`
+
+##### `Attribute blockid`
+
+##### `Attribute storagehash`
+
+##### `Attribute key`
+
+##### `Attribute value`
+
 ## Action Storage System
 
 Action Storage System is responsible for managing Actions from VES/dApp.
@@ -33,6 +43,12 @@ Action Storage System is responsible for managing Actions from VES/dApp.
 ### `addAction`
 
 ### `getAction`
+
+### `Struct Action`
+
+##### `Attribute msghash`
+
+##### `Attribute signature`
 
 ## Transaction System
 
@@ -56,51 +72,48 @@ Based on the Merkle Proof Storage System and Action Storage System, Transaction 
 
 ### `getTransactionInfo`
 
+### slot(0)  `bytes32[] public waitingVerifyProof`
 
+### slot(1)  `uint32[] public validCount`
 
-### `Struct MerkleProof`
+### slot(2)  `uint32[] public votedCount`
 
-##### `Attribute blockid`
+### slot(3)  `mapping (bytes32 => uint32) public proofPointer`
 
-##### `Attribute storagehash`
+### slot(4)  `mapping (address => mapping (bytes32 => bool)) public ownerVoted`
 
-##### `Attribute key`
+### slot(5)  `uint32 public votedPointer`
 
-##### `Attribute value`
+### slot(6)  `mapping (bytes32 => MerkleProof) public MerkleProofTree`
 
-### `Struct Action`
+### slot(7)  `mapping (bytes32 => bool) public verifiedMerkleProof`
 
-##### `Attribute msghash`
+### slot(8)  `mapping (bytes32 => Action) public ActionTree`
 
-##### `Attribute signature`
+### slot(9)  `mapping (address => bool) public isOwner`
 
-### slot(0) $\to$ `bytes32[] public waitingVerifyProof`
+### slot(10)  `address[] public owners` 
 
-### slot(1) $\to$ `uint32[] public validCount`
+### slot(11)  `uint public requiredOwnerCount`
 
-### slot(2) $\to$ `uint32[] public votedCount`
+### slot(12)  `uint public requiredValidVotesCount`
 
-### slot(3) $\to$ `mapping (bytes32 => uint32) public proofPointer`
+### slot(13)  `mapping (address => mapping (address => bool)) public addingOwnerProposal`
 
-### slot(4) $\to$ `mapping (address => mapping (bytes32 => bool)) public ownerVoted`
+### slot(14)  `mapping (address => mapping (address => bool)) public removingOwnerProposal`
 
-### slot(5) $\to$ `uint32 public votedPointer`
+# ISC
 
-### slot(6) $\to$ `mapping (bytes32 => MerkleProof) public MerkleProofTree`
+负责专门的transaction
 
-### slot(7) $\to$ `mapping (bytes32 => bool) public verifiedMerkleProof`
+### `constrcutor`
 
-### slot(8) $\to$ `mapping (bytes32 => Action) public ActionTree`
+### `updateTxInfo`
 
-### slot(9) $\to$ `mapping (address => bool) public isOwner`
+### `ISCTxInfoUpdateFinished`
 
-### slot(10) $\to$ `address[] public owners` 
+### `openISC`
 
-### slot(11) $\to$ `uint public requiredOwnerCount`
+### `InsuranceClaim`
 
-### slot(12) $\to$ `uint public requiredValidVotesCount`
-
-### slot(13) $\to$ `mapping (address => mapping (address => bool)) public addingOwnerProposal`
-
-### slot(14) $\to$ `mapping (address => mapping (address => bool)) public removingOwnerProposal`
-
+### `SettleContract`

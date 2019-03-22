@@ -20,6 +20,7 @@ contract NetworkStatusBlockChain {
         // Party z
         // address pz;
         // signature
+		string msghash;
         string signature;
     }
 
@@ -358,7 +359,7 @@ contract NetworkStatusBlockChain {
      *                       Action Storage System                        *
      **********************************************************************/
 
-    function addAction(string signature)
+    function addAction(string msghash, string signature)
         public
         ownerExists(msg.sender)
         returns (bytes32 keccakhash)
@@ -366,8 +367,8 @@ contract NetworkStatusBlockChain {
         // require(pa != 0, "invalid pa address");
         // require(pz != 0, "invalid pz address");
 
-        Action memory toAdd = Action(signature);
-        keccakhash = keccak256(signature);
+        Action memory toAdd = Action(msghash, signature);
+        keccakhash = keccak256(msghash, signature);
 
         ActionTree[keccakhash]= toAdd;
     }
@@ -375,11 +376,12 @@ contract NetworkStatusBlockChain {
     function getAction(bytes32 keccakhash)
         public
         view
-        returns (string signature)
+        returns (string msghash, string signature)
     {
         Action storage toGet = ActionTree[keccakhash];
         // pa = toGet.pa;
         // pz = toGet.pz;
+		msghash = toGet.msghash;
         signature = toGet.signature;
     }
 
@@ -387,6 +389,82 @@ contract NetworkStatusBlockChain {
      *                    Action Storage System End                       *
      **********************************************************************/
 
+    /**********************************************************************
+     *                         Transaction System                         *
+     **********************************************************************/
+	
+	struct Transaction {
+		// transaction content hash
+		bytes32 txhash;
+		// Actions' hash
+		bytes32[] actionHash;
+		// MerkleProofs' hash
+		bytes32[] proofHash;
+	}
+
+	struct Transactions {
+		// related contract_address (ISC)
+		address contract_addr;
+		// trnasactions' state
+		Transaction[] txinfo; 
+	}
+	
+	mapping (InsuranceSmartContract => Transactions) txsReference;
+	mapping (InsuranceSmartContract => bool) activeISC;
+	mapping (bytes32 => InsuranceSmartContract) proofHashCallback;
+	
+	function addTransactionProosal(InsuranceSmartContract isc)
+	public
+	returns (bool addingSuccess)
+	{
+		// assert msg.sender is isc.owner
+		addingSuccess = false;
+		// create Transactions
+		// addtxhash...
+		addingSuccess = true;
+	}
+	
+	function addMerkleProofProposal(
+		InsuranceSmartContract isc,
+		uint txindex,
+		string blockaddr,
+		bytes32 storagehash,
+		bytes32 key,
+		bytes32 val
+	)
+	public
+	returns (bytes32 keccakhash)
+	{
+		// assert isc.isTransactionOwner(msg.sender, txindex)
+		addMerkleProof(blockaddr, storagehash, key, val);
+		proofHashCallback[keccakhash] = isc;
+		keccakhash = keccak256(blockaddr, storagehash, key, val)
+	}
+	
+	function addActionProposal(
+		InsuranceSmartContract isc,
+		uint txindex,
+		uint actionindex;
+		string msghash,
+		string signature
+	)
+	public
+	returns (bytes32 keccakhash)
+	{
+		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
+		// assert actionindex < actionHash.length
+		keccakhash = actionHash[actionindex] = addAction(msghash, signature);
+	}
+	
+	function closeTransaction(InsuranceSmartContract isc)
+	public
+	returns (bool 
+	{
+		addingSuccess = false;
+		// assert msg.sender is isc.owner
+		activeISC[isc] = true;
+		addingSuccess = true;
+	}
 }
 
 
@@ -412,7 +490,7 @@ contract InsuranceSmartContract {
         mapping(string => string) meta;
         string[] field;
     }
-
+	
     //maybe private later
     mapping (address => uint256) public ownerfunds;
 
