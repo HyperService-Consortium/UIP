@@ -98,7 +98,7 @@ class VerifiableExecutionSystem:
             # TODO: inform Aborted
 
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
-            if SignatrueVerifier.verifyByRawMessage(
+            if SignatrueVerifier.verify_by_raw_message(
                 ack_signature,
                 self.txs_pool[session_id]['ack_dict']['self_first'],
                 ChainDNS.adduser['dot-concated'](ack_user_name)

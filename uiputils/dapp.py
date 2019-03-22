@@ -52,7 +52,8 @@ class DApp:
         sign_json = JsonRPC.eth_sign(self.address, msg)
         return JsonRPC.send(sign_json, HTTP_HEADER, self.chain_host)['result']
 
-    def call(self, trans):
+    @staticmethod
+    def call(trans):
         if trans.chain_type == 'Ethereum':
             call_json = JsonRPC.eth_call(trans.jsonize())
             tx_response = JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)['result']
@@ -85,7 +86,7 @@ class DApp:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
     def ackinit(self, ves: VerifiableExecutionSystem, content, sig):
-        if not SignatrueVerifier.verifyByRawMessage(sig, rlp.encode(content), ves.address):
+        if not SignatrueVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:
                 ves.sessionSetupUpdate(int(content[0]), self.name, None)

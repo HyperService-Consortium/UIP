@@ -21,13 +21,13 @@ if __name__ == '__main__':
     print(msg, HexBytes(msghash).hex())
     # print(HexBytes(msg).hex())
 
-    print(SignatrueVerifier.verifyByRawMessage(eth_signature, raw_msg, signer))
+    print(SignatrueVerifier.verify_by_raw_message(eth_signature, raw_msg, signer))
 
-    print(SignatrueVerifier.verifyByRawMessage(raw_signature, raw_msg, signer))
+    print(SignatrueVerifier.verify_by_raw_message(raw_signature, raw_msg, signer))
 
-    print(SignatrueVerifier.verifyByHashedMessage(eth_signature, msghash, signer))
+    print(SignatrueVerifier.verify_by_hashed_message(eth_signature, msghash, signer))
 
-    print(SignatrueVerifier.verifyByHashedMessage(raw_signature, msghash, signer))
+    print(SignatrueVerifier.verify_by_hashed_message(raw_signature, msghash, signer))
 
     sig = KeyAPI.Signature(HexBytes(raw_signature))
 

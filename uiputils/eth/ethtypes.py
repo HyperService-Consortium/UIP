@@ -4,8 +4,8 @@ from collections import namedtuple
 # import time
 
 # uip modules
-from .loadfile import FileLoad
-from .startservice import ServiceStart
+from uiputils.eth.tools.loadfile import FileLoad
+from uiputils.eth.tools.startservice import ServiceStart
 from uiputils.cast import bytestoint, catint32
 from .tools import (
     Prover,
@@ -57,7 +57,6 @@ class ChainDNS:
                 raise Missing('this chain has not relay-address' + chain_id)
         else:
             raise Missing('no such chainID: ' + chain_id)
-
 
     @staticmethod
     def gethost(chain_id):
