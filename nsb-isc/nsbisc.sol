@@ -1,8 +1,133 @@
 pragma solidity ^0.4.22;
 pragma solidity ^0.4.22;
+
+library SafeCal {
+    function safeMul(uint256 a, uint256 b)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 c = a * b;
+        assert(a == 0 || c / a == b);
+        return c;
+    }
+
+    function safeDiv(uint256 a, uint256 b)
+        internal
+        pure
+        returns (uint256)
+    {
+        assert(b > 0);
+        uint256 c = a / b;
+        assert(a == b * c + a % b);
+        return c;
+    }
+
+    function safeSub(uint256 a, uint256 b)
+        internal
+        pure
+        returns (uint256)
+    {
+        assert(b <= a);
+        return a - b;
+    }
+
+    function safeAdd(uint256 a, uint256 b)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 c = a + b;
+        assert(c >= a);
+        return c;
+    }
+}
+
+library Caster {
+    function bytes32ToAddress(bytes32 x) public pure returns (address) {
+        return address(uint160(bytes20(x)));
+    }
+
+    function bytes32ToString(bytes32 x) public pure returns (string) {
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
+        }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
+    }
+
+    function slice(bytes memory data,uint start,uint len)
+        public
+        pure
+        returns(bytes)
+    {
+        bytes memory b=new bytes(len);
+        for(uint i=0;i<len;i++)
+        {
+            b[i]=data[i+start];
+        }
+        return b;
+    }
+
+    //bytes转换为bytes32
+    function bytesToBytes32(bytes memory source)
+        public
+        pure
+        returns(bytes32 result)
+    {
+        assembly{
+        result :=mload(add(source,32))
+        }
+    }
+}
+
+library Crypto {
+    function validateSignatrue(bytes memory signature, bytes32 msghash)
+        public
+        pure
+        returns (address)
+    {
+        bytes32 r = Caster.bytesToBytes32(Caster.slice(signature,0,32));
+        bytes32 s = Caster.bytesToBytes32(Caster.slice(signature,32,32));
+        byte v = Caster.slice(signature,64,1)[0];
+        return ecrecoverDecode(msghash, r, s, v);
+
+    }
+
+    //使用ecrecover恢复出公钥，后对比
+    function ecrecoverDecode(bytes32 msghash,bytes32 r,bytes32 s, byte v1)
+        public
+        pure
+        returns(address addr)
+    {
+        uint8 v=uint8(v1);
+        if(v<=1)
+        {
+            v += 27;
+        }
+        addr=ecrecover(msghash, v, r, s);
+    }
+}
+
 contract NetworkStatusBlockChain {
+    /**********************************************************************/
+    // constant
+
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
+
+    /**********************************************************************
+     *                              Structs                               *
+     **********************************************************************/
 
     struct MerkleProof {
         string blockaddr;
@@ -15,14 +140,32 @@ contract NetworkStatusBlockChain {
     }
 
     struct Action {
-        // Party a
-        // address pa;
-        // Party z
-        // address pz;
+        // message hash
+		bytes32 msghash;
         // signature
-		string msghash;
-        string signature;
+        bytes signature;
     }
+
+    struct Transaction {
+		// transaction content hash
+		bytes32 txhash;
+		// Actions' hash
+		bytes32[] actionHash;
+		// MerkleProofs' hash
+		bytes32[] proofHash;
+	}
+
+	struct Transactions {
+		// related contract_address (ISC) // if it necessary to defining as InsuranceSmartContract
+		address contract_addr;
+		// trnasactions' state
+		Transaction[] txInfo;
+	}
+
+    /**********************************************************************
+     *                              Storage                               *
+     **********************************************************************/
+    // MerkleProof System Storage
 
     // The MerkleProofTree
     // keccak256(string + storagehash + key + value) maps to MerkleProof
@@ -43,20 +186,40 @@ contract NetworkStatusBlockChain {
     // if the MerkleProof Atte is valid, verifiedMerkleProof[Atte] == true
     mapping (bytes32 => bool) public verifiedMerkleProof; // slot 7
 
+    /**********************************************************************/
+    // Action System Storage
+
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree; // slot 8
 
-    // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
+    /**********************************************************************/
+    // Owner System Storage
+
+    // The Net State BlockChain(NSB) contract is owned by multiple entities to ensure security.
     mapping (address => bool) public isOwner; // slot 9
     address[] public owners; // slot 10
 
     uint public requiredOwnerCount; // slot 11
-        uint public requiredValidVotesCount; // slot 12
+    uint public requiredValidVotesCount; // slot 12
 
     // Maps used for adding and removing owners.
     mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 13
     mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 14
 
+    /**********************************************************************/
+    // Transaction System Storage
+
+    // storage of Transactions
+	Transactions[] private txsStack; // slot 15
+
+	// ISC maps to Transactions
+	mapping (address => Transactions) txsReference; // slot 16
+	// whether ISC active or not
+	mapping (address => bool) activeISC; // slot 17
+
+    /**********************************************************************
+     *                         event & condition                          *
+     **********************************************************************/
 
     event addingMerkleProof(string, bytes32, bytes32, bytes32);
 
@@ -121,6 +284,7 @@ contract NetworkStatusBlockChain {
             require(!isOwner[_owners[i]] && _owners[i] != 0, "owner exists or its address is invalid");
             isOwner[_owners[i]] = true;
         }
+
         owners = _owners;
         requiredOwnerCount = _required;
         requiredValidVotesCount = (requiredOwnerCount + 1) >> 1;
@@ -208,10 +372,6 @@ contract NetworkStatusBlockChain {
     {
         return isOwner[msg.sender];
     }
-
-    /**********************************************************************
-     *                         Owner System End                           *
-     **********************************************************************/
 
     /**********************************************************************
      *                     MerkleProof Storage System                     *
@@ -352,14 +512,10 @@ contract NetworkStatusBlockChain {
     }
 
     /**********************************************************************
-     *                  MerkleProof Storage System End                    *
-     **********************************************************************/
-
-    /**********************************************************************
      *                       Action Storage System                        *
      **********************************************************************/
 
-    function addAction(string msghash, string signature)
+    function addAction(bytes32 msghash, bytes signature)
         public
         ownerExists(msg.sender)
         returns (bytes32 keccakhash)
@@ -376,7 +532,7 @@ contract NetworkStatusBlockChain {
     function getAction(bytes32 keccakhash)
         public
         view
-        returns (string msghash, string signature)
+        returns (bytes32 msghash, bytes signature)
     {
         Action storage toGet = ActionTree[keccakhash];
         // pa = toGet.pa;
@@ -386,44 +542,28 @@ contract NetworkStatusBlockChain {
     }
 
     /**********************************************************************
-     *                    Action Storage System End                       *
-     **********************************************************************/
-
-    /**********************************************************************
      *                         Transaction System                         *
      **********************************************************************/
-	
-	struct Transaction {
-		// transaction content hash
-		bytes32 txhash;
-		// Actions' hash
-		bytes32[] actionHash;
-		// MerkleProofs' hash
-		bytes32[] proofHash;
-	}
 
-	struct Transactions {
-		// related contract_address (ISC)
-		address contract_addr;
-		// trnasactions' state
-		Transaction[] txinfo; 
-	}
-	
-	mapping (InsuranceSmartContract => Transactions) txsReference;
-	mapping (InsuranceSmartContract => bool) activeISC;
-	mapping (bytes32 => InsuranceSmartContract) proofHashCallback;
-	
 	function addTransactionProosal(InsuranceSmartContract isc)
-	public
-	returns (bool addingSuccess)
+    	public
+    	returns (bool addingSuccess)
 	{
-		// assert msg.sender is isc.owner
-		addingSuccess = false;
-		// create Transactions
-		// addtxhash...
+		require(isc.isRawSender(msg.sender), "you have no access to upload ISC to NSB");
+		// addingSuccess = false;
+		txsStack.length++;
+		Transactions storage txs = txsStack[txsStack.length - 1];
+		txsReference[isc] = txs;
+		txs.txInfo.length = isc.txInfoLength();
+		for(uint idx=0; idx < txs.txInfo.length; idx++)
+		{
+		    txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
+		}
+
+		activeISC[isc] = true;
 		addingSuccess = true;
 	}
-	
+
 	function addMerkleProofProposal(
 		InsuranceSmartContract isc,
 		uint txindex,
@@ -432,38 +572,38 @@ contract NetworkStatusBlockChain {
 		bytes32 key,
 		bytes32 val
 	)
-	public
-	returns (bytes32 keccakhash)
+    	public
+    	returns (bytes32 keccakhash)
 	{
-		// assert isc.isTransactionOwner(msg.sender, txindex)
+		require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
 		addMerkleProof(blockaddr, storagehash, key, val);
-		proofHashCallback[keccakhash] = isc;
-		keccakhash = keccak256(blockaddr, storagehash, key, val)
+		keccakhash = keccak256(blockaddr, storagehash, key, val);
 	}
-	
+
 	function addActionProposal(
 		InsuranceSmartContract isc,
 		uint txindex,
-		uint actionindex;
-		string msghash,
-		string signature
+		uint actionindex,
+		bytes32 msghash,
+		bytes signature
 	)
-	public
-	returns (bytes32 keccakhash)
+    	public
+    	returns (bytes32 keccakhash)
 	{
 		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
 		// assert actionindex < actionHash.length
-		keccakhash = actionHash[actionindex] = addAction(msghash, signature);
+		Transactions storage txs = txsReference[isc];
+		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
 	}
-	
+
 	function closeTransaction(InsuranceSmartContract isc)
-	public
-	returns (bool 
+    	public
+    	returns (bool closeSuccess)
 	{
-		addingSuccess = false;
-		// assert msg.sender is isc.owner
-		activeISC[isc] = true;
-		addingSuccess = true;
+		closeSuccess = false;
+		require(isc.closed(), "ISC is active now");
+		activeISC[isc] = false;
+		closeSuccess = true;
 	}
 }
 
@@ -472,29 +612,42 @@ contract InsuranceSmartContract {
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
 
-            //   0        1     2       3     4       5
-    enum State { unknown, init, inited, open, opened, closed }
+    enum State {
+        unknown,
+        init,
+        inited,
+        open,
+        opened,
+        closed
+    }
 
     struct TransactionState {
         State state;
         uint256 topen;
         uint256 tclose;
-        mapping(string => string) result;
-        string[] field;
+        bytes32[] results;
     }
 
     struct Transaction {
         address fr;
         address to;
         uint seq;
-        mapping(string => string) meta;
-        string[] field;
+        uint amt;
+        bytes rlpedMeta;
+        // mapping(string => string) meta;
+        // string[] field;
     }
-	
-    //maybe private later
-    mapping (address => uint256) public ownerfunds;
 
-    mapping (address => bool) public isowner;
+	bool iscOpened;
+	bool iscClosed;
+	bool iscSettled;
+
+    mapping (address => uint256) public ownerRequiredFunds;
+    mapping (address => uint256) public ownerFunds;
+
+
+    address[] public owners;
+    mapping (address => bool) public isOwner;
 
     uint256 public remainingFund;
 
@@ -502,144 +655,406 @@ contract InsuranceSmartContract {
 
     TransactionState[] public txState;
 
+    bytes rlpedTxIntent;
+    bytes32 vesack;
+    mapping (address => bytes) acks;
+    mapping (address => bool) ownerAck;
+    uint acked;
 
     modifier onlyOwner()
     {
-        require(isowner[msg.sender], "owner doesn't exist.");
+        require(isOwner[msg.sender], "owner doesn't exist.");
         _;
     }
 
-    constructor (address[] owners,uint[] funds,
-        bytes32[] transaction_content)
-    public
+    modifier iscInitializing()
     {
+        require(iscOpened == false, "ISC is initialized");
+        require(iscClosed == false, "ISC is ended");
+        _;
+    }
+
+    modifier iscOpening()
+    {
+        require(iscOpened, "ISC is initializing");
+        require(iscClosed == false, "ISC closed");
+        _;
+    }
+
+    modifier iscActive()
+    {
+        require(iscClosed == false, "ISC closed");
+        _;
+    }
+
+    modifier validUploader()
+    {
+        require(msg.sender == owners[0], "you have no access to update the TxInfo");
+        _;
+    }
+
+    /**********************************************************************
+     *                         Initialize Period                          *
+     **********************************************************************/
+
+    constructor (
+        address[] iscowners,
+        uint[] funds,
+        bytes signContent,
+        bytes signature,
+        uint256 txCount
+        //bytes32[] transaction_content
+    )
+        public
+        payable
+    {
+        require(msg.sender == iscowners[0], "iscowners[0] must be the sender");
+        require(msg.value > ownerRequiredFunds[msg.sender], "no enough fund");
+        ownerFunds[msg.sender] = msg.value;
+        //msg.sender.transfer(msg.value);
+
         uint idx;
-        uint idy;
-        uint bse;
-        uint meta_length;
-        txInfo.length++;
-        Transaction storage to_Add = txInfo[0];
-        txState.length++;
-        for(idx = 0; idx < owners.length; idx++)
-        {
-            require(!isowner[owners[idx]] && owners[idx] != 0, "owner exists or its address is invalid");
-            ownerfunds[owners[idx]] = funds[idx];
+
+        iscOpened = iscClosed = iscSettled = false;
+        txInfo.length = txCount;
+        txState.length = txCount;
+
+        bytes32 keccakhash = keccak256(signContent);
+        require(Crypto.validateSignatrue(signature, keccakhash) == iscowners[0], "wrong signature");
+        rlpedTxIntent = signContent;
+        acks[iscowners[0]] = signature;
+        vesack = keccak256(signature);
+        acked = 1;
+
+        for(idx = 0; idx < owners.length; idx++) {
+            require(!isOwner[iscowners[idx]] && iscowners[idx] != 0, "owner exists or its address is invalid");
+            isOwner[iscowners[idx]] = true;
+            ownerRequiredFunds[iscowners[idx]] = funds[idx];
         }
-        for(idx = 0; ; )
-        {
-            bse = idx + 4;
-            require(bse <= transaction_content.length, "invalid transaction base info");
-            to_Add.fr = bytes32ToAddress(transaction_content[idx]);
-            to_Add.to = bytes32ToAddress(transaction_content[idx + 1]);
-            to_Add.seq = uint(transaction_content[idx + 2]);
-            meta_length = uint(transaction_content[idx + 3]);
-            to_Add.field.length = meta_length;
-            meta_length <<= 1;
-            require(bse + meta_length <= transaction_content.length, "invalid transaction meta_length");
-            for(idy = 0; idy < meta_length; idy += 2)
-            {
-                to_Add.field[idx >> 1] = bytes32ToString(transaction_content[bse + idy]);
-                to_Add.meta[to_Add.field[idx >> 1]] = bytes32ToString(transaction_content[bse + idy + 1]);
-            }
-            idx = bse + meta_length;
-            if(idx == transaction_content.length) break;
-            txInfo.length++;
-            txState.length++;
-            to_Add = txInfo[txInfo.length - 1];
-            //test.push(bytes32ToString(transaction_content[idy]));
-        }
+        owners = iscowners;
+
+
+
+        // uint idx;
+        // uint idy;
+        // uint bse;
+        // uint meta_length;
+        // txInfo.length++;
+        // Transaction storage to_Add = txInfo[0];
+        // txState.length++;
+        // for(idx = 0; idx < owners.length; idx++)
+        // {
+        //     require(!isowner[owners[idx]] && owners[idx] != 0, "owner exists or its address is invalid");
+        //     ownerfunds[owners[idx]] = funds[idx];
+        // }
+
+
+        // for(idx = 0; ; )
+        // {
+        //     bse = idx + 4;
+        //     require(bse <= transaction_content.length, "invalid transaction base info");
+        //     to_Add.fr = bytes32ToAddress(transaction_content[idx]);
+        //     to_Add.to = bytes32ToAddress(transaction_content[idx + 1]);
+        //     to_Add.seq = uint(transaction_content[idx + 2]);
+        //     meta_length = uint(transaction_content[idx + 3]);
+        //     to_Add.field.length = meta_length;
+        //     meta_length <<= 1;
+        //     require(bse + meta_length <= transaction_content.length, "invalid transaction meta_length");
+        //     for(idy = 0; idy < meta_length; idy += 2)
+        //     {
+        //         to_Add.field[idx >> 1] = bytes32ToString(transaction_content[bse + idy]);
+        //         to_Add.meta[to_Add.field[idx >> 1]] = bytes32ToString(transaction_content[bse + idy + 1]);
+        //     }
+        //     idx = bse + meta_length;
+        //     if(idx == transaction_content.length) break;
+        //     txInfo.length++;
+        //     txState.length++;
+        //     to_Add = txInfo[txInfo.length - 1];
+        //     //test.push(bytes32ToString(transaction_content[idy]));
+        // }
     }
 
-    string aaf;
-    function test(NetworkStatusBlockChain nsb, address cross) public view returns(bool){
-        return nsb.isOwner(cross);
-    }
-
-    function bytes32ToAddress(bytes32 x) public pure returns (address) {
-        return address(uint160(bytes20(x)));
-    }
-
-    function bytes32ToString(bytes32 x) public pure returns (string) {
-        bytes memory bytesString = new bytes(32);
-        uint charCount = 0;
-        for (uint j = 0; j < 32; j++) {
-            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
-            if (char != 0) {
-                bytesString[charCount] = char;
-                charCount++;
-            }
-        }
-        bytes memory bytesStringTrimmed = new bytes(charCount);
-        for (j = 0; j < charCount; j++) {
-            bytesStringTrimmed[j] = bytesString[j];
-        }
-        return string(bytesStringTrimmed);
-    }
-
-    function getMetaByNumber(uint idx, uint idy)
-    public
-    view
-    returns (string)
+    function updateTxInfo(
+        uint idx,
+        address fr,
+        address to,
+        uint seq,
+        uint amt,
+        bytes rlpedMeta
+    )
+        public
+        iscInitializing
+        validUploader
     {
         require(idx < txInfo.length, "idx overflow");
-        require(idy < txInfo[idx].field.length, "idy overflow");
-        return txInfo[idx].meta[txInfo[idx].field[idy]];
+        txInfo[idx] = Transaction(fr, to, seq, amt, rlpedMeta);
     }
 
-    function getState(uint idx)
-    public
-    view
-    returns (State)
+    function updateTxFr(uint idx, address fr)
+        public
+        iscInitializing
+        validUploader
     {
         require(idx < txInfo.length, "idx overflow");
-        return txState[idx].state;
+        txInfo[idx].fr = fr;
+    }
+
+    function updateTxTo(uint idx, address to)
+        public
+        iscInitializing
+        validUploader
+    {
+        require(idx < txInfo.length, "idx overflow");
+        txInfo[idx].to = to;
+    }
+
+    function updateTxSeq(uint idx, uint seq)
+        public
+        iscInitializing
+        validUploader
+    {
+        require(idx < txInfo.length, "idx overflow");
+        txInfo[idx].seq = seq;
+    }
+
+    function updateTxAmt(uint idx, uint amt)
+        public
+        iscInitializing
+        validUploader
+    {
+        require(idx < txInfo.length, "idx overflow");
+        txInfo[idx].amt = amt;
+    }
+
+    function updateTxRlpedMeta(uint idx, bytes rlpedMeta)
+        public
+        iscInitializing
+        validUploader
+    {
+        require(idx < txInfo.length, "idx overflow");
+        txInfo[idx].rlpedMeta = rlpedMeta;
+    }
+
+    function userAck(bytes signature)
+        public
+        payable
+        iscInitializing
+        onlyOwner
+    {
+        require(Crypto.validateSignatrue(signature, vesack) == msg.sender, "wrong signature");
+        require(ownerAck[msg.sender] == false, "updated");
+        require(msg.value > ownerRequiredFunds[msg.sender], "no enough fund");
+
+        // msg.sender.transfer(msg.value);
+
+        acks[msg.sender] = signature;
+        ownerAck[msg.sender] =true;
+        acked++;
+        if (acked == owners.length) {
+            iscOpened = true;
+        }
+    }
+
+    function userRefuse()
+        public
+        iscInitializing
+        onlyOwner
+    {
+        iscClosed = true;
+        iscSettled = true;
+    }
+
+    /**********************************************************************
+     *                           Active Period                            *
+     **********************************************************************/
+
+    // function insuranceClaim()
+
+    function ChangeState(uint tid, uint state)
+        public
+        onlyOwner
+        iscOpening
+    {
+        require(tid < txState.length, "invalid tid");
+        require(state < 6, "invalid state");
+        require(state > uint(txState[tid].state), "require more advanced state");
+        txState[tid].state = State(state);
+    }
+
+    function ChangeStateOpened(uint tid, uint topen)
+        public
+        onlyOwner
+        iscOpening
+    {
+        State state = State.opened;
+        require(tid < txState.length, "invalid tid");
+        require(uint(state) <= 6, "invalid state");
+        require(uint(state) > uint(txState[tid].state), "require more advanced state");
+        txState[tid].state = State(state);
+        txState[tid].topen = topen;
+    }
+
+    function ChangeStateClosed(uint tid, uint tclose)
+        public
+        onlyOwner
+        iscOpening
+    {
+        State state = State.closed;
+        require(tid < txState.length, "invalid tid");
+        require(uint(state) <= 6, "invalid state");
+        require(uint(state) > uint(txState[tid].state), "require more advanced state");
+        txState[tid].state = State(state);
+        txState[tid].tclose = tclose;
+    }
+
+    function ChangeResult(NetworkStatusBlockChain nsb, uint tid, bytes32[] results)
+        public
+        onlyOwner
+        iscOpening
+    {
+        require(tid < txState.length, "invalid tid");
+        require(txState[tid].state == State.open, "only open-state transaction can be modified");
+        for (uint idx=0; idx < results.length; idx++) {
+            require(nsb.validMerkleProoforNot(results[idx]) == true, "invalid MerkleProof in results");
+        }
+        txState[tid].results = results;
+    }
+
+    function StopISC()
+        public
+        onlyOwner
+        iscOpening
+    {
+        iscClosed = true;
+    }
+
+    /**********************************************************************
+     *                           Settle Period                            *
+     **********************************************************************/
+
+    function settleContract()
+        public
+        onlyOwner
+    {
+        require(iscClosed, "ISC is active now");
+        iscSettled = true;
+    }
+
+    function returnFunds()
+        public
+        onlyOwner
+    {
+        require(iscSettled, "ISC hasn't been settled yet");
+        uint funds = ownerFunds[msg.sender];
+        ownerFunds[msg.sender] = 0;
+        msg.sender.transfer(funds);
+    }
+
+    /**********************************************************************
+     *                               others                               *
+     **********************************************************************/
+
+    function getMetaByNumber(uint tid)
+        public
+        view
+        returns (bytes)
+    {
+        require(tid < txInfo.length, "tid overflow");
+        return txInfo[tid].rlpedMeta;
+    }
+
+    function getState(uint tid)
+        public
+        view
+        returns (State)
+    {
+        require(tid < txState.length, "tid overflow");
+        return txState[tid].state;
+    }
+
+    function getResult(uint tid)
+        public
+        view
+        returns (bytes32[])
+    {
+        require(tid < txState.length, "tid overflow");
+        return txState[tid].results;
+    }
+
+    function getTransactionInfo(uint tid)
+        public
+        view
+        returns (
+            address fr,
+            address to,
+            uint seq,
+            uint amt,
+            bytes rlpedMeta
+        )
+    {
+        require(tid < txState.length, "tid overflow");
+        Transaction storage toGet = txInfo[tid];
+        fr = toGet.fr;
+        to = toGet.to;
+        seq = toGet.seq;
+        amt = toGet.amt;
+        rlpedMeta = toGet.rlpedMeta;
     }
 
     function stakeFund()
         public
         payable
         onlyOwner
+        iscActive
     {
-        remainingFund = safeAdd(remainingFund, msg.value);
+        remainingFund = SafeCal.safeAdd(remainingFund, msg.value);
     }
 
-    function safeMul(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256 )
+    function isTransactionOwner(address queryaddr, uint tid)
+        public
+        view
+        returns (bool)
     {
-        uint256 c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
+        require(tid < txState.length, "tid overflow");
+        return queryaddr == txInfo[tid].fr;
     }
 
-    function safeDiv(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256 )
+    function isRawSender(address queryaddr)
+        public
+        view
+        returns (bool)
     {
-        assert(b > 0);
-        uint256 c = a / b;
-        assert(a == b * c + a % b);
-        return c;
+        return queryaddr == owners[0];
     }
 
-    function safeSub(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256 )
+    function txInfoLength()
+        public
+        view
+        returns (uint)
     {
-        assert(b <= a);
-        return a - b;
+        return txInfo.length;
     }
 
-    function safeAdd(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256 )
+    function getTxInfoHash(uint tid)
+        public
+        view
+        returns (bytes32)
     {
-        uint256 c = a + b;
-        assert(c >= a);
-        return c;
+        require(tid < txState.length, "tid overflow");
+        return keccak256(
+            txInfo[tid].fr,
+            txInfo[tid].to,
+            txInfo[tid].seq,
+            txInfo[tid].amt,
+            txInfo[tid].rlpedMeta
+        );
+    }
+
+    function closed()
+        public
+        view
+        returns (bool)
+    {
+        return iscClosed;
     }
 }
