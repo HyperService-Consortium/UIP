@@ -1,8 +1,28 @@
 pragma solidity ^0.4.22;
+interface InsuranceSmartContract {
+    
+    function isRawSender(address) external returns(bool);
+    
+    function txInfoLength() external returns(uint);
+    
+    function getTxInfoHash(uint) external returns(bytes32);
+    
+    function isTransactionOwner(address, uint) external returns(bool);
+    
+    function closed() external returns(bool);
+}
+
 contract NetworkStatusBlockChain {
+    /**********************************************************************/
+    // constant
+    
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
-
+    
+    /**********************************************************************
+     *                               Structs                              *
+     **********************************************************************/
+    
     struct MerkleProof {
         string blockaddr;
         // storage roothash
@@ -12,15 +32,37 @@ contract NetworkStatusBlockChain {
         // corresponding value
         bytes32 value;
     }
-    
+
     struct Action {
         // Party a
         // address pa;
         // Party z
         // address pz;
         // signature
-        string signature;
+		bytes32 msghash;
+        bytes signature;
     }
+    
+    struct Transaction {
+		// transaction content hash
+		bytes32 txhash;
+		// Actions' hash
+		bytes32[] actionHash;
+		// MerkleProofs' hash
+		bytes32[] proofHash;
+	}
+
+	struct Transactions {
+		// related contract_address (ISC) // if it necessary to defining as InsuranceSmartContract
+		address contract_addr;
+		// trnasactions' state
+		Transaction[] txInfo; 
+	}
+    
+    /**********************************************************************
+     *                              Storage                               *
+     **********************************************************************/
+    // MerkleProof System Storage
     
     // The MerkleProofTree
     // keccak256(string + storagehash + key + value) maps to MerkleProof
@@ -32,18 +74,24 @@ contract NetworkStatusBlockChain {
     // keccakhash of MerkleProof mapsto index of MerkleProof in waitingVerifyProof
     mapping (bytes32 => uint32) public proofPointer; // slot 3
     // if owner voted
-    mapping (address => mapping (bytes32 => bool)) ownerVoted; // slot 4
+    mapping (address => mapping (bytes32 => bool)) public ownerVoted; // slot 4
     // remained verifying MerkleProofs range [votedPointer, waitingVerifyProof.length)
-    uint32 votedPointer; // slot 5
+    uint32 public votedPointer; // slot 5
 
     // all the MerkleProofs on the contract
     mapping (bytes32 => MerkleProof) public MerkleProofTree; // slot 6
     // if the MerkleProof Atte is valid, verifiedMerkleProof[Atte] == true
     mapping (bytes32 => bool) public verifiedMerkleProof; // slot 7
 
+    /**********************************************************************/
+    // Action System Storage
+    
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree; // slot 8
-
+    
+    /**********************************************************************/
+    // Owner System Storage
+    
     // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
     mapping (address => bool) public isOwner; // slot 9
     address[] public owners; // slot 10
@@ -54,8 +102,19 @@ contract NetworkStatusBlockChain {
     // Maps used for adding and removing owners.
     mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 13
     mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 14
-
-
+    
+    /**********************************************************************/
+    // Transaction System Storage
+    
+	Transactions[] private txsStack; // slot 15
+	mapping (address => Transactions) txsReference; // slot 16
+	mapping (address => bool) activeISC; // slot 17
+	mapping (bytes32 => address) proofHashCallback; // slot 18
+    
+    /**********************************************************************
+     *                      event & condition                             *
+     **********************************************************************/
+    
     event addingMerkleProof(string, bytes32, bytes32, bytes32);
 
 
@@ -119,10 +178,15 @@ contract NetworkStatusBlockChain {
             require(!isOwner[_owners[i]] && _owners[i] != 0, "owner exists or its address is invalid");
             isOwner[_owners[i]] = true;
         }
+        
         owners = _owners;
         requiredOwnerCount = _required;
         requiredValidVotesCount = (requiredOwnerCount + 1) >> 1;
     }
+
+    /**********************************************************************
+     *                            Owner System                            *
+     **********************************************************************/
 
     function addOwner(address _newOwner)
         public
@@ -177,6 +241,35 @@ contract NetworkStatusBlockChain {
             owners.length -= 1;
         }
     }
+
+    function getOwner()
+        public
+        view
+        ownerExists(msg.sender)
+        returns (address[])
+    {
+        return owners;
+    }
+
+    function getOwnerCount()
+        public
+        view
+        returns (uint)
+    {
+        return owners.length;
+    }
+
+    function isSenderAOwner()
+        public
+        view
+        returns (bool)
+    {
+        return isOwner[msg.sender];
+    }
+
+    /**********************************************************************
+     *                     MerkleProof Storage System                     *
+     **********************************************************************/
 
     // change it to VES/DAPP/NSB user?
     function addMerkleProof(string blockaddr, bytes32 storagehash, bytes32 key, bytes32 val)
@@ -256,20 +349,6 @@ contract NetworkStatusBlockChain {
             waitingVerifyProof[votedPointer] == 0)votedPointer ++;
     }
 
-    function addAction(string signature)
-        public
-        ownerExists(msg.sender)
-        returns (bytes32 keccakhash)
-    {
-        // require(pa != 0, "invalid pa address");
-        // require(pz != 0, "invalid pz address");
-
-        Action memory toAdd = Action(signature);
-        keccakhash = keccak256(signature);
-
-        ActionTree[keccakhash]= toAdd;
-    }
-
     function getMerkleProofByHash(bytes32 keccakhash)
         public
         view
@@ -294,31 +373,6 @@ contract NetworkStatusBlockChain {
         s = toGet.storagehash;
         k = toGet.key;
         v = toGet.value;
-    }
-
-    function getOwner()
-        public
-        view
-        ownerExists(msg.sender)
-        returns (address[])
-    {
-        return owners;
-    }
-
-    function getOwnerCount()
-        public
-        view
-        returns (uint)
-    {
-        return owners.length;
-    }
-
-    function isSenderAOwner()
-        public
-        view
-        returns (bool)
-    {
-        return isOwner[msg.sender];
     }
 
     function getTobeVotes()
@@ -351,14 +405,100 @@ contract NetworkStatusBlockChain {
         v = toGet.value;
     }
 
+    /**********************************************************************
+     *                       Action Storage System                        *
+     **********************************************************************/
+
+    function addAction(bytes32 msghash, bytes signature)
+        // future will be private
+        public
+        ownerExists(msg.sender)
+        returns (bytes32 keccakhash)
+    {
+        // require(pa != 0, "invalid pa address");
+        // require(pz != 0, "invalid pz address");
+
+        Action memory toAdd = Action(msghash, signature);
+        keccakhash = keccak256(msghash, signature);
+
+        ActionTree[keccakhash]= toAdd;
+    }
+
     function getAction(bytes32 keccakhash)
         public
         view
-        returns (string signature)
+        returns (bytes32 msghash, bytes signature)
     {
         Action storage toGet = ActionTree[keccakhash];
         // pa = toGet.pa;
         // pz = toGet.pz;
+		msghash = toGet.msghash;
         signature = toGet.signature;
     }
+
+    /**********************************************************************
+     *                         Transaction System                         *
+     **********************************************************************/
+	
+	function addTransactionProosal(InsuranceSmartContract isc)
+    	public
+    	returns (bool addingSuccess)
+	{
+		require(isc.isRawSender(msg.sender), "you have no access to upload ISC to NSB");
+		// addingSuccess = false;
+		txsStack.length++;
+		Transactions storage txs = txsStack[txsStack.length - 1];
+		txsReference[isc] = txs;
+		txs.txInfo.length = isc.txInfoLength();
+		for(uint idx=0; idx < txs.txInfo.length; idx++)
+		{
+		    txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
+		}
+		
+		activeISC[isc] = true;
+		addingSuccess = true;
+	}
+	
+	function addMerkleProofProposal(
+		InsuranceSmartContract isc,
+		uint txindex,
+		string blockaddr,
+		bytes32 storagehash,
+		bytes32 key,
+		bytes32 val
+	)
+    	public
+    	returns (bytes32 keccakhash)
+	{
+		require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
+		addMerkleProof(blockaddr, storagehash, key, val);
+		proofHashCallback[keccakhash] = isc;
+		keccakhash = keccak256(blockaddr, storagehash, key, val);
+	}
+	
+	function addActionProposal(
+		InsuranceSmartContract isc,
+		uint txindex,
+		uint actionindex,
+		bytes32 msghash,
+		bytes signature
+	)
+    	public
+    	returns (bytes32 keccakhash)
+	{
+		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
+		// assert actionindex < actionHash.length
+		Transactions storage txs = txsReference[isc];
+		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
+	}
+	
+	function closeTransaction(InsuranceSmartContract isc)
+    	public
+    	returns (bool closeSuccess)
+	{
+		closeSuccess = false;
+		require(isc.closed(), "ISC is active now");
+		activeISC[isc] = false;
+		closeSuccess = true;
+	}
 }
