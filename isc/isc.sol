@@ -5,57 +5,96 @@ interface NetworkStatusBlockChain {
 }
 
 contract InsuranceSmartContract {
+    /**********************************************************************/
+    // constant
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
     // bytes constant public ETH_PREFIX = hex"19457468657265756d205369676e6564204d6573736167653a0a";
     
+    /**********************************************************************
+     *                               Structs                              *
+     **********************************************************************/
+
+    // Enumeration of Transaction State
     enum State {
+        // 0
         unknown,
+        // 1
         init,
+        // 2
         inited,
+        // 3
         open,
+        // 4
         opened,
+        // 5
         closed
     }
-
+    
     struct TransactionState {
         State state;
+        // Transaction's open-time
         uint256 topen;
+        // Transaction's close-time
         uint256 tclose;
+        // result of Transactions (MerkleProofHashes storaged on NSB)
         bytes32[] results;
     }
     
     struct Transaction {
+        // from address
         address fr;
+        // to address (Optional)
         address to;
+        // unique seq (serial)
         uint seq;
+        // meta.amt
         uint amt;
+        
+        // rlpedMetadata
+        // [[key1, value1], [key2, value2], ...]
+        // e.g., [['amt', '1000'], ['comment', 'Here is an Example Rlped Meta Data']]
         bytes rlpedMeta;
         // mapping(string => string) meta;
         // string[] field;
     }
 	
+    // maybe Enum is better
 	bool public iscOpened;
 	bool public iscClosed;
 	bool public iscSettled;
-	
+    
+    // minimum fund an owner should stake
     mapping (address => uint256) public ownerRequiredFunds;
+    // amount of fund an owner staked
     mapping (address => uint256) public ownerFunds;
     
-    
+    // the isc users (including VES's account)
     address[] public owners;
+    // whether an account is owner of isc or not
     mapping (address => bool) public isOwner;
 
-    uint256 public remainingFund;
-
+    // Transactions information
     Transaction[] public txInfo;
-    
+    // Transactions status
     TransactionState[] public txState;
 
+    // complete rlp-serialized Transaction content
+    // [session-id, txs-intent as json]
     bytes public rlpedTxIntent;
+    
+    // vesack = keccak256(
+    //    bytes('\x19Ethereum Signed Message:\n'),
+    //    bytes('130'),
+    //    bytes(hexstring of Sig_VES)
+    //)
     bytes32 public vesack;
+    
+    // Sigs of owners
     mapping (address => bytes) public acks;
+    // whether an owner acknowledged or not
     mapping (address => bool) public ownerAck;
+    // the number of acknowledged owners
     uint public acked;
     
     modifier onlyOwner()
