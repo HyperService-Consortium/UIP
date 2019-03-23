@@ -10,7 +10,7 @@ from .ves import VerifiableExecutionSystem
 
 # eth modules
 from .eth import JsonRPC
-from .eth.tools import SignatrueVerifier
+from .eth.tools import SignatureVerifier
 
 # config
 from .config import HTTP_HEADER
@@ -86,7 +86,7 @@ class DApp:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
     def ackinit(self, ves: VerifiableExecutionSystem, content, sig):
-        if not SignatrueVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
+        if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:
                 ves.sessionSetupUpdate(int(content[0]), self.name, None)

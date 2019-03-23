@@ -9,7 +9,7 @@ from eth_hash.auto import keccak
 from hexbytes import HexBytes
 
 # uip modules
-from .uiperror import InitializeError, GenerationError, Missing
+from .uiperror import InitializeError, GenerationError
 
 # eth modules
 from .eth.ethtypes import NetStatusBlockchain as ethNSB
@@ -102,29 +102,6 @@ class NetworkStatusBlockChain:
         else:
             self.handle = None
             raise TypeError("other NSB type not implemented")
-
-
-class InsuranceSmartContract:
-    def __init__(self, info, owners):
-
-        # TODO : contract construct
-        self.address = '0xca35b7d915458ef540ade6068dfe2f44e8fa733c'
-        self.contract = info
-        self.owners = owners
-        # self.handle = ethISC(...)
-        # Insurance Smart Contract is a contract on the blockchain
-        pass
-
-    def updateFunds(self, owner, fund):
-        if owner not in self.owners:
-            raise Missing('this address is not owner')
-        print(owner, "updated fund:", fund)
-
-    def insuranceClaim(self, contract_id, atte):
-        pass
-
-    def settleContract(self, contract_id):
-        pass
 
 
 class OpIntent:

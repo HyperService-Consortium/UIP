@@ -8,13 +8,13 @@ from hexbytes import HexBytes
 
 # uip modules
 from .uiptypes import (
-    InsuranceSmartContract,
     OpIntent,
     TransactionIntents,
     ChainDNS
 )
+from uiputils import InsuranceSmartContract
 from .eth import JsonRPC
-from .eth.tools import SignatrueVerifier
+from .eth.tools import SignatureVerifier
 from .uiperror import Missing, Mismatch
 
 # config
@@ -64,14 +64,8 @@ class VerifiableExecutionSystem:
         # create txs
         tx_intents, op_owners = VerifiableExecutionSystem.buildGraph(op_intents_json)
 
-        # TODO: build ISC
-        isc = InsuranceSmartContract(tx_intents, ChainDNS.gatherusers(op_owners, userformat='dot-concated'))
         wait_user = set(op_owners)
         for owner in op_owners:
-            # test updateFunds
-            isc.updateFunds(ChainDNS.adduser['dot-concated'](owner), 0)
-            ######################################
-
             if owner not in self.user_pool:
                 raise Missing(owner + " is not in user-pool")
 
@@ -79,9 +73,18 @@ class VerifiableExecutionSystem:
         self.txs_pool[session_id]['ack_dict'] = dict((owner, None) for owner in wait_user)
         self.txs_pool[session_id]['ack_counter'] = len(wait_user)
 
-        sign_content = [str(session_id), tx_intents.purejson(), isc.address]
-        atte_v = self.sign(HexBytes(rlp.encode(sign_content)).hex())
+        sign_content = [str(session_id), tx_intents.purejson()]
+        sign_bytes = HexBytes(rlp.encode(sign_content)).hex()
+        atte_v = self.sign(sign_bytes)
         self.txs_pool[session_id]['ack_dict']['self_first'] = atte_v
+
+        # TODO: build ISC
+        isc = InsuranceSmartContract(
+            sign_bytes,
+            atte_v,
+            [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
+            ves=self
+        )
 
         # TODO: async - send tx_intents
         return sign_content, atte_v
@@ -98,7 +101,7 @@ class VerifiableExecutionSystem:
             # TODO: inform Aborted
 
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
-            if SignatrueVerifier.verify_by_raw_message(
+            if SignatureVerifier.verify_by_raw_message(
                 ack_signature,
                 self.txs_pool[session_id]['ack_dict']['self_first'],
                 ChainDNS.adduser['dot-concated'](ack_user_name)

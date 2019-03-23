@@ -29,12 +29,12 @@ if __name__ == '__main__':
     op_intents_json = FileLoad.getopintents("opintents.json")
 
     session_content, session_signature = ves.sessionSetupPrepare(op_intents_json)
-    print('session_content:', session_content)
-    print('session_signature:', session_signature)
+    # print('session_content:', session_content)
+    # print('session_signature:', session_signature)
 
     dapp_x.ackinit(ves, session_content, session_signature)
     dapp_y.ackinit(ves, session_content, session_signature)
 
-    print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
+    # print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
 
     # print(tx_intents.intents)

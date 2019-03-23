@@ -15,7 +15,8 @@ MOD6 = (1 << 6) - 1
 INTM = [(1 << (bit_size << 3)) for bit_size in range(33)]
 #   two nibbles(0~15) represent a bytes(0~256)
 BYTE32_LENGTH = 64
-
+# encode
+ENC = 'utf-8'
 
 class AbiEncoder:
     def __init__(self):
@@ -96,11 +97,12 @@ class AbiEncoder:
                 para = HexBytes(para).hex()[2:]
             elif isinstance(para, str):
                 if not hex_match.match(para) and not hex_match_withprefix.match(para):
-                    raise TypeError("not hexstring " + para + " for initializing datatype " + para_type)
+                    para = bytes(para.encode(ENC))
                 if para[1] == 'x':
                     para = para[2:]
             bytes_size = para_type[5:]
             if bytes_size == "":
+                # print(para)
                 if len(para) & 1:
                     raise Mismatch("odd-length byte-array is invalid")
                 return AbiEncoder.encode('uint256', len(para) >> 1) + para + '0' * ((-len(para)) & MOD6)

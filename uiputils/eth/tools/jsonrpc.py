@@ -3,6 +3,7 @@
 import json
 import requests
 
+from uiputils.config import HTTP_HEADER
 
 class JsonRPC(object):
     # JSON-RPC methods
@@ -352,7 +353,7 @@ class JsonRPC(object):
         }
 
     @staticmethod
-    def send(dat, hed, rpc_host='http://127.0.0.1:8545'):
+    def send(dat, hed=HTTP_HEADER, rpc_host='http://127.0.0.1:8545'):
         response = requests.post(rpc_host, headers=hed, data=json.dumps(dat))
         if response.status_code != 200 or 'error' in response.json():
             print(json.dumps(dat))
@@ -362,7 +363,6 @@ class JsonRPC(object):
 
 if __name__ == '__main__':
     RPC_HOST = 'http://127.0.0.1:8545'
-    HTTP_HEADER = {'Content-Type': 'application/json'}
 
     '''Sample One
     transaction = {

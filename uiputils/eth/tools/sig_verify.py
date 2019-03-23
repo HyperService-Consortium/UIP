@@ -14,7 +14,7 @@ from uiputils.config import ETHSIGN_HEADER
 ENC = "utf-8"
 
 
-class SignatrueVerifier:
+class SignatureVerifier:
     def __init__(self):
         pass
 
@@ -49,12 +49,14 @@ class SignatrueVerifier:
         if isinstance(msg, str):
             msg = bytes(msg.encode(ENC))
         msg = ETHSIGN_HEADER + bytes(str(len(msg)).encode(ENC)) + msg
-        sig = SignatrueVerifier.init_signature(sig)
+        sig = SignatureVerifier.init_signature(sig)
         return sig.recover_public_key_from_msg(msg).to_checksum_address() == Web3.toChecksumAddress(addr)
 
     @staticmethod
     def verify_by_hashed_message(sig, msg, addr):
-        sig = SignatrueVerifier.init_signature(sig)
+        if isinstance(msg, str):
+            msg = HexBytes(msg)
+        sig = SignatureVerifier.init_signature(sig)
         return sig.recover_public_key_from_msg_hash(msg).to_checksum_address() == Web3.toChecksumAddress(addr)
 
 

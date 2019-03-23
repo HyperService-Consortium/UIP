@@ -8,9 +8,9 @@ from .uiptypes import (
     SmartContract,
     StateProof,
     NetworkStatusBlockChain,
-    InsuranceSmartContract,
     OpIntent,
     TransactionIntents
 )
+from uiputils.isc import InsuranceSmartContract
 from .ves import VerifiableExecutionSystem
 from .dapp import DApp

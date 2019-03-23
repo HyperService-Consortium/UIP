@@ -7,4 +7,8 @@ from .abi_covt import AbiEncoder, AbiDecoder
 
 from .patterns import hex_match, hex_match_withprefix
 
-from .sig_verify import SignatrueVerifier
+from .sig_verify import SignatureVerifier
+
+from .loadfile import FileLoad
+
+from .jsonrpc import JsonRPC

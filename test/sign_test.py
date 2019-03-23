@@ -5,7 +5,7 @@ from hexbytes import HexBytes
 from eth_keys import KeyAPI
 
 # eth modules
-from uiputils.eth.tools import SignatrueVerifier
+from uiputils.eth.tools import SignatureVerifier
 
 # config
 from uiputils.config import ETHSIGN_HEADER
@@ -21,13 +21,13 @@ if __name__ == '__main__':
     print(msg, HexBytes(msghash).hex())
     # print(HexBytes(msg).hex())
 
-    print(SignatrueVerifier.verify_by_raw_message(eth_signature, raw_msg, signer))
+    print(SignatureVerifier.verify_by_raw_message(eth_signature, raw_msg, signer))
 
-    print(SignatrueVerifier.verify_by_raw_message(raw_signature, raw_msg, signer))
+    print(SignatureVerifier.verify_by_raw_message(raw_signature, raw_msg, signer))
 
-    print(SignatrueVerifier.verify_by_hashed_message(eth_signature, msghash, signer))
+    print(SignatureVerifier.verify_by_hashed_message(eth_signature, msghash, signer))
 
-    print(SignatrueVerifier.verify_by_hashed_message(raw_signature, msghash, signer))
+    print(SignatureVerifier.verify_by_hashed_message(raw_signature, msghash, signer))
 
     sig = KeyAPI.Signature(HexBytes(raw_signature))
 
