@@ -90,15 +90,14 @@ class DApp:
             # not try but here ... TODO
             try:
                 ves.sessionSetupUpdate(int(content[0]), self.name, None)
-            except Exception:
-                raise Exception
-
+            except Exception as e:
+                raise e
         # look through content
-
         signatrue = self.sign(sig)
 
         # not try but here ... TODO
-        try:
-            ves.sessionSetupUpdate(int(content[0]), self.name, signatrue)
-        except Exception:
-            raise Exception
+        ret = ves.sessionSetupUpdate(int(content[0]), self.name, signatrue)
+        if isinstance(ret, Exception):
+            raise ret
+        else:
+            print("sucess")

@@ -4,15 +4,15 @@ from collections import namedtuple
 # import time
 
 # uip modules
-from uiputils.eth.tools.loadfile import FileLoad
 from uiputils.eth.tools.startservice import ServiceStart
-from uiputils.cast import bytestoint, catint32
+from uiputils.cast import bytestoint
 from .tools import (
     Prover,
     LocationTransLator,
     AbiEncoder,
     hex_match,
-    hex_match_withprefix
+    hex_match_withprefix,
+    FileLoad
 )
 from uiputils.uiperror import GenerationError, Mismatch, Missing
 
@@ -20,7 +20,7 @@ from uiputils.uiperror import GenerationError, Mismatch, Missing
 from hexbytes import HexBytes
 from eth_hash.auto import keccak
 from eth_utils import is_address
-# from web3 import Web3
+from web3 import Web3
 
 # config
 from uiputils.config import eth_blockchain_info as blockchain_info
@@ -68,9 +68,9 @@ class ChainDNS:
 
 class Transaction:
     def __init__(self, transaction_type, *args, **kwargs):
+        super().__init__({})
         self.chain_host = ""
         self.chain_type = "Ethereum"
-        self.tx_info = {}
         getattr(self, transaction_type + 'Init')(*args, **kwargs)
 
     def transferInit(self, chain_id, src_addr, dst_addr, fund, fund_unit, gasuse=default_gasuse):
@@ -200,7 +200,7 @@ class Contract:
         contract_bytecode = FileLoad.getbytecode(contract_bytecode)
 
         if contract_addr != "":
-            self.handle = web3.eth.contract(contract_addr, abi=contract_abi, bytecode=contract_bytecode)
+            self.handle = web3.eth.contract(Web3.toChecksumAddress(contract_addr), abi=contract_abi, bytecode=contract_bytecode)
         else:
             self.handle = web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
 
@@ -262,33 +262,25 @@ class NetStatusBlockchain:
         return self.web3.eth.getStorageAt(self.address, LocationTransLator.queueloc(idx))
 
     def getMekleProofByHash(self, keccakhash):
-        merkle_loc = bytestoint(LocationTransLator.merkleloc(keccakhash))
-        merkleproof = MerkleProof(
-            self.web3.eth.getStorageAt(self.address, catint32(merkle_loc)),
-            self.web3.eth.getStorageAt(self.address, catint32(merkle_loc + 1)),
-            self.web3.eth.getStorageAt(self.address, catint32(merkle_loc + 2)),
-            self.web3.eth.getStorageAt(self.address, catint32(merkle_loc + 3))
-        )
+        merkleproof = MerkleProof(*self.handle.func('getMerkleProofByHash', keccakhash))
         print("    block_address", HexBytes(merkleproof.blockaddr).hex())
         print("    storageHash", HexBytes(merkleproof.storagehash).hex())
         print("    key", HexBytes(merkleproof.key).hex())
         print("    value", HexBytes(merkleproof.value).hex())
         return merkleproof
 
-    def testgetMerkleProofByNumber(self, idx):
-        a, h, k, v = self.handle.func('getMerkleProofByPointer', idx)
-        print("idx: ", idx)
-        print("    hash: ", HexBytes(self.handle.func('waitingVerifyProof', idx)).hex())
-        print("    block_address", a)
-        print("    storageHash", HexBytes(h).hex())
-        print("    key", HexBytes(k).hex())
-        print("    value", HexBytes(v).hex())
+    def getMekleProofByPointer(self, idx):
+        merkleproof = MerkleProof(*self.handle.func('getMerkleProofByPointer', idx))
+        print("    block_address", HexBytes(merkleproof.blockaddr).hex())
+        print("    storageHash", HexBytes(merkleproof.storagehash).hex())
+        print("    key", HexBytes(merkleproof.key).hex())
+        print("    value", HexBytes(merkleproof.value).hex())
+        return merkleproof
 
     def watchProofPool(self):
         queue_left, queue_right = bytestoint(self.getQueueL()), bytestoint(self.getQueueR())
         print(queue_left, queue_right)
         for idx in range(queue_left, queue_right):
-            self.testgetMerkleProofByNumber(idx)
             print("idx: ", idx)
             keccakhash = self.getQueueContent(idx)
             print("    hash: ", HexBytes(keccakhash).hex())
@@ -306,13 +298,11 @@ class NetStatusBlockchain:
                 self.handle.funct('voteProofByHash', keccakhash, is_valid_merkleproof)
                 self.pf_pool.pop(keccakhash)
 
-    def addAction(self, signature):
-        return self.handle.funct('addAction', self.tx, signature)
+    def addAction(self, msg, sig):
+        return self.handle.funct('addAction', self.tx, msg, sig)
 
     def getAction(self, keccakhash):
-        print("getAction is not finished")
-        # print(self.handle.func('getAction', keccakhash[2:]))
-        return self.web3.eth.getStorageAt(self.address, LocationTransLator.actionloc(HexBytes(keccakhash)))
+        return self.handle.func('getAction', keccakhash[2:])
 
     def validMerkleProoforNot(self, keccakhash):
         return self.handle.func('validMerkleProoforNot', keccakhash) == 1
@@ -329,11 +319,17 @@ class NetStatusBlockchain:
     def work(self, work_time):
         pass
 
-    def exec(self, contract):
-        pass
-
     # def DiscreateTimer() override:
 
     # def CloseureWatching():
 
     # def CloseureClaim():
+
+
+class InsuranceSmartContract:
+    def __init__(self, host, isc_addr, isc_abi_dir, tx, isc_bytecode_dir=None):
+        print(host, isc_addr, isc_abi_dir, tx, isc_bytecode_dir)
+        self.handle = Contract(host, Web3.toChecksumAddress(isc_addr), isc_abi_dir, isc_bytecode_dir)
+        self.web3 = self.handle.web3
+        self.address = self.handle.address
+        print(self.__dict__)

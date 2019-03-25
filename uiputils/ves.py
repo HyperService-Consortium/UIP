@@ -58,6 +58,9 @@ class VerifiableExecutionSystem:
         while session_id in self.txs_pool:
             session_id = randint(0, 0xffffffff)
 
+        # test by stable sid
+        session_id = 1
+
         # pre-register
         self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
 
@@ -83,9 +86,12 @@ class VerifiableExecutionSystem:
             sign_bytes,
             atte_v,
             [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
-            ves=self
+            ves=self,
+            # test by deployed contract
+            tx_head={'from': self.address, 'gas': hex(400000)},
+            contract_addr="0xd42e20871a72261ab4fce0057d9d31781ee5b731"
         )
-
+        print(isc.__dict__)
         # TODO: async - send tx_intents
         return sign_content, atte_v
 
@@ -99,11 +105,10 @@ class VerifiableExecutionSystem:
         if ack_signature is None:
             self.txs_pool.pop(session_id)
             # TODO: inform Aborted
-
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
-            if SignatureVerifier.verify_by_raw_message(
+            if not SignatureVerifier.verify_by_raw_message(
                 ack_signature,
-                self.txs_pool[session_id]['ack_dict']['self_first'],
+                HexBytes(self.txs_pool[session_id]['ack_dict']['self_first']),
                 ChainDNS.adduser['dot-concated'](ack_user_name)
             ):
                 return Mismatch('invalid signature')
