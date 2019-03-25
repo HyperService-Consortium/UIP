@@ -9,7 +9,7 @@ contract InsuranceSmartContract {
     // constant
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
-    // bytes constant public ETH_PREFIX = hex"19457468657265756d205369676e6564204d6573736167653a0a";
+    bytes constant public ETH_PREFIX = hex"19457468657265756d205369676e6564204d6573736167653a0a313330";
     
     /**********************************************************************
      *                               Structs                              *
@@ -444,7 +444,7 @@ contract InsuranceSmartContract {
         onlyOwner
         iscActive
     {
-        remainingFund = safeAdd(remainingFund, msg.value);
+        ownerFunds[msg.sender] = safeAdd(ownerFunds[msg.sender], msg.value);
     }
     
     function isTransactionOwner(address queryaddr, uint tid)
