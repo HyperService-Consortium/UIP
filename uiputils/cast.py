@@ -4,9 +4,13 @@
 # python modules
 import json
 from functools import partial
+import rlp
 
 # ethereum modules
 from hexbytes import HexBytes
+
+# uip modules
+from uiputils.uiperror import DecodeFail
 
 # constant
 MOD512 = (1 << 512) - 1
@@ -225,6 +229,74 @@ def transint(anytype):
         raise TypeError("Unexpected Type when translating element to int")
 
 
+def dict_serializable(dct: dict):
+    rlplist = ['as_dict']
+    for k, v in dct.items():
+        tlp: list
+        if isinstance(v, str) or isinstance(v, bytes):
+            tlp = [k, v]
+        elif isinstance(v, list):
+            for idx, ele in enumerate(v):
+                if isinstance(ele, dict):
+                    v[idx] = dict_serializable(ele)
+            tlp = [k, ['as_list'] + v]
+        elif isinstance(v, int):
+            tlp = [k, hex(v)]
+        elif isinstance(v, dict):
+            tlp = [k, dict_serializable(v)]
+        elif v is None:
+            tlp = [k]
+        rlplist.append(tlp)
+    return rlplist
+
+
+def dict_serialize(dct: dict):
+    return rlp.encode(dict_serializable(dct))
+
+
+def dict_unserialize_decode(rlped_elem):
+    if isinstance(rlped_elem, list):
+        if len(rlped_elem) == 0:
+            return rlped_elem
+        if rlped_elem[0] == b'as_dict':
+            ret = {}
+            for ele in rlped_elem[1:]:
+                if not isinstance(ele, list) or len(ele) > 2 or len(ele) == 0:
+                    raise DecodeFail("element is not a unserializable list-pair")
+                if len(ele) == 2:
+                    ret[ele[0].decode('utf-8')] = dict_unserialize_decode(ele[1])
+                else:
+                    ret[ele[0].decode('utf-8')] = None
+            return ret
+        elif rlped_elem[0] == b'as_list':
+            return [dict_unserialize_decode(ele) for ele in rlped_elem[1:]]
+    else:
+        return rlped_elem
+
+
+def dict_unserialize(rlped_elem):
+    return dict_unserialize_decode(rlp.decode(rlped_elem))
+
+
+class DictRlpize(object):
+    # rlp methods of dict
+    serializable = staticmethod(dict_serializable)
+
+    serialize = staticmethod(dict_serialize)
+
+    unserialize = staticmethod(dict_unserialize)
+
+
+# TODO: JsonRlpize
+class JsonRlpize(object):
+    # rlp methods of dict
+    serializable = staticmethod(dict_serializable)
+
+    serialize = staticmethod(dict_serialize)
+
+    unserialize = staticmethod(dict_unserialize)
+
+
 class Cast(object):
     # use arbi.func(obj, len)
     tostring = staticmethod(uintxstring)
@@ -392,6 +464,24 @@ def formated_json(inputdict):
 
 
 if __name__ == '__main__':
+    dit = {
+        'from': "12345678",
+        'to': "87654321",
+        "data": {
+            "src": "abcdefg",
+            "domain": "Ethereum",
+            "json": [{'from': 'a'}, {'to': 'a'}],
+            "data": b"123",
+            "data2": 255,
+            "data3": True,
+            "data4": False
+        },
+        "json": None
+    }
+    print(DictRlpize.serializable(dit))
+    rlped_dit = DictRlpize.serialize(dit)
+    print(rlped_dit)
+    print(DictRlpize.unserialize(rlped_dit))
     # print(uintxstring(15, 8))
     # print(uint32string(15))
     # print(uint64string(15))
