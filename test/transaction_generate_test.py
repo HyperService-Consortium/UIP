@@ -1,5 +1,5 @@
 
-from uiputils.eth.ethtypes import Transaction
+from uiputils.eth.ethtypes import EthTransaction
 
 if __name__ == '__main__':
     # chain_id, invoker, contract_address,
@@ -14,7 +14,7 @@ if __name__ == '__main__':
         ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"],  # parameters
         ["address"]  # parameters_description
     ]
-    tx = Transaction(*tx_intent)
+    tx = EthTransaction(*tx_intent)
     print(tx)
     print('function_sign ' + getattr(tx, 'signature'))
     print(tx.jsonize())

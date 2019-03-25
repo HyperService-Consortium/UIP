@@ -7,18 +7,13 @@ import rlp
 from hexbytes import HexBytes
 
 # uip modules
-from .uiptypes import (
-    OpIntent,
-    TransactionIntents,
-    ChainDNS
-)
-from uiputils import InsuranceSmartContract
-from .eth import JsonRPC
-from .eth.tools import SignatureVerifier
-from .uiperror import Missing, Mismatch
+from uiputils.uiptypes import InsuranceSmartContract, OpIntent, TransactionIntents, ChainDNS
+from uiputils.eth import JsonRPC
+from uiputils.eth.tools import SignatureVerifier
+from uiputils.uiperror import Missing, Mismatch
 
 # config
-from .config import HTTP_HEADER
+from uiputils.config import HTTP_HEADER
 
 
 class VerifiableExecutionSystem:

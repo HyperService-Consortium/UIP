@@ -4,7 +4,7 @@ from web3 import Web3
 from uiputils.eth import JsonRPC
 from hexbytes import HexBytes
 from uiputils.eth.tools import slicelocation, maplocation
-from uiputils.eth.ethtypes import NetStatusBlockchain
+from uiputils.eth.ethtypes import EthNetStatusBlockchain
 
 EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
 url = "http://127.0.0.1:8545"
@@ -18,7 +18,7 @@ nsb_db_addr = "../nsb/actiondata"
 if __name__ == '__main__':
     web3h = ServiceStart.startweb3(url)
     # key = 0
-    nsbt = NetStatusBlockchain(url, nsb_addr, nsb_abi_addr, EDB_PATH, nsb_bytecode_addr)
+    nsbt = EthNetStatusBlockchain(url, nsb_addr, nsb_abi_addr, EDB_PATH, nsb_bytecode_addr)
     nsb = nsbt.handle
 
     # print(JsonRPC.send(url, HTTP_HEADER, JsonRPC.ethGetProof(nsb_addr, ["0x0"], "latest"))

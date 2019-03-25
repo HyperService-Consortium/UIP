@@ -1,7 +1,7 @@
 
 # uip modules
 from uiputils.eth import FileLoad
-from uiputils import VerifiableExecutionSystem, DApp, ChainDNS
+from uiputils.uiptypes import VerifiableExecutionSystem, DApp
 from uiputils.cast import formated_json
 
 # config

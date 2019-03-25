@@ -5,15 +5,14 @@ import time
 import rlp
 
 # uip modules
-from .uiptypes import ChainDNS
-from .ves import VerifiableExecutionSystem
+from uiputils.uiptypes import ChainDNS
 
 # eth modules
-from .eth import JsonRPC
-from .eth.tools import SignatureVerifier
+from uiputils.eth import JsonRPC
+from uiputils.eth.tools import SignatureVerifier
 
 # config
-from .config import HTTP_HEADER
+from uiputils.config import HTTP_HEADER
 
 
 class DApp:
@@ -85,7 +84,7 @@ class DApp:
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
-    def ackinit(self, ves: VerifiableExecutionSystem, content, sig):
+    def ackinit(self, ves, content, sig):
         if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:

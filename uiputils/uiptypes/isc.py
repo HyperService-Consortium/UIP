@@ -6,11 +6,11 @@ from eth_hash.auto import keccak
 
 # uip modules
 from uiputils.uiperror import Missing
-from uiputils.uiptypes import Transaction
+from uiputils.uiptypes.meta import Transaction
 
 from uiputils.eth.tools import AbiEncoder
 from uiputils.eth.tools import FileLoad, JsonRPC
-from uiputils.eth.ethtypes import InsuranceSmartContract as ethISC
+from uiputils.eth.ethtypes import EthInsuranceSmartContract as ethISC
 
 from uiputils.config import ETHSIGN_HEADER, INCLUDE_PATH
 ENC = 'utf-8'

@@ -14,7 +14,11 @@ from .tools import (
     hex_match_withprefix,
     FileLoad
 )
-from uiputils.uiperror import GenerationError, Mismatch, Missing
+from uiputils.uiperror import (
+    GenerationError,
+    Mismatch,
+    Missing
+)
 
 # ethereum modules
 from hexbytes import HexBytes
@@ -33,7 +37,7 @@ MOD6 = (1 << 6) - 1
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
 
 
-class ChainDNS:
+class EthChainDNS:
     def __init__(self):
         pass
 
@@ -66,9 +70,8 @@ class ChainDNS:
             raise Missing('no such chainID: ' + chain_id)
 
 
-class Transaction:
+class EthTransaction:
     def __init__(self, transaction_type, *args, **kwargs):
-        super().__init__({})
         self.chain_host = ""
         self.chain_type = "Ethereum"
         getattr(self, transaction_type + 'Init')(*args, **kwargs)
@@ -229,7 +232,7 @@ SLOT_VOTEDPOINTER = 5
 SLOT_MERKLEPROOFTREE = 6
 
 
-class NetStatusBlockchain:
+class EthNetStatusBlockchain:
     # Prot NSB in uip
     def __init__(self, owner_addr, host, nsb_addr, nsb_abi_dir, eth_db_dir="", gasuse=hex(400000),
                  nsb_bytecode_dir=None):
@@ -326,7 +329,7 @@ class NetStatusBlockchain:
     # def CloseureClaim():
 
 
-class InsuranceSmartContract:
+class EthInsuranceSmartContract:
     def __init__(self, host, isc_addr, isc_abi_dir, tx, isc_bytecode_dir=None):
         print(host, isc_addr, isc_abi_dir, tx, isc_bytecode_dir)
         self.handle = Contract(host, Web3.toChecksumAddress(isc_addr), isc_abi_dir, isc_bytecode_dir)

@@ -1,6 +1,6 @@
 
 from web3 import Web3
-from uiputils.eth.ethtypes import NetStatusBlockchain
+from uiputils.eth.ethtypes import EthNetStatusBlockchain
 from uiputils.eth import JsonRPC
 
 from uiputils.config import HTTP_HEADER
@@ -29,7 +29,7 @@ tx = {
 }
 
 if __name__ == '__main__':
-    nsbt = NetStatusBlockchain(eth_base_addr, host_addr, nsb_addr, nsb_abi_dir, "", nsb_bytecode_dir=nsb_bytecode_dir)
+    nsbt = EthNetStatusBlockchain(eth_base_addr, host_addr, nsb_addr, nsb_abi_dir, "", nsb_bytecode_dir=nsb_bytecode_dir)
     nsb = nsbt.handle
     unlock = JsonRPC.personal_unlock_account(eth_base_addr, "123456", 20)
     tx_response = JsonRPC.send(unlock, HTTP_HEADER, "http://127.0.0.1:8545")

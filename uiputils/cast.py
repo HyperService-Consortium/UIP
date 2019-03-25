@@ -278,6 +278,10 @@ def dict_unserialize(rlped_elem):
     return dict_unserialize_decode(rlp.decode(rlped_elem))
 
 
+def formated_json(inputdict):
+    return json.dumps(inputdict, sort_keys=True, indent=4, separators=(', ', ': '))
+
+
 class DictRlpize(object):
     # rlp methods of dict
     serializable = staticmethod(dict_serializable)
@@ -459,8 +463,24 @@ class Mult64(object):
         return [catint64(obj) for obj in args]
 
 
-def formated_json(inputdict):
-    return json.dumps(inputdict, sort_keys=True, indent=4, separators=(', ', ': '))
+CastReference = {
+    None: {
+        False: Cast,
+        True: Mult
+    },
+    32: {
+        False: Cast32,
+        True: Mult32
+    },
+    64: {
+        False: Cast64,
+        True: Mult64
+    }
+}
+
+
+def create_cast(length=None, mutikey=False):
+    return CastReference[length][mutikey]
 
 
 if __name__ == '__main__':
