@@ -404,7 +404,7 @@ contract InsuranceSmartContract {
         public
         onlyOwner
     {
-        require(iscState == ISCState.settling || iscState == ISCState.closed, "ISC is active now");
+        require(iscState == ISCState.settling, "ISC is active now");
         iscState = ISCState.closed;
     }
     
