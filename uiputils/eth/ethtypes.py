@@ -1,6 +1,8 @@
 
 # python modules
 from collections import namedtuple
+from enum import Enum
+import json
 # import time
 
 # uip modules
@@ -20,6 +22,7 @@ from uiputils.uiperror import (
     Missing
 )
 
+
 # ethereum modules
 from hexbytes import HexBytes
 from eth_hash.auto import keccak
@@ -35,6 +38,15 @@ from uiputils.config import eth_default_gasuse as default_gasuse
 MOD6 = (1 << 6) - 1
 
 MerkleProof = namedtuple('MerkleProof', 'blockaddr storagehash key value')
+
+
+class StateType(Enum):
+    unknown = 0
+    init = 1
+    inited = 2
+    open = 3
+    opened = 4
+    closed = 5
 
 
 class EthChainDNS:
@@ -193,6 +205,12 @@ class EthTransaction:
         return 'chain_host: ' + str(self.chain_host) +\
                '\ntransaction_intent: ' + str(self.tx_info)
 
+    def purejson(self):
+        return json.dumps(self.__dict__, sort_keys=True)
+
+    def pretjson(self):
+        return json.dumps(self.__dict__, sort_keys=True, indent=4, separators=(', ', ': '))
+
 
 class Contract:
     # return a contract that can transact with web3
@@ -217,10 +235,10 @@ class Contract:
         # call a contract function
         return self.handle.functions[funcname](*args).call()
 
-    def funct(self, funcname, tx, *args):
+    def funct(self, funcname, tx, *args, timeout=10):
         # transact a contract function
         tx_rec = self.handle.functions[funcname](*args).transact(tx)
-        return self.web3.eth.waitForTransactionReceipt(HexBytes(tx_rec).hex(), timeout=10)
+        return self.web3.eth.waitForTransactionReceipt(HexBytes(tx_rec).hex(), timeout=timeout)
 
     def funcs(self):
         # return all functions in self.abi
@@ -330,9 +348,120 @@ class EthNetStatusBlockchain:
 
 
 class EthInsuranceSmartContract:
-    def __init__(self, host, isc_addr, isc_abi_dir, tx, isc_bytecode_dir=None):
-        print(host, isc_addr, isc_abi_dir, tx, isc_bytecode_dir)
+
+    def __init__(self, host, isc_addr, isc_abi_dir, tx=None, isc_bytecode_dir=None):
         self.handle = Contract(host, Web3.toChecksumAddress(isc_addr), isc_abi_dir, isc_bytecode_dir)
         self.web3 = self.handle.web3
         self.address = self.handle.address
-        print(self.__dict__)
+        if tx is not None:
+            if 'gas' in tx:
+                tx.pop('gas')
+            if 'from' in tx:
+                tx['from'] = Web3.toChecksumAddress(tx['from'])
+        self.tx = tx
+        # self.updateFunc = {
+        #     'fr': partial(self.handle.funct, funcname='updateTxFr'),
+        #     'to': partial(self.handle.funct, funcname='updateTxTo'),
+        #     'seq': partial(self.handle.funct, funcname='updateTxSeq'),
+        #     'amt': partial(self.handle.funct, funcname='updateTxAmt'),
+        #     'rlped_data': partial(self.handle.funct, funcname='updateTxRlpedData')
+        # }
+        print(self.handle.funcs())
+
+    def update_tx_info(
+            self,
+            idx,
+            fr=None,
+            to=None,
+            seq=None,
+            amt=None,
+            rlped_meta=None,
+            tx: dict = None,
+            spec: set = None,
+            timeout=10
+    ):
+        if tx is None:
+            tx = self.tx
+        if spec is None:
+            return self.handle.funct(
+                'updateTxInfo',
+                tx,
+                idx,
+                Web3.toChecksumAddress(fr),
+                Web3.toChecksumAddress(to),
+                seq,
+                amt,
+                rlped_meta,
+                timeout=timeout
+            )
+        else:
+            if 'fr' in spec:
+                self.handle.funct('updateTxFr', tx, Web3.toChecksumAddress(fr), timeout=timeout)
+            if 'to' in spec:
+                self.handle.funct('updateTxTo', tx, Web3.toChecksumAddress(to), timeout=timeout)
+            if 'seq' in spec:
+                self.handle.funct('updateTxSeq', tx, seq, timeout=timeout)
+            if 'amt' in spec:
+                self.handle.funct('updateTxAmt', tx, amt, timeout=timeout)
+            if 'rlped_meta' in spec:
+                self.handle.funct('updateTxRlpedMeta', tx, rlped_meta, timeout=timeout)
+            # return tuple((self.updateFunc[spec_type](kwargs) for spec_type in spec))
+
+    def user_stake(self, tx):
+        return self.handle.funct('stakeFund', tx)
+
+    def user_ack(self, sig, tx=None):
+        if tx is None:
+            tx = self.tx
+        return self.handle.funct('userAck', tx, sig)
+
+    def user_refuse(self, tx=None):
+        if tx is None:
+            tx = self.tx
+        return self.handle.funct('userRefuse', tx)
+
+    def insurance_claim(self, atte, tid, state, nsb=None, result=None, tcg=None, tx=None):
+        if tx is None:
+            tx = self.tx
+        print(atte, "is not verified")
+        if state == StateType.opened:
+            return self.handle.funct('ChangeStateOpened', tx, tid, tcg)
+        elif state == StateType.closed:
+            return self.handle.funct('ChangeStateClosed', tx, tid, tcg)
+        elif state == StateType.open:
+            return (
+                self.handle.funct('ChangeState', tx, tid, state),
+                self.handle.funct('ChangeResult', tx, nsb, tid, result)
+            )
+        else:
+            return self.handle.funct('ChangeState', tx, tid, state)
+
+    def stop_isc(self, tx=None):
+        if tx is None:
+            tx = self.tx
+        return self.handle.funct('StopISC', tx)
+
+    def settle_contract(self, tx=None):
+        if tx is None:
+            tx = self.tx
+        return self.handle.funct('settleContract', tx)
+
+    def return_funds(self, tx=None):
+        if tx is None:
+            tx = self.tx
+        return self.handle.funct('returnFunds', tx)
+
+    def is_owner(self, addr):
+        return self.handle.func('isOwner', Web3.toChecksumAddress(addr))
+
+    def get_meta_by_number(self, tid):
+        return self.handle.func('getMetaByNumber', tid)
+
+    def get_state(self, tid):
+        return self.handle.func('getState', tid)
+
+    def get_result(self, tid):
+        return self.handle.func('getResult', tid)
+
+    def get_transaction_info(self, tid):
+        return self.handle.func('getTransactionInfo', tid)

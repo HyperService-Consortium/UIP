@@ -1,6 +1,8 @@
 
 'some meta-types'
 
+from enum import Enum
+
 
 class BlockchainNetwork:
     def __init__(self, identifer="", rpc_port=0, data_dir="", listen_port=0, host="", public=False):
@@ -31,8 +33,3 @@ class StateProof:
 
     def __str__(self):
         return "value: %s;block: %s;proof: %s;" % (self.value, self.block, self.proof)
-
-
-class Transaction(object):
-    def __init__(self, tx_info=None):
-        self.tx_info = tx_info

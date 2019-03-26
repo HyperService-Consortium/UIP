@@ -2,6 +2,7 @@
 import os.path as parsepath
 
 INCLUDE_PATH = parsepath.dirname(__file__) + "/include"
+ROOT_PATH = parsepath.dirname(parsepath.dirname(__file__))
 
 HTTP_HEADER = {'Content-Type': 'application/json'}
 
@@ -35,3 +36,7 @@ eth_unit_factor = {
 }
 
 eth_default_gasuse = hex(300000)
+
+ves_log_dir = ROOT_PATH + "/log/ves.log"
+
+isc_log_dir = ROOT_PATH + "/log/isc.log"

@@ -1,4 +1,7 @@
 
+# python modules
+from web3 import Web3
+
 # uip modules
 from uiputils.eth import FileLoad
 from uiputils.uiptypes import VerifiableExecutionSystem, DApp
@@ -28,12 +31,18 @@ if __name__ == '__main__':
     # load Sample.json
     op_intents_json = FileLoad.getopintents("opintents.json")
 
-    session_content, session_signature = ves.sessionSetupPrepare(op_intents_json)
+    session_content, isc, session_signature = ves.sessionSetupPrepare(op_intents_json)
     # print('session_content:', session_content)
     # print('session_signature:', session_signature)
 
     dapp_x.ackinit(ves, session_content, session_signature)
     dapp_y.ackinit(ves, session_content, session_signature)
+
+    print(isc)
+
+    print(isc.handle.is_owner(ves.address))
+    print(isc.handle.is_owner(dapp_x.address))
+    print(isc.handle.is_owner(dapp_y.address))
 
     # print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
 

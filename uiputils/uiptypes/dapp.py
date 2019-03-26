@@ -99,4 +99,4 @@ class DApp:
         if isinstance(ret, Exception):
             raise ret
         else:
-            print("sucess")
+            print("success")

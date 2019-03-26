@@ -2,6 +2,7 @@
 # python modules
 from random import randint
 import rlp
+import logging.handlers
 
 # ethereum modules
 from hexbytes import HexBytes
@@ -11,13 +12,31 @@ from uiputils.uiptypes import InsuranceSmartContract, OpIntent, TransactionInten
 from uiputils.eth import JsonRPC
 from uiputils.eth.tools import SignatureVerifier
 from uiputils.uiperror import Missing, Mismatch
+from uiputils.cast import JsonRlpize
 
 # config
-from uiputils.config import HTTP_HEADER
+from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir
 
 
 class VerifiableExecutionSystem:
     # the ves in uip
+
+    class VesLog:
+        formatter = logging.Formatter('%(asctime)-15s %(name)s %(vesaddr)-8s %(message)s')
+        logger = logging.getLogger('ves')
+        logger.setLevel(logging.INFO)
+        handle = logging.handlers.TimedRotatingFileHandler(
+            ves_log_dir,
+            encoding="utf-8",
+            when="H",
+            interval=1,
+            backupCount=10
+        )
+        handle.setFormatter(formatter)
+        handle.setLevel(logging.INFO)
+        handle.suffix = "%Y-%m-%d_%H.log"
+        logger.addHandler(handle)
+
     INVALID = 0
     INITIAL_SESSION = {
         'tx_intents': None,
@@ -56,6 +75,8 @@ class VerifiableExecutionSystem:
         # test by stable sid
         session_id = 1
 
+        self.info("sessionSetupPrepare {sid}".format(sid=session_id))
+
         # pre-register
         self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
 
@@ -65,6 +86,10 @@ class VerifiableExecutionSystem:
         wait_user = set(op_owners)
         for owner in op_owners:
             if owner not in self.user_pool:
+                self.debug("session-id: {sid} setupPrepareError {exec}".format(
+                    sid=session_id,
+                    exec=Missing(owner + " is not in user-pool").error_info
+                ))
                 raise Missing(owner + " is not in user-pool")
 
         # initalize ack_dict
@@ -77,18 +102,56 @@ class VerifiableExecutionSystem:
         self.txs_pool[session_id]['ack_dict']['self_first'] = atte_v
 
         # TODO: build ISC
-        isc = InsuranceSmartContract(
-            sign_bytes,
-            atte_v,
-            [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
-            ves=self,
-            # test by deployed contract
-            tx_head={'from': self.address, 'gas': hex(400000)},
-            contract_addr="0xd42e20871a72261ab4fce0057d9d31781ee5b731"
-        )
-        print(isc.__dict__)
+        isc: InsuranceSmartContract = None
+        try:
+            isc = InsuranceSmartContract(
+                [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
+                INCLUDE_PATH + '/isc.abi',
+                ves=self,
+                # rlped_txs=sign_bytes,
+                # signature=atte_v,
+                # # test by deployed contract
+                tx_head={'from': self.address, 'gas': hex(400000)},
+                # tx_count=len(tx_intents.intents)
+                contract_addr="0x8a8bc0753ac23571c175ad5c0173e44cb1bae51f"
+            )
+        except Exception as e:
+            self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
+                sid=session_id,
+                exec=str(e)
+            ))
+
+        self.info("session-id: {sid} ISC bulit at {isc_addr}".format(
+            sid=session_id,
+            isc_addr=isc.address
+        ))
+
+        for idx, tx_intent in enumerate(tx_intents.intents):
+            intent_json = dict(tx_intent.jsonize())
+            fr: str
+            to: str
+            amt: str
+            if 'from' in intent_json:
+                fr = intent_json['from']
+            if 'to' in intent_json:
+                to = intent_json['to']
+            if 'value' in intent_json:
+                amt = int(intent_json['value'], 16)
+
+            update_resp = isc.handle.update_tx_info(
+                idx,
+                fr=fr,
+                to=to,
+                seq=idx,
+                amt=amt,
+                rlped_meta=JsonRlpize.serialize(tx_intent.__dict__),
+                timeout=20
+            )
+            print(update_resp['transactionHash'])
+            print(isc.handle.get_transaction_info(idx))
+
         # TODO: async - send tx_intents
-        return sign_content, atte_v
+        return sign_content, isc, atte_v
 
     def sessionSetupUpdate(self, session_id, ack_user_name, ack_signature):
         if session_id not in self.txs_pool:
@@ -99,7 +162,9 @@ class VerifiableExecutionSystem:
 
         if ack_signature is None:
             self.txs_pool.pop(session_id)
+            self.info("session-id: {sid} aborted".format(sid=session_id))
             # TODO: inform Aborted
+
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
             if not SignatureVerifier.verify_by_raw_message(
                 ack_signature,
@@ -109,11 +174,19 @@ class VerifiableExecutionSystem:
                 return Mismatch('invalid signature')
             self.txs_pool[session_id]['ack_counter'] -= 1
             self.txs_pool[session_id]['ack_dict'][ack_user_name] = ack_signature
+            self.info("session-id: {sid} user-ack: {ack_name} {ack_sig}".format(
+                sid=session_id,
+                ack_name=ack_user_name,
+                ack_sig=ack_signature
+            ))
 
         if self.txs_pool[session_id]['ack_counter'] == 0:
             self.sessionSetupFinish(session_id)
 
     def sessionSetupFinish(self, session_id):
+        self.info("session-id: {sid} setup finished".format(
+            sid=session_id
+        ))
         # TODO: Send Request(Tx-intents) NSB
 
         # TODO: inform Stake Funds
@@ -164,3 +237,9 @@ class VerifiableExecutionSystem:
                 self.appenduserlink(user)
         else:  # assuming be class dApp
             self.user_pool[users.name] = users
+
+    def debug(self, msg):
+        VerifiableExecutionSystem.VesLog.logger.debug(msg, extra={'vesaddr': self.address})
+
+    def info(self, msg):
+        VerifiableExecutionSystem.VesLog.logger.info(msg, extra={'vesaddr': self.address})

@@ -80,7 +80,7 @@ class AbiEncoder:
                     raise ValueError("negative number " + str(para) + " for initializing datatype " + para_type)
                 numstr = hex(para)[2:]
             else:
-                raise TypeError("unexpected type " + type(para) + " for initializing datatype " + para_type)
+                raise TypeError("unexpected type " + str(type(para)) + " for initializing datatype " + para_type)
             numsize = para_type[4:]
             if numsize == "":
                 numsize = 64
