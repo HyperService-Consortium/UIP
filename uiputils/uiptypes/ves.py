@@ -12,7 +12,6 @@ from uiputils.uiptypes import InsuranceSmartContract, OpIntent, TransactionInten
 from uiputils.eth import JsonRPC
 from uiputils.eth.tools import SignatureVerifier
 from uiputils.uiperror import Missing, Mismatch
-from uiputils.cast import JsonRlpize
 
 # config
 from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir
@@ -101,7 +100,6 @@ class VerifiableExecutionSystem:
         atte_v = self.sign(sign_bytes)
         self.txs_pool[session_id]['ack_dict']['self_first'] = atte_v
 
-        # TODO: build ISC
         isc: InsuranceSmartContract = None
         try:
             isc = InsuranceSmartContract(
@@ -110,10 +108,10 @@ class VerifiableExecutionSystem:
                 ves=self,
                 # rlped_txs=sign_bytes,
                 # signature=atte_v,
-                # # test by deployed contract
                 tx_head={'from': self.address, 'gas': hex(400000)},
                 # tx_count=len(tx_intents.intents)
-                contract_addr="0x8a8bc0753ac23571c175ad5c0173e44cb1bae51f"
+                # test by deployed contract
+                contract_addr="0xb7eabab4d8deb73ebdc6c40c2c90db0c2e4160b4"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -144,11 +142,12 @@ class VerifiableExecutionSystem:
                 to=to,
                 seq=idx,
                 amt=amt,
-                rlped_meta=JsonRlpize.serialize(tx_intent.__dict__),
+                meta=tx_intent.__dict__,
                 timeout=20
             )
             print(update_resp['transactionHash'])
             print(isc.handle.get_transaction_info(idx))
+            # TODO: check isc-info updated
 
         # TODO: async - send tx_intents
         return sign_content, isc, atte_v
@@ -187,9 +186,9 @@ class VerifiableExecutionSystem:
         self.info("session-id: {sid} setup finished".format(
             sid=session_id
         ))
-        # TODO: Send Request(Tx-intents) NSB
+        # TODO: await isc-State == opening
 
-        # TODO: inform Stake Funds
+        # TODO: Send Request(Tx-intents) NSB
         pass
 
     @staticmethod
@@ -202,12 +201,6 @@ class VerifiableExecutionSystem:
         return TransactionIntents(op_intents, op_intents_json['dependencies']), op_owners
 
     def sendTxInfoToNSB(self, info):
-        pass
-
-    def sendTxInfoTodApp(self, info):
-        pass
-
-    def stakefunded(self, isc, session_id):
         pass
 
     def unlockself(self):

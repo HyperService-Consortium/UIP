@@ -7,7 +7,14 @@ import json
 
 # uip modules
 from uiputils.eth.tools.startservice import ServiceStart
-from uiputils.cast import bytestoint
+from uiputils.cast import bytestoint, JsonRlpize
+from uiputils.uiperror import (
+    GenerationError,
+    Mismatch,
+    Missing
+)
+
+# eth modules
 from .tools import (
     Prover,
     LocationTransLator,
@@ -16,12 +23,6 @@ from .tools import (
     hex_match_withprefix,
     FileLoad
 )
-from uiputils.uiperror import (
-    GenerationError,
-    Mismatch,
-    Missing
-)
-
 
 # ethereum modules
 from hexbytes import HexBytes
@@ -375,37 +376,41 @@ class EthInsuranceSmartContract:
             to=None,
             seq=None,
             amt=None,
-            rlped_meta=None,
+            meta=None,
             tx: dict = None,
-            spec: set = None,
+            # spec: set = None,
             timeout=10
     ):
         if tx is None:
             tx = self.tx
-        if spec is None:
-            return self.handle.funct(
-                'updateTxInfo',
-                tx,
-                idx,
-                Web3.toChecksumAddress(fr),
-                Web3.toChecksumAddress(to),
-                seq,
-                amt,
-                rlped_meta,
-                timeout=timeout
-            )
-        else:
-            if 'fr' in spec:
-                self.handle.funct('updateTxFr', tx, Web3.toChecksumAddress(fr), timeout=timeout)
-            if 'to' in spec:
-                self.handle.funct('updateTxTo', tx, Web3.toChecksumAddress(to), timeout=timeout)
-            if 'seq' in spec:
-                self.handle.funct('updateTxSeq', tx, seq, timeout=timeout)
-            if 'amt' in spec:
-                self.handle.funct('updateTxAmt', tx, amt, timeout=timeout)
-            if 'rlped_meta' in spec:
-                self.handle.funct('updateTxRlpedMeta', tx, rlped_meta, timeout=timeout)
-            # return tuple((self.updateFunc[spec_type](kwargs) for spec_type in spec))
+        # if spec is None:
+        if isinstance(meta, dict):
+            meta = JsonRlpize.serialize(meta)
+        elif not isinstance(meta, str) and not isinstance(meta, bytes):
+            raise ValueError("unexpected meta-type" + str(type(meta)))
+        return self.handle.funct(
+            'updateTxInfo',
+            tx,
+            idx,
+            Web3.toChecksumAddress(fr),
+            Web3.toChecksumAddress(to),
+            seq,
+            amt,
+            meta,
+            timeout=timeout
+        )
+        # else:
+        #     if 'fr' in spec:
+        #         self.handle.funct('updateTxFr', tx, Web3.toChecksumAddress(fr), timeout=timeout)
+        #     if 'to' in spec:
+        #         self.handle.funct('updateTxTo', tx, Web3.toChecksumAddress(to), timeout=timeout)
+        #     if 'seq' in spec:
+        #         self.handle.funct('updateTxSeq', tx, seq, timeout=timeout)
+        #     if 'amt' in spec:
+        #         self.handle.funct('updateTxAmt', tx, amt, timeout=timeout)
+        #     if 'rlped_meta' in spec:
+        #         self.handle.funct('updateTxRlpedMeta', tx, rlped_meta, timeout=timeout)
+        #     # return tuple((self.updateFunc[spec_type](kwargs) for spec_type in spec))
 
     def user_stake(self, tx):
         return self.handle.funct('stakeFund', tx)
@@ -464,4 +469,6 @@ class EthInsuranceSmartContract:
         return self.handle.func('getResult', tid)
 
     def get_transaction_info(self, tid):
-        return self.handle.func('getTransactionInfo', tid)
+        ret = self.handle.func('getTransactionInfo', tid)
+        ret[4] = JsonRlpize.unserialize(ret[4])
+        return ret

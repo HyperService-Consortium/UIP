@@ -20,7 +20,7 @@ ENC = 'utf-8'
 
 class InsuranceSmartContract:
     class ISCLog:
-        formatter = logging.Formatter('%(asctime)-15s %(name)s %(vesaddr)-8s %(message)s')
+        formatter = logging.Formatter('%(asctime)-15s %(name)s %(iscaddr)-8s %(message)s')
         logger = logging.getLogger('isc')
         logger.setLevel(logging.INFO)
         handle = logging.handlers.TimedRotatingFileHandler(
@@ -136,10 +136,10 @@ class InsuranceSmartContract:
         pass
 
     def debug(self, msg):
-        InsuranceSmartContract.ISCLog.logger.debug(msg, extra={'isc address': self.address})
+        InsuranceSmartContract.ISCLog.logger.debug(msg, extra={'iscaddr': self.address})
 
     def info(self, msg):
-        InsuranceSmartContract.ISCLog.logger.info(msg, extra={'isc address': self.address})
+        InsuranceSmartContract.ISCLog.logger.info(msg, extra={'iscaddr': self.address})
 
 
 # 0x842453b97eb8742178d6af105bdb5bb9340c058e8a6a1d0aedba5f73f15424e80a1da8896cbe9eac968ee75c89a4d5238fb83e501b527e1956f51c81d94e247301
