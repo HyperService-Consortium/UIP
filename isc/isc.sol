@@ -9,7 +9,6 @@ contract InsuranceSmartContract {
     // constant
     uint constant public MAX_OWNER_COUNT = 50;
     uint constant public MAX_VALUE_PROPOSAL_COUNT = 5;
-    bytes constant public ETH_PREFIX = hex"19457468657265756d205369676e6564204d6573736167653a0a313330";
     
     /**********************************************************************
      *                               Structs                              *
@@ -28,6 +27,19 @@ contract InsuranceSmartContract {
         // 4
         opened,
         // 5
+        closed
+    }
+    
+    enum ISCState {
+        // 0
+        init,
+        // 1
+        inited,
+        // 2
+        opening,
+        // 3
+        settling,
+        // 4
         closed
     }
     
@@ -58,11 +70,8 @@ contract InsuranceSmartContract {
         // mapping(string => string) meta;
         // string[] field;
     }
-	
-    // maybe Enum is better
-	bool public iscOpened;
-	bool public iscClosed;
-	bool public iscSettled;
+    
+    ISCState public iscState;
     
     // minimum fund an owner should stake
     mapping (address => uint256) public ownerRequiredFunds;
@@ -96,6 +105,7 @@ contract InsuranceSmartContract {
     mapping (address => bool) public ownerAck;
     // the number of acknowledged owners
     uint public acked;
+    uint public frozenTx;
     
     modifier onlyOwner()
     {
@@ -105,21 +115,20 @@ contract InsuranceSmartContract {
     
     modifier iscInitializing()
     {
-        require(iscOpened == false, "ISC is initialized");
-        require(iscClosed == false, "ISC is ended");
+        require(iscState == ISCState.init, "ISC is initialized or waiting acks  ");
         _;
     }
     
     modifier iscOpening()
     {
-        require(iscOpened, "ISC is initializing");
-        require(iscClosed == false, "ISC closed");
+        require(iscState != ISCState.init && iscState != ISCState.inited, "ISC is initializing");
+        require(iscState == ISCState.opening, "ISC closed");
         _;
     }
     
     modifier iscActive()
     {
-        require(iscClosed == false, "ISC closed");
+        require(iscState != ISCState.closed && iscState != ISCState.settling, "ISC closed");
         _;
     }
     
@@ -152,7 +161,8 @@ contract InsuranceSmartContract {
         
         uint idx;
         
-        iscOpened = iscClosed = iscSettled = false;
+        iscState = ISCState.init;
+        frozenTx = 0;
         txInfo.length = txCount;
         txState.length = txCount;
         
@@ -160,6 +170,7 @@ contract InsuranceSmartContract {
         require(validateSignatrue(signature, keccakhash) == iscowners[0], "wrong signature");
         rlpedTxIntent = signContent;
         acks[iscowners[0]] = signature;
+        ownerAck[iscowners[0]] = true;
         vesack = keccaksignature;
         acked = 1;
         
@@ -224,60 +235,81 @@ contract InsuranceSmartContract {
         validUploader
     {
         require(idx < txInfo.length, "idx overflow");
+        require(txState[idx].state == State.unknown, "this transaction's information is frozen");
         txInfo[idx] = Transaction(fr, to, seq, amt, rlpedMeta);
     }
     
-    function updateTxFr(uint idx, address fr)
-        public
-        iscInitializing
-        validUploader
-    {
-        require(idx < txInfo.length, "idx overflow");
-        txInfo[idx].fr = fr;
-    }
+    // function updateTxFr(uint idx, address fr)
+    //     public
+    //     iscInitializing
+    //     validUploader
+    // {
+    //     require(idx < txInfo.length, "idx overflow");
+    //     require(txState[idx].state == State.unknown, "this transaction's information is frozen");
+    //     txInfo[idx].fr = fr;
+    // }
     
-    function updateTxTo(uint idx, address to)
-        public
-        iscInitializing
-        validUploader
-    {
-        require(idx < txInfo.length, "idx overflow");
-        txInfo[idx].to = to;
-    }
+    // function updateTxTo(uint idx, address to)
+    //     public
+    //     iscInitializing
+    //     validUploader
+    // {
+    //     require(idx < txInfo.length, "idx overflow");
+    //     require(txState[idx].state == State.unknown, "this transaction's information is frozen");
+    //     txInfo[idx].to = to;
+    // }
     
-    function updateTxSeq(uint idx, uint seq)
-        public
-        iscInitializing
-        validUploader
-    {
-        require(idx < txInfo.length, "idx overflow");
-        txInfo[idx].seq = seq;
-    }
+    // function updateTxSeq(uint idx, uint seq)
+    //     public
+    //     iscInitializing
+    //     validUploader
+    // {
+    //     require(idx < txInfo.length, "idx overflow");
+    //     require(txState[idx].state == State.unknown, "this transaction's information is frozen");
+    //     txInfo[idx].seq = seq;
+    // }
     
-    function updateTxAmt(uint idx, uint amt)
-        public
-        iscInitializing
-        validUploader
-    {
-        require(idx < txInfo.length, "idx overflow");
-        txInfo[idx].amt = amt;
-    }
+    // function updateTxAmt(uint idx, uint amt)
+    //     public
+    //     iscInitializing
+    //     validUploader
+    // {
+    //     require(idx < txInfo.length, "idx overflow");
+    //     require(txState[idx].state == State.unknown, "this transaction's information is frozen");
+    //     txInfo[idx].amt = amt;
+    // }
     
-    function updateTxRlpedMeta(uint idx, bytes rlpedMeta)
+    // function updateTxRlpedMeta(uint idx, bytes rlpedMeta)
+    //     public
+    //     iscInitializing
+    //     validUploader
+    // {
+    //     require(idx < txInfo.length, "idx overflow");
+    //     require(txState[idx].state == State.unknown, "this transaction's information is frozen");
+    //     txInfo[idx].rlpedMeta = rlpedMeta;
+    // }
+    
+    function freezeInfo(uint idx)
         public
         iscInitializing
         validUploader
     {
         require(idx < txInfo.length, "idx overflow");
-        txInfo[idx].rlpedMeta = rlpedMeta;
+        if(txState[idx].state == State.unknown) {
+            txState[idx].state = State.init;
+            frozenTx++;
+            if(frozenTx == txInfo.length) {
+                iscState = ISCState.inited;
+            }
+        }
     }
     
     function userAck(bytes signature)
         public
         payable
-        iscInitializing
         onlyOwner
     {
+        require(iscState == ISCState.inited, "ISC is opened or waiting initializing");
         require(validateSignatrue(signature, vesack) == msg.sender, "wrong signature");
         require(ownerAck[msg.sender] == false, "updated");
         require(msg.value >= ownerRequiredFunds[msg.sender], "no enough fund");
@@ -288,17 +320,16 @@ contract InsuranceSmartContract {
         ownerAck[msg.sender] =true;
         acked++;
         if (acked == owners.length) {
-            iscOpened = true;
+            iscState = ISCState.opening;
         }
     }
     
     function userRefuse()
         public
-        iscInitializing
         onlyOwner
     {
-        iscClosed = true;
-        iscSettled = true;
+        require(iscState == ISCState.inited, "ISC is opened or waiting initializing");
+        iscState = ISCState.settling;
     }
      
     /**********************************************************************
@@ -362,7 +393,7 @@ contract InsuranceSmartContract {
         onlyOwner
         iscOpening
     {
-        iscClosed = true;
+        iscState = ISCState.settling;
     }
      
     /**********************************************************************
@@ -373,15 +404,15 @@ contract InsuranceSmartContract {
         public
         onlyOwner
     {
-        require(iscClosed, "ISC is active now");
-        iscSettled = true;
+        require(iscState == ISCState.settling || iscState == ISCState.closed, "ISC is active now");
+        iscState = ISCState.closed;
     }
     
     function returnFunds()
         public
         onlyOwner
     {
-        require(iscSettled, "ISC hasn't been settled yet");
+        require(iscState == ISCState.closed, "ISC hasn't been settled yet");
         uint funds = ownerFunds[msg.sender];
         ownerFunds[msg.sender] = 0;
         msg.sender.transfer(funds);
@@ -437,7 +468,7 @@ contract InsuranceSmartContract {
         amt = toGet.amt;
         rlpedMeta = toGet.rlpedMeta;
     }
-    
+        
     function stakeFund()
         public
         payable
@@ -478,13 +509,13 @@ contract InsuranceSmartContract {
         returns (bytes32)
     {
         require(tid < txState.length, "tid overflow");
-        return keccak256(
+        return keccak256(abi.encodePacked(
             txInfo[tid].fr,
             txInfo[tid].to,
             txInfo[tid].seq,
             txInfo[tid].amt,
             txInfo[tid].rlpedMeta
-        );
+        ));
     }
     
     function closed()
@@ -492,42 +523,13 @@ contract InsuranceSmartContract {
         view
         returns (bool)
     {
-        return iscClosed;
+        return iscState == ISCState.closed;
     }
     
     /**********************************************************************
      *                             SafeCalc                               *
      **********************************************************************/
-    
-    function safeMul(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
-    }
 
-    function safeDiv(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256)
-    {
-        assert(b > 0);
-        uint256 c = a / b;
-        assert(a == b * c + a % b);
-        return c;
-    }
-
-    function safeSub(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256)
-    {
-        assert(b <= a);
-        return a - b;
-    }
 
     function safeAdd(uint256 a, uint256 b)
         internal

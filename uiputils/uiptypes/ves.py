@@ -137,7 +137,7 @@ class VerifiableExecutionSystem:
                 to = intent_json['to']
             if 'value' in intent_json:
                 amt = int(intent_json['value'], 16)
-
+            self.unlockself()
             update_resp = isc.handle.update_tx_info(
                 idx,
                 fr=fr,
