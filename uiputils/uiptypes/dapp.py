@@ -11,6 +11,9 @@ from uiputils.uiptypes import ChainDNS
 from uiputils.eth import JsonRPC
 from uiputils.eth.tools import SignatureVerifier
 
+# ethereum modules
+from web3 import Web3
+
 # config
 from uiputils.config import HTTP_HEADER
 
@@ -84,7 +87,7 @@ class DApp:
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
-    def ackinit(self, ves, content, sig):
+    def ackinit(self, ves, isc, content, sig):
         if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:
@@ -92,7 +95,22 @@ class DApp:
             except Exception as e:
                 raise e
         # look through content
+
+        # from hexbytes import HexBytes
+        # vesack = HexBytes(isc.handle.vesack()).hex()
+        # print(HexBytes(isc.handle.vesack()).hex())
+
         signatrue = self.sign(sig)
+
+        # print(SignatureVerifier.verify_by_hashed_message(signatrue, vesack, self.address))
+
+        # self.unlockself()
+        # ack_func = isc.handle.user_ack(signatrue, {
+        #     'from': Web3.toChecksumAddress(self.address),
+        #     'gas': hex(5000000)
+        # })
+        # ack_func.transact()
+        # print(ack_func.loop_and_wait())
 
         # not try but here ... TODO
         ret = ves.sessionSetupUpdate(int(content[0]), self.name, signatrue)

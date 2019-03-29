@@ -106,10 +106,10 @@ contract NetworkStatusBlockChain {
     /**********************************************************************/
     // Transaction System Storage
     
-	Transactions[] private txsStack; // slot 15
-	mapping (address => Transactions) txsReference; // slot 16
-	mapping (address => bool) activeISC; // slot 17
-	mapping (bytes32 => address) proofHashCallback; // slot 18
+	Transactions[] public txsStack; // slot 15
+	mapping (address => Transactions) public txsReference; // slot 16
+	mapping (address => bool) public activeISC; // slot 17
+	mapping (bytes32 => address) public proofHashCallback; // slot 18
     
     /**********************************************************************
      *                      event & condition                             *
@@ -440,7 +440,15 @@ contract NetworkStatusBlockChain {
      *                         Transaction System                         *
      **********************************************************************/
 	
-	function addTransactionProosal(InsuranceSmartContract isc)
+	function txtest(InsuranceSmartContract isc)
+	    public
+	    view
+	    returns (uint len)
+	{
+	    return txsReference[isc].txInfo[0].actionHash.length;
+	}
+	
+	function addTransactionProposal(InsuranceSmartContract isc)
     	public
     	returns (bool addingSuccess)
 	{
@@ -448,12 +456,13 @@ contract NetworkStatusBlockChain {
 		// addingSuccess = false;
 		txsStack.length++;
 		Transactions storage txs = txsStack[txsStack.length - 1];
-		txsReference[isc] = txs;
 		txs.txInfo.length = isc.txInfoLength();
-		for(uint idx=0; idx < txs.txInfo.length; idx++)
-		{
-		    txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
-		}
+		txs.contract_addr = isc;
+		txsReference[isc] = txsStack[txsStack.length - 1];
+		// for(uint idx=0; idx < txs.txInfo.length; idx++)
+		// {
+		//     txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
+		// }
 		
 		activeISC[isc] = true;
 		addingSuccess = true;
@@ -489,6 +498,9 @@ contract NetworkStatusBlockChain {
 		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
 		// assert actionindex < actionHash.length
 		Transactions storage txs = txsReference[isc];
+		if (actionindex >= txs.txInfo[txindex].actionHash.length) {
+		    txs.txInfo[txindex].actionHash.length = actionindex + 1;
+		}
 		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
 	}
 	

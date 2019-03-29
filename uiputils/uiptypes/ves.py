@@ -111,7 +111,7 @@ class VerifiableExecutionSystem:
                 tx_head={'from': self.address, 'gas': hex(400000)},
                 # tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                contract_addr="0xb7eabab4d8deb73ebdc6c40c2c90db0c2e4160b4"
+                contract_addr="0x438151281f5bb5f2f0c659dae63f788a4363f877"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -125,28 +125,36 @@ class VerifiableExecutionSystem:
         ))
 
         for idx, tx_intent in enumerate(tx_intents.intents):
-            intent_json = dict(tx_intent.jsonize())
-            fr: str
-            to: str
-            amt: str
-            if 'from' in intent_json:
-                fr = intent_json['from']
-            if 'to' in intent_json:
-                to = intent_json['to']
-            if 'value' in intent_json:
-                amt = int(intent_json['value'], 16)
-            self.unlockself()
-            update_resp = isc.handle.update_tx_info(
-                idx,
-                fr=fr,
-                to=to,
-                seq=idx,
-                amt=amt,
-                meta=tx_intent.__dict__,
-                timeout=20
-            )
-            print(update_resp['transactionHash'])
-            print(isc.handle.get_transaction_info(idx))
+            pass
+            # intent_json = dict(tx_intent.jsonize())
+            # fr: str
+            # to: str
+            # amt: str
+            # if 'from' in intent_json:
+            #     fr = intent_json['from']
+            # if 'to' in intent_json:
+            #     to = intent_json['to']
+            # if 'value' in intent_json:
+            #     amt = int(intent_json['value'], 16)
+            # self.unlockself()
+            # update_lazyfunc = isc.handle.update_tx_info(
+            #     idx,
+            #     fr=fr,
+            #     to=to,
+            #     seq=idx,
+            #     amt=amt,
+            #     meta=tx_intent.__dict__,
+            #     lazy=True
+            # )
+            # print(update_lazyfunc, type(update_lazyfunc))
+            # update_lazyfunc.transact()
+            # update_resp = update_lazyfunc.loop_and_wait()
+            # print(update_resp['transactionHash'])
+            # self.unlockself()
+            # print(isc.handle.get_transaction_info(idx))
+
+            # self.unlockself()
+            # print(isc.handle.freeze_info(idx))
             # TODO: check isc-info updated
 
         # TODO: async - send tx_intents
@@ -189,6 +197,7 @@ class VerifiableExecutionSystem:
         # TODO: await isc-State == opening
 
         # TODO: Send Request(Tx-intents) NSB
+        # nsb.add_transaction_proposal('0xb7eabab4d8deb73ebdc6c40c2c90db0c2e4160b4')
         pass
 
     @staticmethod

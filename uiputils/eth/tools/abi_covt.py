@@ -18,12 +18,15 @@ BYTE32_LENGTH = 64
 # encode
 ENC = 'utf-8'
 
+
 class AbiEncoder:
     def __init__(self):
         pass
 
     @staticmethod
     def encode(para_type, para):
+        if not isinstance(para_type, str):
+            raise ValueError("para_type description must be in string: " + str(type(para_type)))
         if para_type == 'address':
             return AbiEncoder.encode('uint160', para)
         elif para_type == 'string':
@@ -142,6 +145,11 @@ class AbiDecoder:
 
     @staticmethod
     def decode(ret_type, raw_ret):
+        if isinstance(raw_ret, bytes):
+            raw_ret = HexBytes(raw_ret).hex()[2:]
+
+        if not isinstance(ret_type, str):
+            raise ValueError("ret_type description must be in string: " + str(type(ret_type)))
         if ret_type == 'address':
             return AbiDecoder.decode('uint160', raw_ret)
         elif ret_type == 'byte':

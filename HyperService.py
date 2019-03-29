@@ -3,7 +3,10 @@
 import json, requests, time
 from uiputils.eth import JsonRPC
 from uiputils.cast import uint64string
-from uiputils.uiptypes import StateProof, SmartContract
+from uiputils.uiptypes.meta import StateProof, SmartContract
+
+from uiputils.eth.tools import AbiEncoder
+
 
 BLOCKCHAIN = {
     "A": "private_A",
@@ -61,6 +64,7 @@ class HyperService:
                     "id": 64
                     }
             response = self.DispatchRpcToDomain(url, unlock)
+            print(response)
 
 
     def DeployContract(self, contract):
@@ -144,29 +148,43 @@ if __name__ == '__main__':
     supported_chains = [BLOCKCHAIN['A']]#, BLOCKCHAIN['A']]
     hyperservice = HyperService(supported_chains)
 
-    # Deploy the Broker and Option contract.
-    # with open('broker_bytecode', 'r') as f:
+    # chain1 0xafc7d2959e72081770304f6474151293be1fbba7
+    # with open('./contract_sample/broker-option/broker.bin', 'r') as f:
     #     BrokerBytecode = f.read()
-    #     print(BrokerBytecode[:-1])
+    #
     #     broker_contract = SmartContract(
-    #         BrokerBytecode[:-1], BLOCKCHAIN['A'],
+    #         BrokerBytecode + AbiEncoder.encodes(
+    #             [
+    #                 ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b", "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e",
+    #                  "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737", "0x91f030cfec606f9ff832aef20f768bf3a129b59c",
+    #                  "0x4f984aa7d262372df92f85af9be8d2df09ac4018"],
+    #                 1
+    #             ],
+    #             ['address[]', 'uint']
+    #         ),
+    #         BLOCKCHAIN['A'],
     #         "BrokerContract", hex(2000000))
     #     hyperservice.DeployContract(broker_contract)
-    #     queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
-    #     print(queryProof)
+        # queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
+        # print(queryProof)
 
-    # with open('option_bytecode', 'r') as f:
+    # chain1 0x3723261b2a5a62b778b5c74318534d7fdf8db38c
+    # chain2 0xc06da79957ca0b46aac29ee2815742f05fbad327
+    # with open('./contract_sample/broker-option/option.bin', 'r') as f:
     #     OptionBytecode = f.read()
     #     option_contract = SmartContract(
-    #         OptionBytecode[:-1], BLOCKCHAIN['A'],
-    #         "OptionContract", hex(200000), "0x8ac7230489e80000")
+    #         OptionBytecode + AbiEncoder.encodes(
+    #             ['0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e', '50'],
+    #             ['address', 'uint']
+    #         ),
+    #         BLOCKCHAIN['A'],
+    #         "OptionContract", hex(1000000), "0x872")
     #     hyperservice.DeployContract(option_contract)
 
     # 0x7019fa779024c0a0eac1d8475733eefe10a49f3b
     with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
-        NSBdata = NSBBytecode
-        # NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
+        NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
         NSB_contract = SmartContract(
             NSBdata, BLOCKCHAIN['A'],
             "NSBContract", hex(6000000))

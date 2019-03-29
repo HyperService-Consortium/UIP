@@ -68,7 +68,7 @@ class InsuranceSmartContract:
                             [0, 0, 0],
                             HexBytes(ETHSIGN_HEADER + bytes(str(len(rlped_txs)).encode(ENC)) + bytes(rlped_txs)).hex(),
                             signature,
-                            keccak(ETHSIGN_HEADER + b'\x31\x33\x30' + bytes(signature[2:].encode(ENC))),
+                            keccak(ETHSIGN_HEADER + b'\x36\x35' + HexBytes(signature)),
                             tx_count
                         ],
                         ['address[]', 'uint256[]', 'bytes', 'bytes', 'bytes32', 'uint256']

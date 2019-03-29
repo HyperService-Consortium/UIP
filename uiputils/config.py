@@ -13,7 +13,8 @@ eth_blockchain_info = {
         'host': 'http://127.0.0.1:8545',
         'relay': "0x7019fa779024c0a0eac1d8475733eefe10a49f3b",
         'user': {
-            'X': "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e"
+            'X': "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e",
+            'nsb': "0x4f984aa7d262372df92f85af9be8d2df09ac4018"
         }
     },
     'chain2': {
