@@ -111,7 +111,7 @@ class VerifiableExecutionSystem:
                 tx_head={'from': self.address, 'gas': hex(400000)},
                 # tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                contract_addr="0x438151281f5bb5f2f0c659dae63f788a4363f877"
+                contract_addr="0x46fb5d19b3f7c119ceb13758a75f72648ff62877"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -152,13 +152,13 @@ class VerifiableExecutionSystem:
             # print(update_resp['transactionHash'])
             # self.unlockself()
             # print(isc.handle.get_transaction_info(idx))
-
+            #
             # self.unlockself()
             # print(isc.handle.freeze_info(idx))
             # TODO: check isc-info updated
 
         # TODO: async - send tx_intents
-        return sign_content, isc, atte_v
+        return sign_content, isc, atte_v, tx_intents
 
     def sessionSetupUpdate(self, session_id, ack_user_name, ack_signature):
         if session_id not in self.txs_pool:

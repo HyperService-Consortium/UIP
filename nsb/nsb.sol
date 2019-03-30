@@ -1,5 +1,6 @@
 pragma solidity ^0.4.22;
-interface InsuranceSmartContract {
+
+interface InsuranceSmartContractInterface {
     
     function isRawSender(address) external returns(bool);
     
@@ -12,7 +13,11 @@ interface InsuranceSmartContract {
     function closed() external returns(bool);
 }
 
-contract NetworkStatusBlockChain {
+interface NetworkStatusBlockChainInterface {
+    function validMerkleProoforNot(bytes32) external returns(bool);
+}
+
+contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     /**********************************************************************/
     // constant
     
@@ -440,7 +445,7 @@ contract NetworkStatusBlockChain {
      *                         Transaction System                         *
      **********************************************************************/
 	
-	function txtest(InsuranceSmartContract isc)
+	function txtest(InsuranceSmartContractInterface isc)
 	    public
 	    view
 	    returns (uint len)
@@ -448,7 +453,7 @@ contract NetworkStatusBlockChain {
 	    return txsReference[isc].txInfo[0].actionHash.length;
 	}
 	
-	function addTransactionProposal(InsuranceSmartContract isc)
+	function addTransactionProposal(InsuranceSmartContractInterface isc)
     	public
     	returns (bool addingSuccess)
 	{
@@ -469,7 +474,7 @@ contract NetworkStatusBlockChain {
 	}
 	
 	function addMerkleProofProposal(
-		InsuranceSmartContract isc,
+		InsuranceSmartContractInterface isc,
 		uint txindex,
 		string blockaddr,
 		bytes32 storagehash,
@@ -486,7 +491,7 @@ contract NetworkStatusBlockChain {
 	}
 	
 	function addActionProposal(
-		InsuranceSmartContract isc,
+		InsuranceSmartContractInterface isc,
 		uint txindex,
 		uint actionindex,
 		bytes32 msghash,
@@ -504,7 +509,7 @@ contract NetworkStatusBlockChain {
 		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
 	}
 	
-	function closeTransaction(InsuranceSmartContract isc)
+	function closeTransaction(InsuranceSmartContractInterface isc)
     	public
     	returns (bool closeSuccess)
 	{

@@ -19,7 +19,7 @@ baser = DApp({
     'passphrase': "123456"
 })
 # beiyong 0x92a875bff412aea7fab74daa1cba3f7b94415ac9
-nsb_addr = Web3.toChecksumAddress("0x6d8f552c2e1e47031f8e73e3dfee54dd3b6003c1")
+nsb_addr = Web3.toChecksumAddress("0xafc7d2959e72081770304f6474151293be1fbba7")
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
 nsb_abi_dir = "../nsb/nsb.abi"
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     print('waiting to verify [', nsbt.get_queue_l(), ',', nsbt.get_queue_r(), ')')
 
-    update_func = nsbt.add_transaction_proposal('0x438151281f5bb5f2f0c659dae63f788a4363f877', gasuse=hex(200000))
+    update_func = nsbt.add_transaction_proposal('0x46fb5d19b3f7c119ceb13758a75f72648ff62877', gasuse=hex(5000000))
 
     update_func.transact()
     print(update_func.loop_and_wait())
@@ -64,4 +64,4 @@ if __name__ == '__main__':
     # 0x4f984aa7d262372df92f85af9be8d2df09ac4018
     print(baser.address)
 
-    print(nsbt.is_active_isc('0x438151281f5bb5f2f0c659dae63f788a4363f877'))
+    print(nsbt.is_active_isc('0x46fb5d19b3f7c119ceb13758a75f72648ff62877'))

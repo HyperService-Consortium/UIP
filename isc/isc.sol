@@ -1,10 +1,23 @@
 pragma solidity ^0.4.22;
 
-interface NetworkStatusBlockChain {
+interface InsuranceSmartContractInterface {
+    
+    function isRawSender(address) external returns(bool);
+    
+    function txInfoLength() external returns(uint);
+    
+    function getTxInfoHash(uint) external returns(bytes32);
+    
+    function isTransactionOwner(address, uint) external returns(bool);
+    
+    function closed() external returns(bool);
+}
+
+interface NetworkStatusBlockChainInterface {
     function validMerkleProoforNot(bytes32) external returns(bool);
 }
 
-contract InsuranceSmartContract {
+contract InsuranceSmartContract is InsuranceSmartContractInterface {
     /**********************************************************************/
     // constant
     uint constant public MAX_OWNER_COUNT = 50;
@@ -375,7 +388,7 @@ contract InsuranceSmartContract {
         txState[tid].tclose = tclose;
     }
     
-    function ChangeResult(NetworkStatusBlockChain nsb, uint tid, bytes32[] results)
+    function ChangeResult(NetworkStatusBlockChainInterface nsb, uint tid, bytes32[] results)
         public
         onlyOwner
         iscOpening
