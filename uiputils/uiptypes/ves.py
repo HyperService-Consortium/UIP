@@ -106,12 +106,12 @@ class VerifiableExecutionSystem:
                 [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
                 INCLUDE_PATH + '/isc.abi',
                 ves=self,
+                tx_head={'from': self.address, 'gas': hex(400000)},
                 # rlped_txs=sign_bytes,
                 # signature=atte_v,
-                tx_head={'from': self.address, 'gas': hex(400000)},
                 # tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                contract_addr="0x46fb5d19b3f7c119ceb13758a75f72648ff62877"
+                contract_addr="0x0092044dd5f294860d722a75d295cac378994409"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(

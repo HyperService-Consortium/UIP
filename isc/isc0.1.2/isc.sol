@@ -1,20 +1,20 @@
 pragma solidity ^0.4.22;
 
-contract InsuranceSmartContractInterface {
+interface InsuranceSmartContractInterface {
     
-    function isRawSender(address) public view returns(bool);
+    function isRawSender(address) external returns(bool);
     
-    function txInfoLength() public view returns(uint);
+    function txInfoLength() external returns(uint);
     
-    function getTxInfoHash(uint) public view returns(bytes32);
+    function getTxInfoHash(uint) external returns(bytes32);
     
-    function isTransactionOwner(address, uint) public view returns(bool);
+    function isTransactionOwner(address, uint) external returns(bool);
     
-    function closed() public view returns(bool);
+    function closed() external returns(bool);
 }
 
-contract NetworkStatusBlockChainInterface {
-    function validMerkleProoforNot(bytes32) public view returns(bool);
+interface NetworkStatusBlockChainInterface {
+    function validMerkleProoforNot(bytes32) external returns(bool);
 }
 
 contract InsuranceSmartContract is InsuranceSmartContractInterface {
@@ -388,12 +388,11 @@ contract InsuranceSmartContract is InsuranceSmartContractInterface {
         txState[tid].tclose = tclose;
     }
     
-    function ChangeResult(address nsb_addr, uint tid, bytes32[] results)
+    function ChangeResult(NetworkStatusBlockChainInterface nsb, uint tid, bytes32[] results)
         public
         onlyOwner
         iscOpening
     {
-        NetworkStatusBlockChainInterface nsb = NetworkStatusBlockChainInterface(nsb_addr);
         require(tid < txState.length, "invalid tid");
         require(txState[tid].state == State.open, "only open-state transaction can be modified");
         for (uint idx=0; idx < results.length; idx++) {

@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     print('waiting to verify [', nsbt.get_queue_l(), ',', nsbt.get_queue_r(), ')')
 
-    update_func = nsbt.add_transaction_proposal('0x46fb5d19b3f7c119ceb13758a75f72648ff62877', gasuse=hex(5000000))
+    update_func = nsbt.add_transaction_proposal('0x0092044dd5f294860d722a75d295cac378994409', gasuse=hex(5000000))
 
     update_func.transact()
     print(update_func.loop_and_wait())
@@ -64,4 +64,4 @@ if __name__ == '__main__':
     # 0x4f984aa7d262372df92f85af9be8d2df09ac4018
     print(baser.address)
 
-    print(nsbt.is_active_isc('0x46fb5d19b3f7c119ceb13758a75f72648ff62877'))
+    print(nsbt.is_active_isc('0x0092044dd5f294860d722a75d295cac378994409'))

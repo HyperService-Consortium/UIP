@@ -1,20 +1,20 @@
 pragma solidity ^0.4.22;
 
-contract InsuranceSmartContractInterface {
+interface InsuranceSmartContractInterface {
     
-    function isRawSender(address) public view returns(bool);
+    function isRawSender(address) external returns(bool);
     
-    function txInfoLength() public view returns(uint);
+    function txInfoLength() external returns(uint);
     
-    function getTxInfoHash(uint) public view returns(bytes32);
+    function getTxInfoHash(uint) external returns(bytes32);
     
-    function isTransactionOwner(address, uint) public view returns(bool);
+    function isTransactionOwner(address, uint) external returns(bool);
     
-    function closed() public view returns(bool);
+    function closed() external returns(bool);
 }
 
-contract NetworkStatusBlockChainInterface {
-    function validMerkleProoforNot(bytes32) public view returns(bool);
+interface NetworkStatusBlockChainInterface {
+    function validMerkleProoforNot(bytes32) external returns(bool);
 }
 
 contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
@@ -453,11 +453,10 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 	    return txsReference[isc].txInfo[0].actionHash.length;
 	}
 	
-	function addTransactionProposal(address isc_addr)
+	function addTransactionProposal(InsuranceSmartContractInterface isc)
     	public
     	returns (bool addingSuccess)
 	{
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
 		require(isc.isRawSender(msg.sender), "you have no access to upload ISC to NSB");
 		// addingSuccess = false;
 		txsStack.length++;
@@ -475,7 +474,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 	}
 	
 	function addMerkleProofProposal(
-		address isc_addr,
+		InsuranceSmartContractInterface isc,
 		uint txindex,
 		string blockaddr,
 		bytes32 storagehash,
@@ -485,15 +484,14 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     	public
     	returns (bytes32 keccakhash)
 	{
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
 		require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
-	    addMerkleProof(blockaddr, storagehash, key, val);
+		addMerkleProof(blockaddr, storagehash, key, val);
 		proofHashCallback[keccakhash] = isc;
 		keccakhash = keccak256(blockaddr, storagehash, key, val);
 	}
 	
 	function addActionProposal(
-		address isc_addr,
+		InsuranceSmartContractInterface isc,
 		uint txindex,
 		uint actionindex,
 		bytes32 msghash,
@@ -504,7 +502,6 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 	{
 		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
 		// assert actionindex < actionHash.length
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
 		Transactions storage txs = txsReference[isc];
 		if (actionindex >= txs.txInfo[txindex].actionHash.length) {
 		    txs.txInfo[txindex].actionHash.length = actionindex + 1;
@@ -512,11 +509,10 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
 	}
 	
-	function closeTransaction(address isc_addr)
+	function closeTransaction(InsuranceSmartContractInterface isc)
     	public
     	returns (bool closeSuccess)
 	{
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
 		closeSuccess = false;
 		require(isc.closed(), "ISC is active now");
 		activeISC[isc] = false;
