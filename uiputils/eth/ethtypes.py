@@ -24,7 +24,9 @@ from .tools import (
     AbiDecoder,
     hex_match,
     hex_match_withprefix,
-    FileLoad
+    FileLoad,
+    MapLoc,
+    SliceLoc
 )
 
 # ethereum modules
@@ -485,7 +487,8 @@ class EthNetStatusBlockchain:
         return self.handle.lazyfunct('addTransactionProposal', self.tx, Web3.toChecksumAddress(addr), gasuse=gasuse)
 
     def is_active_isc(self, addr):
-            return self.handle.func('activeISC', Web3.toChecksumAddress(addr))
+        return self.handle.func('activeISC', Web3.toChecksumAddress(addr))
+        # return self.web3.eth.getStorageAt(self.address, MapLoc.cast(17, addr))
 
 
     # def DiscreateTimer() override:

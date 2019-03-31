@@ -16,6 +16,7 @@ BLOCKCHAIN = {
 }
 
 NETWORK_SETUP = {
+    # BLOCKCHAIN['A']: "http://162.105.87.118:8545",
     BLOCKCHAIN['A']: "http://127.0.0.1:8545",
     BLOCKCHAIN['B']: "http://127.0.0.1:8599",
     BLOCKCHAIN['C']: "http://127.0.0.1:8545",
@@ -106,6 +107,7 @@ class HyperService:
             code_resp = self.DispatchRpcToDomain(url, get_code)
 
             # print(code_resp)
+            print(contract_addr)
             if code_resp['result'] == '0x':
                 raise IndexError("Contract deployment failed")
             return contract_addr
@@ -181,13 +183,16 @@ if __name__ == '__main__':
     #         "OptionContract", hex(1000000), "0x872")
     #     hyperservice.DeployContract(option_contract)
 
+    # chain1
     # 0x7019fa779024c0a0eac1d8475733eefe10a49f3b
-    with open('./nsb/nsb.bin', 'r') as f:
+    # buptchain1
+    # 0xf4dacff5eba7426295e27a32d389fff3cde55de2
+    with open('./nsb-isc/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
         NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
         NSB_contract = SmartContract(
             NSBdata, BLOCKCHAIN['A'],
-            "NSBContract", hex(6000000))
+            "NSBContract", hex(8000000))
         hyperservice.DeployContract(NSB_contract)
 
     # print(hyperservice.contracts)

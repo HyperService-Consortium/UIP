@@ -1,20 +1,20 @@
-pragma solidity ^0.4.22;
+pragma solidity ^0.5.0;
 
-contract InsuranceSmartContractInterface {
+interface InsuranceSmartContractInterface {
     
-    function isRawSender(address) public view returns(bool);
+    function isRawSender(address) external view returns(bool);
     
-    function txInfoLength() public view returns(uint);
+    function txInfoLength() external view returns(uint);
     
-    function getTxInfoHash(uint) public view returns(bytes32);
+    function getTxInfoHash(uint) external view returns(bytes32);
     
-    function isTransactionOwner(address, uint) public view returns(bool);
+    function isTransactionOwner(address, uint) external view returns(bool);
     
-    function closed() public view returns(bool);
+    function closed()  external view returns(bool);
 }
 
-contract NetworkStatusBlockChainInterface {
-    function validMerkleProoforNot(bytes32) public view returns(bool);
+interface NetworkStatusBlockChainInterface {
+    function validMerkleProoforNot(bytes32)  external view returns(bool);
 }
 
 contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
@@ -175,18 +175,18 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     }
 
     // Remember to specify at least one address and set the _required as one.
-    constructor (address[] _owners, uint _required)
+    constructor (address[] memory _owners, uint _required)
         public
-        validRequirement(_owners.length, _required)
+        // validRequirement(_owners.length, _required)
     {
         for (uint i = 0; i<_owners.length; i++) {
-            require(!isOwner[_owners[i]] && _owners[i] != 0, "owner exists or its address is invalid");
+            require(!isOwner[_owners[i]] && _owners[i] != address(0), "owner exists or its address is invalid");
             isOwner[_owners[i]] = true;
+            owners.push(_owners[i]);
         }
         
-        owners = _owners;
         requiredOwnerCount = _required;
-        requiredValidVotesCount = (requiredOwnerCount + 1) >> 1;
+        requiredValidVotesCount = _required;
     }
 
     /**********************************************************************
@@ -198,7 +198,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         ownerExists(msg.sender)
         validRequirement(owners.length + 1, requiredOwnerCount)
     {
-        require(_newOwner != 0, "invalid owner address");
+        require(_newOwner != address(0), "invalid owner address");
         addingOwnerProposal[_newOwner][msg.sender] = true;
 
         //use a integer to count it?
@@ -251,7 +251,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         public
         view
         ownerExists(msg.sender)
-        returns (address[])
+        returns (address[] memory)
     {
         return owners;
     }
@@ -277,13 +277,13 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
      **********************************************************************/
 
     // change it to VES/DAPP/NSB user?
-    function addMerkleProof(string blockaddr, bytes32 storagehash, bytes32 key, bytes32 val)
+    function addMerkleProof(string memory blockaddr, bytes32 storagehash, bytes32 key, bytes32 val)
         public
         ownerExists(msg.sender)
         validMerkleProof(storagehash, key)
     {
         MerkleProof memory toAdd = MerkleProof(blockaddr, storagehash, key, val);
-        bytes32 keccakhash = keccak256(blockaddr, storagehash, key, val);
+        bytes32 keccakhash = keccak256(abi.encodePacked(blockaddr, storagehash, key, val));
 
         require(MerkleProofTree[keccakhash].storagehash == 0, "already in MerkleProofTree");
 
@@ -358,7 +358,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         public
         view
         ownerExists(msg.sender)
-        returns (string a, bytes32 s, bytes32 k, bytes32 v)
+        returns (string memory a, bytes32 s, bytes32 k, bytes32 v)
     {
         MerkleProof storage toGet = MerkleProofTree[keccakhash];
         a = toGet.blockaddr;
@@ -371,7 +371,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         public
         view
         ownerExists(msg.sender)
-        returns (string a, bytes32 s, bytes32 k, bytes32 v)
+        returns (string memory a, bytes32 s, bytes32 k, bytes32 v)
     {
         MerkleProof storage toGet = MerkleProofTree[waitingVerifyProof[curPointer]];
         a = toGet.blockaddr;
@@ -390,7 +390,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     }
 
     function validMerkleProoforNot(bytes32 keccakhash)
-        public
+         external
         view
         returns (bool)
     {
@@ -400,7 +400,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     function getVaildMerkleProof(bytes32 keccakhash)
         public
         view
-        returns (string a, bytes32 s, bytes32 k, bytes32 v)
+        returns (string memory a, bytes32 s, bytes32 k, bytes32 v)
     {
         require(verifiedMerkleProof[keccakhash] == true, "invalid");
         MerkleProof storage toGet = MerkleProofTree[keccakhash];
@@ -414,7 +414,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
      *                       Action Storage System                        *
      **********************************************************************/
 
-    function addAction(bytes32 msghash, bytes signature)
+    function addAction(bytes32 msghash, bytes memory signature)
         // future will be private
         public
         ownerExists(msg.sender)
@@ -424,7 +424,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         // require(pz != 0, "invalid pz address");
 
         Action memory toAdd = Action(msghash, signature);
-        keccakhash = keccak256(msghash, signature);
+        keccakhash = keccak256(abi.encodePacked(msghash, signature));
 
         ActionTree[keccakhash]= toAdd;
     }
@@ -432,7 +432,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     function getAction(bytes32 keccakhash)
         public
         view
-        returns (bytes32 msghash, bytes signature)
+        returns (bytes32 msghash, bytes memory signature)
     {
         Action storage toGet = ActionTree[keccakhash];
         // pa = toGet.pa;
@@ -445,7 +445,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
      *                         Transaction System                         *
      **********************************************************************/
 	
-	function txtest(InsuranceSmartContractInterface isc)
+	function txtest(address isc)
 	    public
 	    view
 	    returns (uint len)
@@ -453,31 +453,33 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 	    return txsReference[isc].txInfo[0].actionHash.length;
 	}
 	
+//	InsuranceSmartContract isc;
+	
 	function addTransactionProposal(address isc_addr)
     	public
     	returns (bool addingSuccess)
 	{
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
+	    InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		require(isc.isRawSender(msg.sender), "you have no access to upload ISC to NSB");
 		// addingSuccess = false;
 		txsStack.length++;
 		Transactions storage txs = txsStack[txsStack.length - 1];
-		txs.txInfo.length = isc.txInfoLength();
-		txs.contract_addr = isc;
-		txsReference[isc] = txsStack[txsStack.length - 1];
+// 		txs.txInfo.length = isc.txInfoLength();
+		txs.contract_addr = isc_addr;
+		txsReference[isc_addr] = txsStack[txsStack.length - 1];
 		// for(uint idx=0; idx < txs.txInfo.length; idx++)
 		// {
 		//     txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
 		// }
 		
-		activeISC[isc] = true;
+		activeISC[isc_addr] = true;
 		addingSuccess = true;
 	}
 	
 	function addMerkleProofProposal(
 		address isc_addr,
 		uint txindex,
-		string blockaddr,
+		string memory blockaddr,
 		bytes32 storagehash,
 		bytes32 key,
 		bytes32 val
@@ -485,11 +487,11 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     	public
     	returns (bytes32 keccakhash)
 	{
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
+	    InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
 	    addMerkleProof(blockaddr, storagehash, key, val);
-		proofHashCallback[keccakhash] = isc;
-		keccakhash = keccak256(blockaddr, storagehash, key, val);
+		proofHashCallback[keccakhash] = isc_addr;
+		keccakhash = keccak256(abi.encodePacked(blockaddr, storagehash, key, val));
 	}
 	
 	function addActionProposal(
@@ -497,15 +499,15 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 		uint txindex,
 		uint actionindex,
 		bytes32 msghash,
-		bytes signature
+		bytes memory signature
 	)
     	public
     	returns (bytes32 keccakhash)
 	{
+		// InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
 		// assert actionindex < actionHash.length
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
-		Transactions storage txs = txsReference[isc];
+	    Transactions storage txs = txsReference[isc_addr];
 		if (actionindex >= txs.txInfo[txindex].actionHash.length) {
 		    txs.txInfo[txindex].actionHash.length = actionindex + 1;
 		}
@@ -516,10 +518,10 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     	public
     	returns (bool closeSuccess)
 	{
-	    InsuranceSmartContractInterface isc = InsuranceSmartContractInterface(isc_addr);
+	    InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		closeSuccess = false;
 		require(isc.closed(), "ISC is active now");
-		activeISC[isc] = false;
+		activeISC[isc_addr] = false;
 		closeSuccess = true;
 	}
 }

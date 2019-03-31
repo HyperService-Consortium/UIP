@@ -1,21 +1,23 @@
 pragma solidity ^0.4.22;
 
-contract InsuranceSmartContractInterface {
+
+interface InsuranceSmartContractInterface {
     
-    function isRawSender(address) public view returns(bool);
+    function isRawSender(address) external view returns(bool);
     
-    function txInfoLength() public view returns(uint);
+    function txInfoLength() external view returns(uint);
     
-    function getTxInfoHash(uint) public view returns(bytes32);
+    function getTxInfoHash(uint) external view returns(bytes32);
     
-    function isTransactionOwner(address, uint) public view returns(bool);
+    function isTransactionOwner(address, uint) external view returns(bool);
     
-    function closed() public view returns(bool);
+    function closed()  external view returns(bool);
 }
 
-contract NetworkStatusBlockChainInterface {
-    function validMerkleProoforNot(bytes32) public view returns(bool);
+interface NetworkStatusBlockChainInterface {
+    function validMerkleProoforNot(bytes32)  external view returns(bool);
 }
+
 
 contract InsuranceSmartContract is InsuranceSmartContractInterface {
     /**********************************************************************/
@@ -493,7 +495,7 @@ contract InsuranceSmartContract is InsuranceSmartContractInterface {
     }
     
     function isTransactionOwner(address queryaddr, uint tid)
-        public
+        external
         view
         returns (bool)
     {
@@ -502,7 +504,7 @@ contract InsuranceSmartContract is InsuranceSmartContractInterface {
     }
     
     function isRawSender(address queryaddr)
-        public
+        external
         view
         returns (bool)
     {
@@ -510,7 +512,7 @@ contract InsuranceSmartContract is InsuranceSmartContractInterface {
     }
     
     function txInfoLength()
-        public
+        external
         view
         returns (uint)
     {
@@ -518,7 +520,7 @@ contract InsuranceSmartContract is InsuranceSmartContractInterface {
     }
     
     function getTxInfoHash(uint tid)
-        public
+        external
         view
         returns (bytes32)
     {
@@ -533,7 +535,7 @@ contract InsuranceSmartContract is InsuranceSmartContractInterface {
     }
     
     function closed()
-        public
+        external
         view
         returns (bool)
     {
