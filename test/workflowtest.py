@@ -2,8 +2,9 @@
 # python modules
 
 # uip modules
-from uiputils.eth import FileLoad, JsonRPC
-from uiputils.uiptypes import VerifiableExecutionSystem, DApp
+from uiputils.ethtools import FileLoad, JsonRPC
+from uiputils.ves import VerifiableExecutionSystem
+from uiputils.dapp import DApp
 
 # config
 from uiputils.config import HTTP_HEADER

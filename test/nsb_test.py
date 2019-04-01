@@ -5,11 +5,12 @@
 # ethereum modules
 from hexbytes import HexBytes
 from web3 import Web3
+
 # uip modules
 from uiputils.ethtools import ServiceStart
-from uiputils.uiptypes import DApp
+from uiputils.dapp import DApp
 from uiputils.nsb.nsb import EthNetStatusBlockchain
-from uiputils.ethtools import slicelocation
+from uiputils.ethtools.loc_cal import slicelocation
 baser = DApp({
     'domain': "Ethereum://chain1",
     'name': "nsb",

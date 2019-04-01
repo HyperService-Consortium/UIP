@@ -1,7 +1,7 @@
 
 from web3 import Web3
 from uiputils.nsb.nsb import EthNetStatusBlockchain
-from uiputils.eth import JsonRPC
+from uiputils.ethtools import JsonRPC
 
 from uiputils.config import HTTP_HEADER
 from hexbytes import HexBytes
