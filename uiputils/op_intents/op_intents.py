@@ -1,7 +1,7 @@
-from uiputils.uiperror import InitializeError
+from uiputils.errors import InitializeError
 
 
-class OpIntent:
+class OpIntents:
     Key_Attribute_All = ('name', 'op_type')
     Key_Attribute_Payment = ('amount', 'src', 'dst')
     Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func')
@@ -15,13 +15,13 @@ class OpIntent:
     def __init__(self, intent_json):
         self.op_type = ""
         self.owners = []
-        for key_attr in OpIntent.Key_Attribute_All:
+        for key_attr in OpIntents.Key_Attribute_All:
             if key_attr in intent_json:
                 setattr(self, key_attr, intent_json[key_attr])
             else:
                 raise InitializeError("the attribute " + key_attr + " must be included in the Op intent")
 
-        if self.op_type not in OpIntent.Op_Type:
+        if self.op_type not in OpIntents.Op_Type:
             raise InitializeError("unexpected op_type: " + self.op_type)
 
         getattr(self, self.op_type + 'Init')(intent_json)
@@ -30,13 +30,13 @@ class OpIntent:
     def createopintents(op_intents_json):
         op_intents, op_owners = [], set()
         for op_intent_json in op_intents_json:
-            op_intent = OpIntent(op_intent_json)
+            op_intent = OpIntents(op_intent_json)
             op_intents.append(op_intent)
             op_owners.update(op_intent.owners)
         return op_intents, op_owners
 
     def PaymentInit(self, intent_json):
-        for key_attr in OpIntent.Key_Attribute_Payment:
+        for key_attr in OpIntents.Key_Attribute_Payment:
             if key_attr in intent_json:
                 setattr(self, key_attr, intent_json[key_attr])
             else:
@@ -45,22 +45,24 @@ class OpIntent:
             getattr(self, 'src')['domain'] + '.' + getattr(self, 'src')['user_name'],
             getattr(self, 'dst')['domain'] + '.' + getattr(self, 'dst')['user_name']
         ])
-        for option_attr in OpIntent.Option_Attribute_Payment:
+        for option_attr in OpIntents.Option_Attribute_Payment:
             if option_attr in intent_json:
                 setattr(self, option_attr, intent_json[option_attr])
         else:
             chain_type = getattr(self, 'src')['domain'].split('://')[0]
-            setattr(self, 'unit', OpIntent.Chain_Default_Unit[chain_type])
+            setattr(self, 'unit', OpIntents.Chain_Default_Unit[chain_type])
 
     def ContractInvocationInit(self, intent_json):
-        for key_attr in OpIntent.Key_Attribute_ContractInvocation:
+        for key_attr in OpIntents.Key_Attribute_ContractInvocation:
             if key_attr in intent_json:
                 setattr(self, key_attr, intent_json[key_attr])
             else:
-                raise InitializeError("the attribute " + key_attr +\
-                                      " must be included in the ContractInvocation intent")
+                raise InitializeError(
+                    "the attribute " + key_attr +
+                    " must be included in the ContractInvocation intent"
+                )
         self.owners.append(getattr(self, 'contract_domain') + '.' + getattr(self, 'invoker'))
-        for option_attr in OpIntent.Option_Attribute_ContractInvocation:
+        for option_attr in OpIntents.Option_Attribute_ContractInvocation:
             if option_attr in intent_json:
                 setattr(self, option_attr, intent_json[option_attr])
 
