@@ -8,10 +8,14 @@ import logging.handlers
 from hexbytes import HexBytes
 
 # uip modules
-from uiputils.uiptypes import InsuranceSmartContract, OpIntent, TransactionIntents, ChainDNS
-from uiputils.eth import JsonRPC
-from uiputils.eth.tools import SignatureVerifier
-from uiputils.uiperror import Missing, Mismatch
+from uiputils.op_intents import OpIntents
+from uiputils.transaction_intents import TransactionIntents
+from uiputils.chain_dns import ChainDNS
+from uiputils.isc import InsuranceSmartContract
+from uiputils.errors import Missing, Mismatch
+
+# eth modules
+from uiputils.ethtools import JsonRPC, SignatureVerifier
 
 # config
 from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir
@@ -66,7 +70,7 @@ class VerifiableExecutionSystem:
     # async receiveTransactions(self, txs):
     #     pass
 
-    def sessionSetupPrepare(self, op_intents_json):
+    def session_setup_prepare(self, op_intents_json):
         session_id = 0
         while session_id in self.txs_pool:
             session_id = randint(0, 0xffffffff)
@@ -80,7 +84,7 @@ class VerifiableExecutionSystem:
         self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
 
         # create txs
-        tx_intents, op_owners = VerifiableExecutionSystem.buildGraph(op_intents_json)
+        tx_intents, op_owners = VerifiableExecutionSystem.build_graph(op_intents_json)
 
         wait_user = set(op_owners)
         for owner in op_owners:
@@ -125,6 +129,7 @@ class VerifiableExecutionSystem:
         ))
 
         for idx, tx_intent in enumerate(tx_intents.intents):
+            print(idx, tx_intent)
             pass
             # intent_json = dict(tx_intent.jsonize())
             # fr: str
@@ -160,7 +165,7 @@ class VerifiableExecutionSystem:
         # TODO: async - send tx_intents
         return sign_content, isc, atte_v, tx_intents
 
-    def sessionSetupUpdate(self, session_id, ack_user_name, ack_signature):
+    def session_setup_update(self, session_id, ack_user_name, ack_signature):
         if session_id not in self.txs_pool:
             return KeyError("session (id=" + str(session_id) + ") is not valid anymore")
 
@@ -188,9 +193,9 @@ class VerifiableExecutionSystem:
             ))
 
         if self.txs_pool[session_id]['ack_counter'] == 0:
-            self.sessionSetupFinish(session_id)
+            self.session_setup_finish(session_id)
 
-    def sessionSetupFinish(self, session_id):
+    def session_setup_finish(self, session_id):
         self.info("session-id: {sid} setup finished".format(
             sid=session_id
         ))
@@ -201,15 +206,15 @@ class VerifiableExecutionSystem:
         pass
 
     @staticmethod
-    def buildGraph(op_intents_json):
+    def build_graph(op_intents_json):
         # build eligible Op intents
-        op_intents, op_owners = OpIntent.createopintents(op_intents_json['Op-intents'])
+        op_intents, op_owners = OpIntents.createopintents(op_intents_json['Op-intents'])
 
         # Generate Transaction intents and Dependency Graph
         # TODO:sort Graph
         return TransactionIntents(op_intents, op_intents_json['dependencies']), op_owners
 
-    def sendTxInfoToNSB(self, info):
+    def send_txinfo_to_nsb(self, info):
         pass
 
     def unlockself(self):
@@ -226,10 +231,10 @@ class VerifiableExecutionSystem:
     def watching(self, session_id):
         pass
 
-    def addAttestation(self, session_id, atte):
+    def add_attestation(self, session_id, atte):
         pass
 
-    def addMerkleProof(self, session_id, merk):
+    def add_merkleproof(self, session_id, merk):
         pass
 
     # tmp function

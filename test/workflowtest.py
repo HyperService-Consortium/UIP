@@ -37,7 +37,7 @@ if __name__ == '__main__':
     # load Sample.json
     op_intents_json = FileLoad.getopintents("opintents.json")
 
-    session_content, isc, session_signature, tx_intents = ves.sessionSetupPrepare(op_intents_json)
+    session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
     # print('session_content:', session_content)
     # print('session_signature:', session_signature)
 

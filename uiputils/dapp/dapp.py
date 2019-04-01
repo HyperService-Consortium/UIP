@@ -87,7 +87,7 @@ class DApp:
         if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:
-                ves.sessionSetupUpdate(int(content[0]), self.name, None)
+                ves.session_setup_update(int(content[0]), self.name, None)
             except Exception as e:
                 raise e
         # look through content
@@ -109,7 +109,7 @@ class DApp:
         # print(ack_func.loop_and_wait())
 
         # not try but here ... TODO
-        ret = ves.sessionSetupUpdate(int(content[0]), self.name, signatrue)
+        ret = ves.session_setup_update(int(content[0]), self.name, signatrue)
         if isinstance(ret, Exception):
             raise ret
         else:
