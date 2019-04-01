@@ -1,12 +1,56 @@
 
-# eth modules
-from uiputils.eth.ethtypes import EthChainDNS
+# python modules
+
+
+# ethereum modules
+from eth_utils import is_address
+
+
+# uip modules
+from uiputils.errors import Missing
+
+
+# config
+from uiputils.config import eth_blockchain_info
 
 
 def adduser_f00(user):
     user_name, chain_domain = (split_str[::-1] for split_str in user[::-1].split('.', 1))
     chain_type, chain_id = chain_domain.split('://')
     return ChainDNS.checkuser(chain_type, chain_id, user_name)
+
+
+class EthChainDNS:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def checkuser(chain_id, user_name):
+        if is_address(user_name):
+            return user_name
+        if chain_id in eth_blockchain_info:
+            if user_name in eth_blockchain_info[chain_id]['user']:
+                return eth_blockchain_info[chain_id]['user'][user_name]
+            raise Missing('no user named ' + user_name + ' in ' + chain_id)
+        else:
+            raise Missing('no such chainID: ' + chain_id)
+
+    @staticmethod
+    def checkrelay(chain_id):
+        if chain_id in eth_blockchain_info:
+            if 'relay' in eth_blockchain_info[chain_id]:
+                return eth_blockchain_info[chain_id]['relay']
+            else:
+                raise Missing('this chain has not relay-address' + chain_id)
+        else:
+            raise Missing('no such chainID: ' + chain_id)
+
+    @staticmethod
+    def gethost(chain_id):
+        if chain_id in eth_blockchain_info:
+            return eth_blockchain_info[chain_id]['host']
+        else:
+            raise Missing('no such chainID: ' + chain_id)
 
 
 class ChainDNS:
