@@ -2,11 +2,8 @@
 
 import json, requests, time
 from uiputils.eth import JsonRPC
-from uiputils.cast import uint64string
+from uiputils.uiptools.cast import uint64string
 from uiputils.uiptypes.meta import StateProof, SmartContract
-
-from uiputils.eth.tools import AbiEncoder
-
 
 BLOCKCHAIN = {
     "A": "private_A",

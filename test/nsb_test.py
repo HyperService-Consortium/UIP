@@ -1,18 +1,15 @@
 
 
 # python modules
-import time
 
 # ethereum modules
 from hexbytes import HexBytes
 from web3 import Web3
 # uip modules
-import uiputils.eth as eth
-from uiputils.eth import JsonRPC
-from uiputils.eth.tools import ServiceStart
+from uiputils.ethtools import ServiceStart
 from uiputils.uiptypes import DApp
-from uiputils.eth.ethtypes import EthNetStatusBlockchain
-from uiputils.eth.tools.loc_cal import maplocation, slicelocation
+from uiputils.nsb.nsb import EthNetStatusBlockchain
+from uiputils.ethtools import slicelocation
 baser = DApp({
     'domain': "Ethereum://chain1",
     'name': "nsb",

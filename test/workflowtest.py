@@ -1,11 +1,9 @@
 
 # python modules
-from web3 import Web3
 
 # uip modules
 from uiputils.eth import FileLoad, JsonRPC
 from uiputils.uiptypes import VerifiableExecutionSystem, DApp
-from uiputils.cast import formated_json
 
 # config
 from uiputils.config import HTTP_HEADER
