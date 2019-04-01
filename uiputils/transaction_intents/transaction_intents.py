@@ -3,9 +3,9 @@ import json
 from eth_hash.auto import keccak
 from hexbytes import HexBytes
 
-from uiputils.uiptypes import ChainDNS
-from uiputils.eth.ethtypes import EthTransaction as EthTx
-from uiputils.uiperror import GenerationError
+from uiputils.chain_dns import ChainDNS
+from uiputils.transaction.eth_transaction import EthTransaction as EthTx
+from uiputils.errors import GenerationError
 
 
 ENC = 'utf-8'
@@ -49,7 +49,7 @@ class TransactionIntents:
             tx = EthTx(
                 "transfer",  # transaction type
                 src_chain_id,  # chain_id
-                ChainDNS.checkuser(src_chain_type, src_chain_id, op_intent.src['user_name']),  #src_addr
+                ChainDNS.checkuser(src_chain_type, src_chain_id, op_intent.src['user_name']),  # src_addr
                 ChainDNS.checkrelay(src_chain_type, src_chain_id),  # dst_addr
                 op_intent.amount,  # fund
                 op_intent.unit  # fund_unit
