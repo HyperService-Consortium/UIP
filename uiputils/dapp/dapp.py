@@ -5,14 +5,10 @@ import time
 import rlp
 
 # uip modules
-from uiputils.uiptypes import ChainDNS
+from uiputils.chain_dns import ChainDNS
 
 # eth modules
-from uiputils.eth import JsonRPC
-from uiputils.eth.tools import SignatureVerifier
-
-# ethereum modules
-from web3 import Web3
+from uiputils.ethtools import JsonRPC, SignatureVerifier
 
 # config
 from uiputils.config import HTTP_HEADER
