@@ -1,4 +1,5 @@
 
+
 class InitializeError(Exception):
     def __init__(self, error_info):
         super().__init__(self)
