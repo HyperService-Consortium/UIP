@@ -1,5 +1,5 @@
 
-'some cast methods'
+"""some cast methods"""
 
 # python modules
 import json
@@ -10,7 +10,7 @@ import rlp
 from hexbytes import HexBytes
 
 # uip modules
-from uiputils.uiperror import DecodeFail
+from uiputils.errors import DecodeFail
 
 # constant
 MOD512 = (1 << 512) - 1
