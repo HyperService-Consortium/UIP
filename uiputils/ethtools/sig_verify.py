@@ -1,6 +1,6 @@
 
 # uip modules
-from uiputils.cast import bytestoint
+from uiputils.uiptools.cast import bytestoint
 
 # ethereum modules
 from hexbytes import HexBytes

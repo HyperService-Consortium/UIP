@@ -1,6 +1,6 @@
 
 # eth modules
-from uiputils.uiperror import Mismatch, SolidityTypeError
+from uiputils.errors import Mismatch, SolidityTypeError
 
 # ethereum modules
 from hexbytes import HexBytes
@@ -191,7 +191,7 @@ class AbiDecoder:
             ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
             if 64 + (ret_size << 1) > len(raw_rets):
                 raise OverflowError(
-                    "superflours decode for array: input " + str(len(raw_rets)) + \
+                    "superflours decode for array: input " + str(len(raw_rets)) +
                     " but expect at least " + str(64 + (ret_size << 1))
                 )
             return HexBytes(raw_rets[64:64 + (ret_size << 1)])
@@ -199,7 +199,7 @@ class AbiDecoder:
             ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
             if 64 + (ret_size << 1) > len(raw_rets):
                 raise OverflowError(
-                    "superflours decode for array: input " + str(len(raw_rets)) + \
+                    "superflours decode for array: input " + str(len(raw_rets)) +
                     " but expect at least " + str(64 + (ret_size << 1))
                 )
             return raw_rets[64:64 + (ret_size << 1)].encode('utf-8')
@@ -211,7 +211,7 @@ class AbiDecoder:
                 ret_size = AbiDecoder.decode('uint256', raw_rets[0:64])
                 if 64 + (ret_size << 6) > len(raw_rets):
                     raise OverflowError(
-                        "superflours decode for array: input " + str(len(raw_rets)) + \
+                        "superflours decode for array: input " + str(len(raw_rets)) +
                         " but expect at least " + str(64 + (ret_size << 1))
                     )
                 return [

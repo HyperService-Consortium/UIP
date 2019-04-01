@@ -3,7 +3,7 @@
 from ctypes import CDLL
 
 # uip modules
-from uiputils.gotypes import (
+from uiputils.uiptools.gotypes import (
     GoString,
     GoInt32,
     GoStringSlice,

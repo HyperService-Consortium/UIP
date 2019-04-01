@@ -3,7 +3,9 @@
 import json
 import requests
 
+# config
 from uiputils.config import HTTP_HEADER
+
 
 class JsonRPC(object):
     # JSON-RPC methods

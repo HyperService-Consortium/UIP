@@ -3,7 +3,7 @@
 from eth_hash.auto import keccak
 
 # uip modules
-from uiputils.cast import (
+from uiputils.uiptools.cast import (
     fillbytes32,
     catbytes32,
     bytestoint,
