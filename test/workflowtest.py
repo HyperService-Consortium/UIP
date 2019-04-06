@@ -1,11 +1,10 @@
 
 # python modules
-from web3 import Web3
 
 # uip modules
-from uiputils.eth import FileLoad, JsonRPC
-from uiputils.uiptypes import VerifiableExecutionSystem, DApp
-from uiputils.cast import formated_json
+from uiputils.ethtools import FileLoad, JsonRPC
+from uiputils.ves import VerifiableExecutionSystem
+from uiputils.dapp import DApp
 
 # config
 from uiputils.config import HTTP_HEADER
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     # load Sample.json
     op_intents_json = FileLoad.getopintents("opintents.json")
 
-    session_content, isc, session_signature, tx_intents = ves.sessionSetupPrepare(op_intents_json)
+    session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
     # print('session_content:', session_content)
     # print('session_signature:', session_signature)
 

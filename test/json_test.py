@@ -3,10 +3,12 @@
 import json
 
 # uip modules
-from uiputils import DApp, OpIntent, TransactionIntents
+from uiputils.dapp import DApp
+from uiputils.op_intents import OpIntents
+from uiputils.transaction_intents import TransactionIntents
 
 # eth modules
-from uiputils.eth import FileLoad
+from uiputils.ethtools import FileLoad
 
 
 if __name__ == '__main__':
@@ -14,7 +16,7 @@ if __name__ == '__main__':
     op_intents_json = FileLoad.getopintents("opintents.json")
 
     # build eligible Op intents
-    op_intents = OpIntent.createopintents(op_intents_json['Op-intents'])
+    op_intents = OpIntents.createopintents(op_intents_json['Op-intents'])
     for op_intent in op_intents:
         print("---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----")
         print(json.dumps(op_intent.__dict__, sort_keys=True, indent=4, separators=(', ', ': ')))

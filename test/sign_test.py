@@ -5,7 +5,7 @@ from hexbytes import HexBytes
 from eth_keys import KeyAPI
 
 # eth modules
-from uiputils.eth.tools import SignatureVerifier
+from uiputils.ethtools import SignatureVerifier
 
 # config
 from uiputils.config import ETHSIGN_HEADER

@@ -1,5 +1,4 @@
-
-from uiputils.eth.ethtypes import EthTransaction
+from uiputils.transaction.eth_transaction import EthTransaction
 
 if __name__ == '__main__':
     # chain_id, invoker, contract_address,
