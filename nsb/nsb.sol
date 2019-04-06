@@ -286,7 +286,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     // change it to VES/DAPP/NSB user?
     function addMerkleProof(string memory blockaddr, bytes32 storagehash, bytes32 key, bytes32 val)
         public
-        ownerExists(msg.sender)
+        //ownerExists(msg.sender)
         validMerkleProof(storagehash, key)
         returns (bytes32 keccakhash)
     {
@@ -321,6 +321,10 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         if (votedCount[curPointer] == requiredOwnerCount) {
             if (validCount[curPointer] >= requiredValidVotesCount) {
                 verifiedMerkleProof[keccakhash] = true;
+                CallbackPair storage cb = proofHashCallback[keccakhash];
+                if(cb.isc_addr != address(0)) {
+                    txsReference[cb.isc_addr].txInfo[cb.tx_index].proofHash.push(keccakhash);
+                }
             } else {
                 delete MerkleProofTree[keccakhash];
             }
@@ -349,12 +353,17 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         if (votedCount[curPointer] == requiredOwnerCount) {
             if (validCount[curPointer] >= requiredValidVotesCount) {
                 verifiedMerkleProof[waitingVerifyProof[curPointer]] = true;
+                CallbackPair storage cb = proofHashCallback[waitingVerifyProof[curPointer]];
+                if(cb.isc_addr != address(0)) {
+                    txsReference[cb.isc_addr].txInfo[cb.tx_index].proofHash.push(waitingVerifyProof[curPointer]);
+                }
             } else {
                 delete MerkleProofTree[waitingVerifyProof[curPointer]];
             }
             delete waitingVerifyProof[curPointer];
             delete validCount[curPointer];
             delete votedCount[curPointer];
+
         }
 
         //update the pointer
@@ -487,6 +496,8 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     	public
     	returns (bytes32 keccakhash)
 	{
+	    require(activeISC[isc_addr], "this isc is not active now");
+		require(txsReference[isc_addr].txInfo.length > txindex, "index overflow");
 	    // InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		// require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
 	    keccakhash = addMerkleProof(blockaddr, storagehash, key, val);
