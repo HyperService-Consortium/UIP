@@ -25,14 +25,14 @@ class SignatureVerifier:
     @staticmethod
     def init_signature(sig):
         if isinstance(sig, str):
-            if sig[-2:] != '01':
+            if sig[-2:] != '01' and sig[-2:] != '00':
                 sig = hex(int(sig, 16) - 27)
             try:
                 sig = KeyAPI.Signature(HexBytes(sig))
             except Exception:
                 raise TypeError(type(sig) + "is not verifiable signature")
-        elif isinstance(sig, bytes) or isinstance(sig, HexBytes):
-            if sig[-1] != 1:
+        elif isinstance(sig, bytes):
+            if sig[-1] != 1 and sig[-1] != 0:
                 sig = bytestoint(sig)
                 sig -= 27
             sig = HexBytes(hex(sig))
