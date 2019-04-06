@@ -291,7 +291,7 @@ class InsuranceSmartContract:
             raise Missing('this address is not owner')
         print(owner, "updated fund:", fund)
 
-    def insurance_claim(self, contract_id, atte):
+    def insurance_claim(self, atte):
         pass
 
     def settle_contract(self, contract_id):
