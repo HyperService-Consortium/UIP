@@ -71,18 +71,13 @@ class EthLightNetStatusBlockChain:
             timeout=timeout
         )
 
-    def is_active_isc(self, isc_addr, timeout=25):
-        return ContractFunctionClient(
-            function_call=ContractFunctionWithoutCheck.call(
-                self.host,
-                EthLightNetStatusBlockChain.Function_Sign['is_active_isc'],
-                [isc_addr],
-                ['address'],
-            ),
-            wait_catch=ContractFunctionWithoutCheck.wait(self.host),
-            tx=self.tx,
-            timeout=timeout
-        )
+    def is_active_isc(self, isc_addr, ):
+        return ContractFunctionWithoutCheck.call(
+            self.host,
+            EthLightNetStatusBlockChain.Function_Sign['is_active_isc'],
+            [isc_addr],
+            ['address'],
+        )(self.tx)[-1] == '1'
 
 
 class EthNetStatusBlockchain:

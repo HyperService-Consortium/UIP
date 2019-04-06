@@ -1,3 +1,3 @@
 
 
-from .nsb import NetworkStatusBlockChain
+from .nsb import EthLightNetStatusBlockChain, NetworkStatusBlockChain

@@ -135,12 +135,10 @@ class ContractFunctionClient(object):
 
     def transact(self):
         self.tx_resp = self.transactor()
-        print('txresp', self.tx_resp)
         return self.tx_resp
 
     def call(self):
         self.tx_resp = self.caller()
-        print('txresp', self.tx_resp)
         return self.tx_resp
 
     def wait(self, timeout=None):

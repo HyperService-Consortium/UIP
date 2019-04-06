@@ -20,11 +20,9 @@ if __name__ == '__main__':
     )
 
     unlockself('0x7019fa779024c0a0eac1d8475733eefe10a49f3b', "123456", 'http://127.0.0.1:8545')
+
     lazyfunc = light_nsb.add_transaction_proposal('0x7019fa779024c0a0eac1d8475733eefe10a49f3b', 15)
-    print(lazyfunc)
     lazyfunc.transact()
     print(lazyfunc.loop_and_wait())
 
-    lazyfunc = light_nsb.is_active_isc('0x7019fa779024c0a0eac1d8475733eefe10a49f3b')
-    print(lazyfunc)
-    print(lazyfunc.call())
+    print(light_nsb.is_active_isc('0x7019fa779024c0a0eac1d8475733eefe10a49f3b'))
