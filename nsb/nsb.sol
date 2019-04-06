@@ -64,11 +64,18 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 		Transaction[] txInfo; 
 	}
     
+    struct CallbackPair {
+        // callback isc
+        address isc_addr;
+        // callback tx_count
+        uint tx_index;
+    }
+
     /**********************************************************************
      *                              Storage                               *
      **********************************************************************/
     // MerkleProof System Storage
-    
+
     // The MerkleProofTree
     // keccak256(string + storagehash + key + value) maps to MerkleProof
     bytes32[] public waitingVerifyProof; // slot 0
@@ -90,13 +97,13 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 
     /**********************************************************************/
     // Action System Storage
-    
+
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree; // slot 8
-    
+
     /**********************************************************************/
     // Owner System Storage
-    
+
     // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
     mapping (address => bool) public isOwner; // slot 9
     address[] public owners; // slot 10
@@ -107,19 +114,19 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     // Maps used for adding and removing owners.
     mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 13
     mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 14
-    
+
     /**********************************************************************/
     // Transaction System Storage
-    
+
 	Transactions[] public txsStack; // slot 15
 	mapping (address => Transactions) public txsReference; // slot 16
 	mapping (address => bool) public activeISC; // slot 17
-	mapping (bytes32 => address) public proofHashCallback; // slot 18
-    
+	mapping (bytes32 => CallbackPair) public proofHashCallback; // slot 18
+
     /**********************************************************************
      *                      event & condition                             *
      **********************************************************************/
-    
+
     event addingMerkleProof(string, bytes32, bytes32, bytes32);
 
 
@@ -184,7 +191,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
             isOwner[_owners[i]] = true;
             owners.push(_owners[i]);
         }
-        
+
         requiredOwnerCount = _required;
         requiredValidVotesCount = _required;
     }
@@ -281,9 +288,10 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         public
         ownerExists(msg.sender)
         validMerkleProof(storagehash, key)
+        returns (bytes32 keccakhash)
     {
         MerkleProof memory toAdd = MerkleProof(blockaddr, storagehash, key, val);
-        bytes32 keccakhash = keccak256(abi.encodePacked(blockaddr, storagehash, key, val));
+        keccakhash = keccak256(abi.encodePacked(blockaddr, storagehash, key, val));
 
         require(MerkleProofTree[keccakhash].storagehash == 0, "already in MerkleProofTree");
 
@@ -444,38 +452,30 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     /**********************************************************************
      *                         Transaction System                         *
      **********************************************************************/
-	
-	function txtest(address isc)
-	    public
-	    view
-	    returns (uint len)
-	{
-	    return txsReference[isc].txInfo[0].actionHash.length;
-	}
-	
+
 //	InsuranceSmartContract isc;
-	
-	function addTransactionProposal(address isc_addr)
+
+	function addTransactionProposal(address isc_addr, uint tx_count)
     	public
     	returns (bool addingSuccess)
 	{
-	    InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
-		require(isc.isRawSender(msg.sender), "you have no access to upload ISC to NSB");
+	    // InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
+		// require(isc.isRawSender(msg.sender), "you have no access to upload ISC to NSB");
 		// addingSuccess = false;
 		txsStack.length++;
 		Transactions storage txs = txsStack[txsStack.length - 1];
-// 		txs.txInfo.length = isc.txInfoLength();
+ 		txs.txInfo.length = tx_count;
 		txs.contract_addr = isc_addr;
 		txsReference[isc_addr] = txsStack[txsStack.length - 1];
 		// for(uint idx=0; idx < txs.txInfo.length; idx++)
 		// {
 		//     txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
 		// }
-		
+
 		activeISC[isc_addr] = true;
 		addingSuccess = true;
 	}
-	
+
 	function addMerkleProofProposal(
 		address isc_addr,
 		uint txindex,
@@ -487,13 +487,12 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     	public
     	returns (bytes32 keccakhash)
 	{
-	    InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
-		require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
-	    addMerkleProof(blockaddr, storagehash, key, val);
-		proofHashCallback[keccakhash] = isc_addr;
-		keccakhash = keccak256(abi.encodePacked(blockaddr, storagehash, key, val));
+	    // InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
+		// require(isc.isTransactionOwner(msg.sender, txindex), "you have no access to update the merkle proof");
+	    keccakhash = addMerkleProof(blockaddr, storagehash, key, val);
+		proofHashCallback[keccakhash] = CallbackPair(isc_addr, txindex);
 	}
-	
+
 	function addActionProposal(
 		address isc_addr,
 		uint txindex,
@@ -504,23 +503,25 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     	public
     	returns (bytes32 keccakhash)
 	{
-		// InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
+	    require(activeISC[isc_addr], "this isc is not active now");
+	    // InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		// assert isc.isTransactionOwner(msg.sender, txindex, actionindex)
 		// assert actionindex < actionHash.length
 	    Transactions storage txs = txsReference[isc_addr];
+		require(txs.txInfo.length > txindex, "index overflow");
 		if (actionindex >= txs.txInfo[txindex].actionHash.length) {
 		    txs.txInfo[txindex].actionHash.length = actionindex + 1;
 		}
 		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
 	}
-	
+
 	function closeTransaction(address isc_addr)
     	public
     	returns (bool closeSuccess)
 	{
-	    InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
+	    // InsuranceSmartContract isc = InsuranceSmartContract(isc_addr);
 		closeSuccess = false;
-		require(isc.closed(), "ISC is active now");
+		// require(isc.closed(), "ISC is active now");
 		activeISC[isc_addr] = false;
 		closeSuccess = true;
 	}
