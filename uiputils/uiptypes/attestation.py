@@ -1,16 +1,22 @@
-from typing import List
 
+# python modules
 import rlp
 import json
-from uiputils.transaction import StateType
-from uiputils.uiptools.cast import bytestoint
-from uiputils.errors import DecodeFail, VerificationError
-from uiputils.ethtools import SignatureVerifier
-from eth_keys import KeyAPI
+
+# ethereum modules
 from hexbytes import HexBytes
 from eth_keys.datatypes import PrivateKey
 from eth_hash.auto import keccak
-from eth_utils import to_normalized_address
+
+# uip modules
+from uiputils.transaction import StateType
+from uiputils.uiptools.cast import bytestoint
+from uiputils.errors import DecodeFail, VerificationError
+
+# eth modules
+from uiputils.ethtools import SignatureVerifier
+
+# config
 from uiputils.config import ETHSIGN_HEADER
 
 
@@ -48,7 +54,6 @@ class Attestation(object):
     def __init__(self, atte_list: bytes or list):
         if isinstance(atte_list, bytes):
             atte_list = rlp.decode(atte_list)
-        print(atte_list)
         self.content, self.signatures = Attestation.recover_atte(atte_list)
 
     @staticmethod
@@ -75,6 +80,10 @@ class Attestation(object):
         ])
 
     @staticmethod
+    def create_attestation(content_list: list, signature_pair: list):
+        return Attestation(rlp.encode([content_list, [signature_pair]]))
+
+    @staticmethod
     def recover_content(content_list: list):
         if len(content_list) != 4:
             raise ValueError(
@@ -88,19 +97,21 @@ class Attestation(object):
             content_list[2] = bytestoint(content_list[2])
             content_list[3] = bytestoint(content_list[3])
         except Exception as e:
-            raise DecodeFail(" failed when recovering content, " + str(e))
+            raise DecodeFail("failed when recovering content, " + str(e))
         return content_list
 
     @staticmethod
     def recover_signatures(atte_list: list):
         left_list, res_list = [], []
         for sig, addr in atte_list[1]:
-            rlped_data = rlp.encode([atte_list[0], left_list])
-            left_list.append([sig, addr])
-            print(HexBytes(sig).hex())
-            sig = SignatureVerifier.init_signature(HexBytes(sig).hex())
-            addr = addr.decode(ENC)
-            res_list.append([sig, addr])
+            try:
+                rlped_data = rlp.encode([atte_list[0], left_list])
+                left_list.append([sig, addr])
+                sig = SignatureVerifier.init_signature(HexBytes(sig).hex())
+                addr = addr.decode(ENC)
+                res_list.append([sig, addr])
+            except Exception as e:
+                raise DecodeFail("failed when recovering signatures, " + str(e))
             if not SignatureVerifier.verify_by_raw_message(sig, keccak(rlped_data), addr):
                 raise VerificationError(
                     "wrong signature when verifying: " +
@@ -127,7 +138,10 @@ class Attestation(object):
         return keccak(self.encode())
 
 
+
 if __name__ == '__main__':
+    import time
+    beg = time.time()
     pbx = PrivateKey(
         b'\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78'
         b'\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78\x12\x34\x56\x78'
@@ -136,16 +150,16 @@ if __name__ == '__main__':
         b'\x23\x45\x67\x89\x23\x45\x67\x89\x23\x45\x67\x89\x23\x45\x67\x89'
         b'\x23\x45\x67\x89\x23\x45\x67\x89\x23\x45\x67\x89\x23\x45\x67\x89'
     )
-    print(pbx.public_key.to_address().encode('utf-8'))
     content = [
-        bytes(json.dumps(
+        json.dumps(
             {"from": "0x12345678", "to": "0x87654321", "data": "..."},
             sort_keys=True
-        ).encode('utf-8')),
+        ).encode('utf-8'),
         b'\x01',
         b'\x02',
         b'\x03'
     ]
+    print("time used: ", time.time() - beg)
     signaturex = [
         pbx.sign_msg(
             ETHSIGN_HEADER + b'\x33\x32' + keccak(rlp.encode([content, []]))
@@ -153,12 +167,10 @@ if __name__ == '__main__':
         pbx.public_key.to_address()
     ]
     rlped_datax = rlp.encode([content, [signaturex]])
-    print(rlped_datax)
-    import time
-    time.sleep(1)
-    attex = Attestation(rlped_datax)
-    print(attex.content, attex.signatures)
-    print(attex.encode() == rlped_datax)
+    attex = Attestation.create_attestation(content, signaturex)
+    print("time used: ", time.time() - beg)
+    # print(attex.content, attex.signatures)
+    # print(attex.encode() == rlped_datax)
     attex.sign_and_encode([
         pby.sign_msg(
             ETHSIGN_HEADER + b'\x33\x32' + attex.hash()
@@ -167,5 +179,29 @@ if __name__ == '__main__':
     ])
     rlped_datay = attex.encode()
     attey = Attestation(rlped_datay)
-    print(attey.content, attey.signatures)
-    print(attey.encode() == rlped_datay)
+    # print(attey.content, attey.signatures)
+    # print(attey.encode() == rlped_datay)
+
+    print("time used: ", time.time() - beg)
+
+    signaturex = [
+        pbx.sign_msg(
+            ETHSIGN_HEADER + b'\x33\x32' + attey.hash()
+        ),
+        pbx.public_key.to_address()
+    ]
+    rlped_datax = attex.sign_and_encode(signaturex)
+    attex = Attestation(rlped_datax)
+
+    print("time used: ", time.time() - beg)
+
+    signaturey = [
+        pby.sign_msg(
+            ETHSIGN_HEADER + b'\x33\x32' + attex.hash()
+        ),
+        pby.public_key.to_address()
+    ]
+    rlped_datay = attex.sign_and_encode(signaturey)
+    attey = Attestation(rlped_datay)
+
+    print("time used: ", time.time() - beg)

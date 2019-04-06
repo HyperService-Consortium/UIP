@@ -6,12 +6,17 @@ import rlp
 
 # uip modules
 from uiputils.chain_dns import ChainDNS
+from uiputils.uiptypes.attestation import Attestation
+from uiputils.errors import VerificationError
+from uiputils.transaction import StateType
 
 # eth modules
 from uiputils.ethtools import JsonRPC, SignatureVerifier
 
 # ethereum modules
 from web3 import Web3
+from hexbytes import HexBytes
+from eth_hash.auto import keccak
 
 # config
 from uiputils.config import HTTP_HEADER
@@ -117,3 +122,37 @@ class DApp:
             raise ret
         else:
             print("success")
+
+    def receive(self, rlped_atte):
+        try:
+            # TODO: verify attestation is on the nsb
+            atte = Attestation(rlped_atte)
+        except VerificationError as e:
+            # TODO: stop ISC ?
+            raise e
+
+        return atte
+
+    def sign_atte(self, atte: Attestation):
+        return atte.sign_and_encode([
+            self.sign(atte.hash()),
+            self.address
+        ])
+
+    def init_attestation(self, onchain_tx: dict, state: StateType, session_index: int, tx_index: int):
+        content_list = [
+            json.dumps(
+                {"from": "0x12345678", "to": "0x87654321", "data": "..."},
+                sort_keys=True
+            ).encode('utf-8'),
+            HexBytes(state.value),
+            HexBytes(session_index),
+            HexBytes(tx_index)
+        ]
+        return Attestation.create_attestation(
+            content_list,
+            [
+                self.sign(keccak(rlp.encode([content_list, []]))),
+                self.address
+            ]
+        )

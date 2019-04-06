@@ -30,7 +30,8 @@ SLOT_MERKLEPROOFTREE = 6
 class EthLightNetStatusBlockChain:
     Function_Sign = {
         'add_transaction_proposal': "0x3aadafba",
-        'is_active_isc': "0x5640ee94"
+        'add_action_proposal':      "0x5959c982",
+        'is_active_isc':            "0x5640ee94"
     }
 
     def __init__(
@@ -65,6 +66,27 @@ class EthLightNetStatusBlockChain:
                 EthLightNetStatusBlockChain.Function_Sign['add_transaction_proposal'],
                 [isc_addr, tx_count],
                 ['address', 'uint'],
+            ),
+            wait_catch=ContractFunctionWithoutCheck.wait(self.host),
+            tx=self.tx,
+            timeout=timeout
+        )
+
+    def add_action_proposal(
+            self,
+            isc_addr,
+            tx_index,
+            action_index,
+            msg_hash,
+            signature,
+            timeout=25
+    ):
+        return ContractFunctionClient(
+            function_transact=ContractFunctionWithoutCheck.transact(
+                self.host,
+                EthLightNetStatusBlockChain.Function_Sign['add_action_proposal'],
+                [isc_addr, tx_index, action_index, msg_hash, signature],
+                ['address', 'uint', 'uint', 'bytes32', 'bytes'],
             ),
             wait_catch=ContractFunctionWithoutCheck.wait(self.host),
             tx=self.tx,
