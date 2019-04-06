@@ -1,34 +1,48 @@
-{
-    "Op-intents": [
-        {
-            "name": "Op1",
-            "op_type": "Payment",
-            "src": {
-                "domain":"Ethereum://chain1",
-                "user_name": "X"
-            },
-            "dst": {
-                "domain":"Ethereum://chain2",
-                "user_name": "Y"
-            },
-            "amount": 1000,
-            "unit": "wei"
-        },
-        {
-            "op_type": "ContractInvocation",
-            "name": "Op2",
-            "invoker": "Y",
-            "contract_domain": "Ethereum://chain2",
-            "contract_addr": "0x85854fe3853b7A51576bFd78564Ec1993f8820d1",
-            "contract_code": null,
-            "func": "isOwner",
-            "parameters": ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"],
-            "parameters_description": ["address"]
+[
+  {
+    "name": "Op1",
+    "op_type": "Payment",
+    "src": {
+        "domain":"Ethereum://chain1",
+        "user_name": "X"
+    },
+    "dst": {
+        "domain":"Ethereum://chain2",
+        "user_name": "Y"
+    },
+    "amount": 1000,
+    "unit": "wei"
+  },
+  {
+    "name": "Op2",
+    "op_type": "ContractInvocation",
+    "invoker": "Y",
+    "contract_domain": "Ethereum://chain2",
+    "contract_addr": "addr",
+    "contract_code": "contractname",
+    "func": "trans",
+    "parameters": [
+      {
+        "Type": "int",
+        "Value": {
+          "int": 10
         }
-    ],
-    "dependencies": [{
-        "left": "Op1",
-        "right": "Op2",
-        "dep": "before"
-    }]
+      },
+      {
+        "Type": "string",
+        "Value": {
+          "receiver": "contract1",
+          "field": "name",
+          "pos": 1
+        }
+      }
+    ]
+  },
+  "dependencies":[{
+  "left": "o1",
+  "right": "o2",
+  "dep": "before"
 }
+]
+
+]
