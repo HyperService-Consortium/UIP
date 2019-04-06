@@ -6,10 +6,20 @@ from web3 import Web3
 # uip modules
 from uiputils.uiptools.cast import bytestoint
 from uiputils.uiptypes import MerkleProof
+from uiputils.contract.wrapped_contract_function import(
+    ContractFunctionWithoutCheck,
+    ContractFunctionClient
+)
 
 # eth modules
 from uiputils.contract.eth_contract import EthContract
-from uiputils.ethtools import Prover, AbiDecoder, LocationTransLator
+from uiputils.ethtools import(
+    AbiEncoder,
+    AbiDecoder,
+    Prover,
+    JsonRPC,
+    LocationTransLator
+)
 
 # constant
 SLOT_WAITING_QUEUE = 0
@@ -18,32 +28,61 @@ SLOT_MERKLEPROOFTREE = 6
 
 
 class EthLightNetStatusBlockChain:
+    Function_Sign = {
+        'add_transaction_proposal': "0x3aadafba",
+        'is_active_isc': "0x5640ee94"
+    }
+
     def __init__(
         self,
         owner_addr,
         host,
         nsb_addr,
-        nsb_abi_dir,
         tx=None,
         timeout=25
     ):
-        self.handle = EthContract(host, nsb_addr, nsb_abi_dir, timeout=timeout)
-        self.web3 = self.handle.web3
-        self.address = self.handle.address
+        self.host = host
+        self.address = nsb_addr
         self.owner = Web3.toChecksumAddress(owner_addr)
-        self.pf_pool = {}
+        self.timeout = timeout
         if tx is None:
             self.tx = {
                 "from": self.owner,
-                "gas": hex(400000)
+                "gas": hex(4000000),
+                "data": None,
+                "to": nsb_addr
             }
         else:
             self.tx = tx.copy()
             if 'from' in self.tx:
                 self.tx['from'] = Web3.toChecksumAddress(self.tx['from'])
+            self.tx["to"] = nsb_addr
 
-    def add_transaction_proposal(self, addr):
-        return self.handle.funct('addTransactionProosal', self.tx, addr)
+    def add_transaction_proposal(self, isc_addr, tx_count, timeout=25):
+        return ContractFunctionClient(
+            function_transact=ContractFunctionWithoutCheck.transact(
+                self.host,
+                EthLightNetStatusBlockChain.Function_Sign['add_transaction_proposal'],
+                [isc_addr, tx_count],
+                ['address', 'uint'],
+            ),
+            wait_catch=ContractFunctionWithoutCheck.wait(self.host),
+            tx=self.tx,
+            timeout=timeout
+        )
+
+    def is_active_isc(self, isc_addr, timeout=25):
+        return ContractFunctionClient(
+            function_call=ContractFunctionWithoutCheck.call(
+                self.host,
+                EthLightNetStatusBlockChain.Function_Sign['is_active_isc'],
+                [isc_addr],
+                ['address'],
+            ),
+            wait_catch=ContractFunctionWithoutCheck.wait(self.host),
+            tx=self.tx,
+            timeout=timeout
+        )
 
 
 class EthNetStatusBlockchain:
@@ -176,8 +215,8 @@ class EthNetStatusBlockchain:
 
     # transaction system
 
-    def add_transaction_proposal(self, addr, gasuse=None):
-        return self.handle.lazyfunct('addTransactionProposal', self.tx, Web3.toChecksumAddress(addr), gasuse=gasuse)
+    def add_transaction_proposal(self, addr, tx_count, gasuse=None):
+        return self.handle.lazyfunct('addTransactionProposal', self.tx, Web3.toChecksumAddress(addr), tx_count, gasuse=gasuse)
 
     def is_active_isc(self, addr):
         return self.handle.func('activeISC', Web3.toChecksumAddress(addr))
