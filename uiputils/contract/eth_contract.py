@@ -2,54 +2,14 @@
 # ethereum modules
 from hexbytes import HexBytes
 from web3 import Web3
-from web3.utils.threads import Timeout as Web3Timeout
 
 # eth modules
+from uiputils.contract.wrapped_contract_function import ContractFunctionClient
 from uiputils.ethtools import ServiceStart, FileLoad
 
 
 class EthContract:
     # return a contract that can transact with web3
-
-    class WrapedContractFunction:
-        def __init__(self, bounded_contract_function, wait_catch=None, tx=None, timeout=10):
-            self.func = bounded_contract_function
-            self.timeout = timeout
-            self.wait_catch = wait_catch
-            self.tx = tx
-            print(self.tx)
-            self.tx_resp = None
-
-        def transact(self):
-            self.tx_resp = HexBytes(self.func.transact(self.tx)).hex()
-
-        def call(self):
-            self.func.call()
-
-        def wait(self, timeout=None):
-            if self.tx_resp is None:
-                raise LookupError("nothing to wait")
-            if self.wait_catch is None:
-                raise IndexError("catch-function doesn't exist")
-            try:
-                if timeout:
-                    return self.wait_catch(self.tx_resp, timeout)
-                else:
-                    return self.wait_catch(self.tx_resp, self.timeout)
-            except Web3Timeout:
-                return None
-            except Exception as e:
-                raise e
-
-        def loop_and_wait(self):
-            while True:
-                try:
-                    tx_result = self.wait(timeout=998244353)
-                    if tx_result is None:
-                        continue
-                    return tx_result
-                except Exception as e:
-                    raise e
 
     def __init__(self, web3_addr, contract_addr="", contract_abi=None, contract_bytecode=None, timeout=30):
 
@@ -97,9 +57,11 @@ class EthContract:
             # is it necessary to deep-copy?
             to_send_tx_head = tx_head.copy()
             to_send_tx_head['gas'] = gasuse
-        return EthContract.WrapedContractFunction(
+        func = self.handle.functions[funcname](*args)
+        return ContractFunctionClient(
             # bounded_contract_function
-            self.handle.functions[funcname](*args),
+            func.transact,
+            func.call,
             # wait_catch
             self.web3.eth.waitForTransactionReceipt,
             to_send_tx_head,

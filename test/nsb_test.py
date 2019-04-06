@@ -17,7 +17,7 @@ baser = DApp({
     'passphrase': "123456"
 })
 # beiyong 0x92a875bff412aea7fab74daa1cba3f7b94415ac9
-nsb_addr = Web3.toChecksumAddress("0x822b41735c7f8f6cef522599f19df3bc3c2c55bf")
+nsb_addr = Web3.toChecksumAddress("0x5bc26e3c0067c62b95ad11dfbfcbfc666876fdd4")
 # ("0x076122c56613fc1e3ae97d715ca7cb6a35a934c6")
 
 nsb_abi_dir = "../nsb/nsb.abi"
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     print('waiting to verify [', nsbt.get_queue_l(), ',', nsbt.get_queue_r(), ')')
 
-    update_func = nsbt.add_transaction_proposal('0xd722836602e9e2f576cabef8701bfa5b591192de', gasuse=hex(5000000))
+    update_func = nsbt.add_transaction_proposal('0xd722836602e9e2f576cabef8701bfa5b591192de', 3, gasuse=hex(5000000))
 
     update_func.transact()
     print(update_func.loop_and_wait())

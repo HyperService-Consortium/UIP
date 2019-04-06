@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import json, requests, time
-from uiputils.eth import JsonRPC
+from uiputils.ethtools import JsonRPC
 from uiputils.uiptools.cast import uint64string
 from uiputils.uiptypes.meta import StateProof, SmartContract
 
@@ -183,8 +183,9 @@ if __name__ == '__main__':
     # chain1
     # 0x7019fa779024c0a0eac1d8475733eefe10a49f3b
     # buptchain1
-    # 0xf4dacff5eba7426295e27a32d389fff3cde55de2
-    with open('./nsb-isc/nsb.bin', 'r') as f:
+    # 0x5bc26e3c0067c62b95ad11dfbfcbfc666876fdd4
+    # 0x4f358c8e9b891082eb61fb96f1a0cbdf23c14b6b
+    with open('./nsb/nsb.bin', 'r') as f:
         NSBBytecode = f.read()
         NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
         NSB_contract = SmartContract(

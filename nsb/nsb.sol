@@ -70,12 +70,12 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         // callback tx_count
         uint tx_index;
     }
-
+    
     /**********************************************************************
      *                              Storage                               *
      **********************************************************************/
     // MerkleProof System Storage
-
+    
     // The MerkleProofTree
     // keccak256(string + storagehash + key + value) maps to MerkleProof
     bytes32[] public waitingVerifyProof; // slot 0
@@ -97,13 +97,13 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 
     /**********************************************************************/
     // Action System Storage
-
+    
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree; // slot 8
-
+    
     /**********************************************************************/
     // Owner System Storage
-
+    
     // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
     mapping (address => bool) public isOwner; // slot 9
     address[] public owners; // slot 10
@@ -114,21 +114,22 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     // Maps used for adding and removing owners.
     mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 13
     mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 14
-
+    
     /**********************************************************************/
     // Transaction System Storage
-
+    
 	Transactions[] public txsStack; // slot 15
 	mapping (address => Transactions) public txsReference; // slot 16
 	mapping (address => bool) public activeISC; // slot 17
 	mapping (bytes32 => CallbackPair) public proofHashCallback; // slot 18
-
+    
     /**********************************************************************
      *                      event & condition                             *
      **********************************************************************/
-
+    
     event addingMerkleProof(string, bytes32, bytes32, bytes32);
-
+    event addISCSuccess(address, uint);
+    
 
     modifier ownerDoesNotExist(address owner) {
         require(!isOwner[owner], "owner exists");
@@ -191,7 +192,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
             isOwner[_owners[i]] = true;
             owners.push(_owners[i]);
         }
-
+        
         requiredOwnerCount = _required;
         requiredValidVotesCount = _required;
     }
@@ -363,7 +364,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
             delete waitingVerifyProof[curPointer];
             delete validCount[curPointer];
             delete votedCount[curPointer];
-
+            
         }
 
         //update the pointer
@@ -461,9 +462,9 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     /**********************************************************************
      *                         Transaction System                         *
      **********************************************************************/
-
+	
 //	InsuranceSmartContract isc;
-
+	
 	function addTransactionProposal(address isc_addr, uint tx_count)
     	public
     	returns (bool addingSuccess)
@@ -480,11 +481,12 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 		// {
 		//     txs.txInfo[idx].txhash = isc.getTxInfoHash(idx);
 		// }
-
+		
 		activeISC[isc_addr] = true;
 		addingSuccess = true;
+		emit addISCSuccess(isc_addr, tx_count);
 	}
-
+	
 	function addMerkleProofProposal(
 		address isc_addr,
 		uint txindex,
@@ -503,7 +505,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 	    keccakhash = addMerkleProof(blockaddr, storagehash, key, val);
 		proofHashCallback[keccakhash] = CallbackPair(isc_addr, txindex);
 	}
-
+	
 	function addActionProposal(
 		address isc_addr,
 		uint txindex,
@@ -525,7 +527,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
 		}
 		keccakhash = txs.txInfo[txindex].actionHash[actionindex] = addAction(msghash, signature);
 	}
-
+	
 	function closeTransaction(address isc_addr)
     	public
     	returns (bool closeSuccess)
