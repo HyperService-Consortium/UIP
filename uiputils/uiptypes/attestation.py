@@ -97,7 +97,7 @@ class Attestation(object):
             content_list[2] = bytestoint(content_list[2])
             content_list[3] = bytestoint(content_list[3])
         except Exception as e:
-            raise DecodeFail("failed when recovering content, " + str(e))
+            raise DecodeFail("failed when recovering content, " + str(type(e)) + str(e))
         return content_list
 
     @staticmethod
@@ -107,11 +107,15 @@ class Attestation(object):
             try:
                 rlped_data = rlp.encode([atte_list[0], left_list])
                 left_list.append([sig, addr])
-                sig = SignatureVerifier.init_signature(HexBytes(sig).hex())
+                if len(sig) > 65:
+                    sig = sig.decode(ENC)
+                else:
+                    sig = HexBytes(sig).hex()
+                sig = SignatureVerifier.init_signature(sig)
                 addr = addr.decode(ENC)
                 res_list.append([sig, addr])
             except Exception as e:
-                raise DecodeFail("failed when recovering signatures, " + str(e))
+                raise DecodeFail("failed when recovering signatures, " + str(type(e)) + str(e))
             if not SignatureVerifier.verify_by_raw_message(sig, keccak(rlped_data), addr):
                 raise VerificationError(
                     "wrong signature when verifying: " +
@@ -132,7 +136,7 @@ class Attestation(object):
 
     @staticmethod
     def encode_signatures(signatures_list):
-        return [[sig.to_bytes(), addr.encode(ENC)] for sig, addr in signatures_list]
+        return [[SignatureVerifier.init_signature(sig).to_bytes(), addr.encode(ENC)] for sig, addr in signatures_list]
 
     def hash(self):
         return keccak(self.encode())

@@ -11,17 +11,17 @@ ETHSIGN_HEADER = b"\x19Ethereum Signed Message:\n"
 eth_blockchain_info = {
     'chain1': {
         'host': 'http://127.0.0.1:8545',
-        'relay': "0x7019fa779024c0a0eac1d8475733eefe10a49f3b",
         'user': {
             'X': "0x47a1cdb6594d6efed3a6b917f2fbaa2bbcf61a2e",
-            'nsb': "0x4f984aa7d262372df92f85af9be8d2df09ac4018"
+            'nsb': "0x4f984aa7d262372df92f85af9be8d2df09ac4018",
+            'relay_nsb': "0x7019fa779024c0a0eac1d8475733eefe10a49f3b"
         }
     },
     'chain2': {
         'host': 'http://127.0.0.1:8545',
-        'relay': "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737",
         'user': {
-            'Y': "0x91f030cfec606f9ff832aef20f768bf3a129b59c"
+            'Y': "0x91f030cfec606f9ff832aef20f768bf3a129b59c",
+            'relay_nsb': "0xd051a43d3ea62afff3632bca3d5abf68bc6fd737"
         }
     }
 }

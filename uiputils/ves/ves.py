@@ -3,16 +3,20 @@
 from random import randint
 import rlp
 import logging.handlers
+import json
 
 # ethereum modules
 from hexbytes import HexBytes
+from eth_hash.auto import keccak
 
 # uip modules
 from uiputils.op_intents import OpIntents
+from uiputils.transaction import StateType
 from uiputils.transaction_intents import TransactionIntents
 from uiputils.chain_dns import ChainDNS
 from uiputils.isc import InsuranceSmartContract
-from uiputils.errors import Missing, Mismatch
+from uiputils.errors import Missing, Mismatch, VerificationError
+from uiputils.uiptypes import Attestation
 
 # eth modules
 from uiputils.ethtools import JsonRPC, SignatureVerifier
@@ -20,6 +24,9 @@ from uiputils.nsb import EthLightNetStatusBlockChain
 
 # config
 from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir
+
+# constant
+ENC = 'utf-8'
 
 
 class VerifiableExecutionSystem:
@@ -119,17 +126,18 @@ class VerifiableExecutionSystem:
                 INCLUDE_PATH + '/isc.abi',
                 ves=self,
                 tx_head={'from': self.address, 'gas': hex(400000)},
-                rlped_txs=sign_bytes,
-                signature=atte_v,
-                tx_count=len(tx_intents.intents)
+                # rlped_txs=sign_bytes,
+                # signature=atte_v,
+                # tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                # contract_addr="0x0092044dd5f294860d722a75d295cac378994409"
+                contract_addr="0xf8ceffb8a6a503ed6417150c2185e2257fdb309e"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
                 sid=session_id,
                 exec=str(e)
             ))
+            raise e
         self.info("session-id: {sid} ISC bulit at {isc_addr}".format(
             sid=session_id,
             isc_addr=isc.address
@@ -137,36 +145,37 @@ class VerifiableExecutionSystem:
 
         # update isc's information
         for idx, tx_intent in enumerate(tx_intents.intents):
+            pass
             # print(idx, tx_intent)
-            intent_json = dict(tx_intent.jsonize())
-            fr: str
-            to: str
-            amt: str
-            if 'from' in intent_json:
-                fr = intent_json['from']
-            if 'to' in intent_json:
-                to = intent_json['to']
-            if 'value' in intent_json:
-                amt = int(intent_json['value'], 16)
-            self.unlockself()
-            update_lazyfunc = isc.handle.update_tx_info(
-                idx,
-                fr=fr,
-                to=to,
-                seq=idx,
-                amt=amt,
-                meta=tx_intent.__dict__,
-                lazy=True
-            )
-            print(update_lazyfunc, type(update_lazyfunc))
-            update_lazyfunc.transact()
-            update_resp = update_lazyfunc.loop_and_wait()
-            print(update_resp['transactionHash'])
-            self.unlockself()
-            print(isc.handle.get_transaction_info(idx))
-
-            self.unlockself()
-            print(isc.handle.freeze_info(idx))
+            # intent_json = dict(tx_intent.jsonize())
+            # fr: str
+            # to: str
+            # amt: str
+            # if 'from' in intent_json:
+            #     fr = intent_json['from']
+            # if 'to' in intent_json:
+            #     to = intent_json['to']
+            # if 'value' in intent_json:
+            #     amt = int(intent_json['value'], 16)
+            # self.unlockself()
+            # update_lazyfunc = isc.handle.update_tx_info(
+            #     idx,
+            #     fr=fr,
+            #     to=to,
+            #     seq=idx,
+            #     amt=amt,
+            #     meta=tx_intent.__dict__,
+            #     lazy=True
+            # )
+            # print(update_lazyfunc, type(update_lazyfunc))
+            # update_lazyfunc.transact()
+            # update_resp = update_lazyfunc.loop_and_wait()
+            # print(update_resp['transactionHash'])
+            # self.unlockself()
+            # print(isc.handle.get_transaction_info(idx))
+            #
+            # self.unlockself()
+            # print(isc.handle.freeze_info(idx))
             # TODO: check isc-info updated
 
         # undate session information
@@ -278,6 +287,40 @@ class VerifiableExecutionSystem:
                 self.appenduserlink(user)
         else:  # assuming be class dApp
             self.user_pool[users.name] = users
+
+    def receive(self, rlped_atte):
+        try:
+            # TODO: verify attestation is on the nsb
+            atte = Attestation(rlped_atte)
+        except VerificationError as e:
+            # TODO: stop ISC ?
+            raise e
+
+        return atte
+
+    def sign_attestation(self, atte: Attestation):
+        return atte.sign_and_encode([
+            self.sign(HexBytes(atte.hash()).hex()),
+            self.address
+        ])
+
+    def init_attestation(self, onchain_tx: dict, state: StateType, session_index: int, tx_index: int):
+        content_list = [
+            json.dumps(
+                onchain_tx,
+                sort_keys=True
+            ).encode(ENC),
+            HexBytes(state.value),
+            HexBytes(session_index),
+            HexBytes(tx_index)
+        ]
+        return Attestation.create_attestation(
+            content_list,
+            [
+                self.sign(HexBytes(keccak(rlp.encode([content_list, []]))).hex()),
+                self.address
+            ]
+        )
 
     def debug(self, msg):
         VerifiableExecutionSystem.VesLog.logger.debug(msg, extra={'vesaddr': self.address})

@@ -5,7 +5,7 @@
 from uiputils.ethtools import FileLoad, JsonRPC
 from uiputils.ves import VerifiableExecutionSystem
 from uiputils.dapp import DApp
-from uiputils.nsb.nsb import EthLightNetStatusBlockChain
+from uiputils.chain_dns import ChainDNS
 from uiputils.transaction import StateType
 
 # config
@@ -18,6 +18,18 @@ info_x = {
 info_y = {
     'domain': "Ethereum://chain2",
     'name': "Y",
+    'passphrase': "123456"
+}
+
+info_relay_x = {
+    'domain': "Ethereum://chain1",
+    'name': "relay_nsb",
+    'passphrase': "123456"
+}
+
+info_relay_y = {
+    'domain': "Ethereum://chain2",
+    'name': "relay_nsb",
     'passphrase': "123456"
 }
 
@@ -35,6 +47,8 @@ if __name__ == '__main__':
     ves = VerifiableExecutionSystem()
     dapp_x = DApp(info_x)
     dapp_y = DApp(info_y)
+    relay_x = DApp(info_relay_x)
+    relay_y = DApp(info_relay_y)
     ves.appenduserlink([dapp_x, dapp_y])
 
     # load Sample.json
@@ -49,14 +63,14 @@ if __name__ == '__main__':
 
     print(isc)
 
-    print(isc.handle.handle.funcs())
-
-    print("raw: ", ves.address)
-    print(isc.handle.is_owner(ves.address))
-    print(isc.handle.is_raw_sender(ves.address))
-    print(isc.handle.is_owner(dapp_x.address))
-    print(isc.handle.is_owner(dapp_y.address))
-    print(isc.handle.tx_info_length())
+    # print(isc.handle.handle.funcs())
+    #
+    # print("raw: ", ves.address)
+    # print(isc.handle.is_owner(ves.address))
+    # print(isc.handle.is_raw_sender(ves.address))
+    # print(isc.handle.is_owner(dapp_x.address))
+    # print(isc.handle.is_owner(dapp_y.address))
+    # print(isc.handle.tx_info_length())
 
     print(isc.handle.get_isc_state())
     # print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
@@ -65,89 +79,45 @@ if __name__ == '__main__':
 
     print(on_chain_txs)
 
-    tx = on_chain_txs[0]
-    atte = dapp_x.init_attestation(tx, StateType.inited, int(session_content[0]), 0)
-    # update
+    user_table = [
+        (dapp_x, relay_x),
+        (relay_y, dapp_y),
+        (dapp_y, ves)
+    ]
 
-    # relay
-    atte_rec = dapp_x.receive(atte.encode())
-    rlped_data = atte_rec.sign_and_encode()
-    # update
+    for idx, [u, v] in enumerate(user_table):
+        # assert tx_intent is on ISC
 
-    # check
-    dapp_x.receive(rlped_data)
+        # compute on_chan_tx
+        tx = tx_intents.intents[idx].jsonize()
+        print(tx)
+        atte = u.init_attestation(tx, StateType.inited, int(session_content[0]), 0)
+        # update
 
-    # open
-    unlock_user(tx['from'])
-    tx_json = JsonRPC.eth_send_transaction(tx)
-    print(JsonRPC.send(tx_json, HTTP_HEADER, "http://127.0.0.1:8545"))
-    # verify_transaction_state?
-    atte = dapp_x.init_attestation(tx, StateType.open, int(session_content[0]), 0)
+        # relay
+        atte_rec = v.receive(atte.encode())
+        rlped_data = v.sign_attestation(atte_rec)
+        # update
 
-    # relay(ves)
-    dapp_x.receive(atte.encode())
-    atte = dapp_x.init_attestation(tx, StateType.opened, int(session_content[0]), 0)
+        # check
+        u.receive(rlped_data)
 
-    # ves check
-    dapp_x.receive(atte.encode())
-    # close
+        # open
+        unlock_user(tx['from'])
+        tx_json = JsonRPC.eth_send_transaction(tx)
+        print(JsonRPC.send(tx_json, HTTP_HEADER, tx_intents.intents[idx].chain_host))
+        # verify_transaction_state?
+        atte = u.init_attestation(tx, StateType.open, int(session_content[0]), 0)
 
-    # relay
-    tx = on_chain_txs[1]
-    atte = dapp_y.init_attestation(tx, StateType.inited, int(session_content[0]), 1)
-    # update
+        #
+        v.receive(atte.encode())
+        atte = v.init_attestation(tx, StateType.opened, int(session_content[0]), 0)
 
-    # dapp_y
-    atte_rec = dapp_y.receive(atte.encode())
-    rlped_data = atte_rec.sign_and_encode()
-    # update
+        # ves check
+        ves.receive(atte.encode())
+        # close
 
-    # relay(ves) check
-    dapp_y.receive(rlped_data)
-
-    # open
-    unlock_user(tx['from'])
-    tx_json = JsonRPC.eth_send_transaction(tx)
-    print(JsonRPC.send(tx_json, HTTP_HEADER, "http://127.0.0.1:8545"))
-    # verify_transaction_state?
-    atte = dapp_y.init_attestation(tx, StateType.open, int(session_content[0]), 1)
-
-    # dapp_y
-    dapp_y.receive(atte.encode())
-    atte = dapp_y.init_attestation(tx, StateType.opened, int(session_content[0]), 1)
-
-    # dapp_y ckeck
-    dapp_y.receive(atte.encode())
-    # close
-
-    # relay
-    tx = on_chain_txs[2]
-    atte = dapp_y.init_attestation(tx, StateType.inited, int(session_content[0]), 2)
-    # update
-
-    # dapp_y
-    atte_rec = dapp_y.receive(atte.encode())
-    rlped_data = atte_rec.sign_and_encode()
-    # update
-
-    # ves check
-    dapp_y.receive(rlped_data)
-
-    # open
-    unlock_user(tx['from'])
-    tx_json = JsonRPC.eth_send_transaction(tx)
-    print(JsonRPC.send(tx_json, HTTP_HEADER, "http://127.0.0.1:8545"))
-    # verify_transaction_state?
-    atte = dapp_y.init_attestation(tx, StateType.open, int(session_content[0]), 1)
-
-    # dapp_y
-    dapp_y.receive(atte.encode())
-    atte = dapp_y.init_attestation(tx, StateType.opened, int(session_content[0]), 1)
-
-    # dapp_y ckeck
-    dapp_y.receive(atte.encode())
-    # close
-
-    # settle
-
-    # close
+    #
+    # # settle
+    #
+    # # close

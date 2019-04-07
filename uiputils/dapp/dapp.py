@@ -21,6 +21,9 @@ from eth_hash.auto import keccak
 # config
 from uiputils.config import HTTP_HEADER
 
+# constant
+ENC = 'utf-8'
+
 
 class DApp:
     def __init__(self, user_loc):
@@ -108,13 +111,13 @@ class DApp:
 
         # print(SignatureVerifier.verify_by_hashed_message(signatrue, vesack, self.address))
 
-        self.unlockself()
-        ack_func = isc.handle.user_ack(signatrue, {
-            'from': Web3.toChecksumAddress(self.address),
-            'gas': hex(5000000)
-        })
-        ack_func.transact()
-        print(ack_func.loop_and_wait())
+        # self.unlockself()
+        # ack_func = isc.handle.user_ack(signatrue, {
+        #     'from': Web3.toChecksumAddress(self.address),
+        #     'gas': hex(5000000)
+        # })
+        # ack_func.transact()
+        # print(ack_func.loop_and_wait())
 
         # not try but here ... TODO
         ret = ves.session_setup_update(int(content[0]), self.name, signatrue)
@@ -133,18 +136,18 @@ class DApp:
 
         return atte
 
-    def sign_atte(self, atte: Attestation):
+    def sign_attestation(self, atte: Attestation):
         return atte.sign_and_encode([
-            self.sign(atte.hash()),
+            self.sign(HexBytes(atte.hash()).hex()),
             self.address
         ])
 
     def init_attestation(self, onchain_tx: dict, state: StateType, session_index: int, tx_index: int):
         content_list = [
             json.dumps(
-                {"from": "0x12345678", "to": "0x87654321", "data": "..."},
+                onchain_tx,
                 sort_keys=True
-            ).encode('utf-8'),
+            ).encode(ENC),
             HexBytes(state.value),
             HexBytes(session_index),
             HexBytes(tx_index)
@@ -152,7 +155,7 @@ class DApp:
         return Attestation.create_attestation(
             content_list,
             [
-                self.sign(keccak(rlp.encode([content_list, []]))),
+                self.sign(HexBytes(keccak(rlp.encode([content_list, []]))).hex()),
                 self.address
             ]
         )

@@ -38,8 +38,8 @@ class EthChainDNS:
     @staticmethod
     def checkrelay(chain_id):
         if chain_id in eth_blockchain_info:
-            if 'relay' in eth_blockchain_info[chain_id]:
-                return eth_blockchain_info[chain_id]['relay']
+            if 'relay_nsb' in eth_blockchain_info[chain_id]['user']:
+                return eth_blockchain_info[chain_id]['user']['relay_nsb']
             else:
                 raise Missing('this chain has not relay-address' + chain_id)
         else:
