@@ -26,61 +26,100 @@ ENC = 'utf-8'
 
 
 class DApp:
-    def __init__(self, user_loc):
-        self.info = {}
-        chain_type, chain_id = user_loc['domain'].split('://')
-        self.address = ChainDNS.checkuser(chain_type, chain_id, user_loc['name'])
-        self.chain_host = ChainDNS.gethost(chain_type, chain_id)
-        self.name = user_loc['domain'] + '.' + user_loc['name']
-        if 'passphrase' in user_loc:
-            self.password = user_loc['passphrase']
-        # for loc in user_loc:
-        #     chain_type, chain_id = loc['chain'].split('://')
-        #     if chain_type == 'Ethereum':
-        #         self.address = ChainDNS.checkuser(chain_type, chain_id, loc['name'])
-        #         self.chain_host = ChainDNS.gethost(chain_type, chain_id)
-        #         if 'passphrase' in loc:
-        #             self.password = loc['passphrase']
-        #     self.info[chain_type] = {
-        #         'address': ChainDNS.checkuser(chain_type, chain_id, loc['name']),
-        #         'host': ChainDNS.gethost(chain_type, chain_id),
-        #         'password': None
-        #     }
-        #     if 'passphrase' in loc:
-        #         self.info[chain_type]['password'] = loc['passphrase']
+    def __init__(self, user_info: dict):
 
-    def unlockself(self):
-        unlock = JsonRPC.personal_unlock_account(self.address, self.password, 20)
-        response = JsonRPC.send(unlock, HTTP_HEADER, self.chain_host)
+        self.info = {}
+        self.name = user_info['name']
+
+        if 'accounts' not in user_info:
+            if 'domain' not in user_info:
+                raise KeyError("wrong format of user_info for creating DApp")
+            chain_type, chain_id = user_info['domain'].split('://')
+            chain_host = ChainDNS.gethost(chain_type, chain_id)
+            self.info[chain_host] = self.info[user_info['domain']] = {
+                'address': ChainDNS.checkuser(chain_type, chain_id, self.name),
+                'host': chain_host,
+                'password': None
+            }
+            if 'passphrase' in user_info:
+                self.password = user_info['passphrase']
+            self.default_domain = user_info['domain']
+        else:
+            if not hasattr(user_info, '__len__') or len(user_info['accounts']) == 0:
+                raise KeyError("no valid info in user_info['accounts']")
+
+            for infomation in user_info['accounts']:
+                chain_type, chain_id = infomation['domain'].split('://')
+                chain_host = ChainDNS.gethost(chain_type, chain_id)
+                self.info[chain_host] = self.info[infomation['domain']] = {
+                    'address': ChainDNS.checkuser(chain_type, chain_id, self.name),
+                    'host': chain_host,
+                    'password': None
+                }
+                if 'passphrase' in infomation:
+                    self.info[infomation['domain']]['password'] = infomation['passphrase']
+            self.default_domain = user_info['accounts'][0]['domain']
+
+    def unlockself(self, host_name=None):
+        """
+        assuming self.address is on Ethereum
+        :param host_name:
+        :return:
+        """
+        if host_name is None:
+            host_name = self.default_domain
+        host_info = self.info[host_name]
+        unlock = JsonRPC.personal_unlock_account(host_info['address'], host_info['password'], 20)
+        response = JsonRPC.send(unlock, HTTP_HEADER, host_info['host'])
         if not response['result']:
             raise ValueError("unlock failed. wrong password?")
 
-    def sign(self, msg):
-        # assuming self.address is on Ethereum
-        self.unlockself()
-        sign_json = JsonRPC.eth_sign(self.address, msg)
-        return JsonRPC.send(sign_json, HTTP_HEADER, self.chain_host)['result']
+    def sign(self, msg, host_name=None):
+        """
+        assuming self.address is on Ethereum
+        :param msg: msg to sign (bytes in string)
+        :param host_name: that the msg will send to
+        :return: signature
+        """
+        if host_name is None:
+            host_name = self.default_domain
+        self.unlockself(host_name)
+        host_info = self.info[host_name]
+        sign_json = JsonRPC.eth_sign(host_info['address'], msg)
+        return JsonRPC.send(sign_json, HTTP_HEADER, host_info['host'])['result']
 
     @staticmethod
     def call(trans):
+        """
+        call the contract_methods
+        :param trans: transaction with contract invocation's information
+        :return: results of function
+        """
         if trans.chain_type == 'Ethereum':
             call_json = JsonRPC.eth_call(trans.jsonize())
-            tx_response = JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)['result']
             # print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
-
-            print(tx_response)
-
+            return JsonRPC.send(call_json, HTTP_HEADER, trans.chain_host)['result']
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
-    def send(self, trans, passphrase):
+    def send(self, trans, passphrase=None):
+        """
+        transact the contract_methods
+        :param trans: transaction with contract invocation's information
+        :param passphrase:
+        :return: None
+        """
+        if passphrase is None:
+            passphrase = self.info[trans.chain_host]
         if trans.chain_type == 'Ethereum':
-            unlock = JsonRPC.personal_unlock_account(self.address, passphrase, 20)
+            unlock = JsonRPC.personal_unlock_account(self.info[trans.chain_host]['address'], passphrase, 20)
             tx_response = JsonRPC.send(unlock, HTTP_HEADER, trans.chain_host)
             print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+
             packet_transaction = JsonRPC.eth_send_transaction(trans.jsonize())
             tx_response = JsonRPC.send(packet_transaction, HTTP_HEADER, trans.chain_host)
             print(json.dumps(tx_response, sort_keys=True, indent=4, separators=(', ', ': ')))
+
             tx_hash = tx_response['result']
             query = JsonRPC.eth_get_transaction_receipt(tx_hash)
             while True:
@@ -94,7 +133,10 @@ class DApp:
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
-    def ackinit(self, ves, isc, content, sig):
+    def ackinit(self, ves, isc, content, sig, host_name=None):
+        if host_name is None:
+            host_name = self.default_domain
+        host_info = self.info[host_name]
         if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:
@@ -111,9 +153,9 @@ class DApp:
 
         # print(SignatureVerifier.verify_by_hashed_message(signatrue, vesack, self.address))
 
-        self.unlockself()
+        self.unlockself(host_name)
         ack_func = isc.handle.user_ack(signatrue, {
-            'from': Web3.toChecksumAddress(self.address),
+            'from': Web3.toChecksumAddress(host_info['address']),
             'gas': hex(5000000)
         })
         ack_func.transact()
@@ -126,7 +168,8 @@ class DApp:
         else:
             print("success")
 
-    def receive(self, rlped_atte):
+    @staticmethod
+    def receive(rlped_atte) -> Attestation:
         try:
             # TODO: verify attestation is on the nsb
             atte = Attestation(rlped_atte)
@@ -136,13 +179,23 @@ class DApp:
 
         return atte
 
-    def sign_attestation(self, atte: Attestation):
+    def sign_attestation(self, atte: Attestation, host_name: str = None) -> bytes:
+        if host_name is None:
+            host_name = self.default_domain
         return atte.sign_and_encode([
             self.sign(HexBytes(atte.hash()).hex()),
-            self.address
+            self.info[host_name]['address']
         ])
 
-    def init_attestation(self, onchain_tx: dict, state: StateType, session_index: int, tx_index: int):
+    def init_attestation(
+            self, onchain_tx: dict,
+            state: StateType,
+            session_index: int,
+            tx_index: int,
+            host_name: str = None
+    ) -> Attestation:
+        if host_name is None:
+            host_name = self.default_domain
         content_list = [
             json.dumps(
                 onchain_tx,
@@ -156,6 +209,6 @@ class DApp:
             content_list,
             [
                 self.sign(HexBytes(keccak(rlp.encode([content_list, []]))).hex()),
-                self.address
+                self.info[host_name]['address']
             ]
         )

@@ -64,6 +64,7 @@ class VerifiableExecutionSystem:
         self.address = "0x4f984aa7d262372df92f85af9be8d2df09ac4018"
         self.password = "123456"
         self.chain_host = "http://127.0.0.1:8545"
+        self.chain = "Ethereum://Chain1"
         ###########################################################
 
         # TODO: temporary eth-nsb-address
@@ -112,6 +113,17 @@ class VerifiableExecutionSystem:
                     exec=Missing(owner + " is not in user-pool").error_info
                 ))
                 raise Missing(owner + " is not in user-pool")
+            dapp_owner = self.user_pool[owner]
+            if dapp_owner.chain_host != self.chain:
+                relay_owner_name = self.chain + 'relay_' + dapp_owner.name[::-1].split('.', 1)[0][::-1]
+                if relay_owner_name + owner not in self.user_pool:
+                    self.debug("session-id: {sid} setupPrepareError {exec}".format(
+                        sid=session_id,
+                        exec=Missing(owner + "'s relay is not in user-pool").error_info
+                    ))
+                    raise Missing(owner + "'s relay is not in user-pool")
+
+
 
         # sign tx_intent
         sign_content = [str(session_id), tx_intents.purejson()]

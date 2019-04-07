@@ -29,9 +29,10 @@ SLOT_MERKLEPROOFTREE = 6
 
 class EthLightNetStatusBlockChain:
     Function_Sign = {
-        'add_transaction_proposal': "0x3aadafba",
-        'add_action_proposal':      "0x5959c982",
-        'is_active_isc':            "0x5640ee94"
+        'add_transaction_proposal':  "0x3aadafba",
+        'add_action_proposal':       "0x5959c982",
+        'add_merkleproof_proposal': "0x3e91d71e",
+        'is_active_isc':             "0x5640ee94"
     }
 
     def __init__(
@@ -66,6 +67,32 @@ class EthLightNetStatusBlockChain:
                 EthLightNetStatusBlockChain.Function_Sign['add_transaction_proposal'],
                 [isc_addr, tx_count],
                 ['address', 'uint'],
+            ),
+            wait_catch=ContractFunctionWithoutCheck.wait(self.host),
+            tx=self.tx,
+            timeout=timeout
+        )
+
+    def add_merkleproof_proposal(
+            self,
+            isc_addr,
+            tx_index,
+            merkle_proof: MerkleProof,
+            timeout=25
+    ):
+        return ContractFunctionClient(
+            function_transact=ContractFunctionWithoutCheck.transact(
+                self.host,
+                EthLightNetStatusBlockChain.Function_Sign['add_merkleproof_proposal'],
+                [
+                    isc_addr,
+                    tx_index,
+                    merkle_proof.blockaddr,
+                    merkle_proof.storagehash,
+                    merkle_proof.key,
+                    merkle_proof.value
+                ],
+                ['address', 'uint', 'string', 'bytes32', 'bytes32', 'bytes32'],
             ),
             wait_catch=ContractFunctionWithoutCheck.wait(self.host),
             tx=self.tx,
