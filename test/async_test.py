@@ -40,7 +40,7 @@ def run(num):
 
 
 if __name__ == '__main__':
-    compare_time = run(100)
+    compare_time = run(10)
     print(time.time() - start, compare_time)
 
 

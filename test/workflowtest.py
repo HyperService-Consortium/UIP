@@ -1,12 +1,14 @@
 
 # python modules
+import sys
+sys.path.append("E:/project/uip")
 
 # uip modules
 from uiputils.ethtools import FileLoad, JsonRPC
 from uiputils.ves import VerifiableExecutionSystem
 from uiputils.dapp import DApp
-from uiputils.chain_dns import ChainDNS
 from uiputils.transaction import StateType
+
 
 # config
 from uiputils.config import HTTP_HEADER
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     ves.appenduserlink([dapp_x, dapp_y])
 
     # load Sample.json
-    op_intents_json = FileLoad.getopintents("opintents.json")
+    op_intents_json = FileLoad.getopintents("./opintents.json")
 
     session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
     # print('session_content:', session_content)
@@ -60,8 +62,6 @@ if __name__ == '__main__':
 
     dapp_x.ackinit(ves, isc, session_content, session_signature)
     dapp_y.ackinit(ves, isc, session_content, session_signature)
-
-    print(isc)
 
     # print(isc.handle.handle.funcs())
     #
@@ -71,7 +71,8 @@ if __name__ == '__main__':
     # print(isc.handle.is_owner(dapp_x.address))
     # print(isc.handle.is_owner(dapp_y.address))
     # print(isc.handle.tx_info_length())
-
+    print(isc)
+    print(isc.__dict__)
     print(isc.handle.get_isc_state())
     # print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
 
