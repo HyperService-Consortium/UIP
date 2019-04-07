@@ -1,15 +1,36 @@
+
 from uiputils.errors import InitializeError
+
+# [
+#     {
+#         "Type": "uint",
+#         "Value": {
+#             "contract": "c1",
+#             "field": "genuineValue",
+#             "pos": "0"
+#         }
+#     }
+# ]
+
+
+def encode_parameters(origin_dict: dict):
+    para_list, type_list = [], []
+    for para_pair in origin_dict:
+        type_list.append(para_pair['Type'])
+        para_list.append(para_pair['Value'])
+    return type_list, para_list
 
 
 class OpIntents:
     Key_Attribute_All = ('name', 'op_type')
     Key_Attribute_Payment = ('amount', 'src', 'dst')
-    Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func')
+    Key_Attribute_ContractInvocation = ('invoker', 'contract_domain', 'func', 'parameters')
     Option_Attribute_Payment = ('unit',)
-    Option_Attribute_ContractInvocation = ('parameters', 'parameters_description')
+    Option_Attribute_ContractInvocation = ()
     Op_Type = ('Payment', 'ContractInvocation')
     Chain_Default_Unit = {
-        'Ethereum': 'wei'
+        'Ethereum': 'wei',
+        'EOS': 'SYS'
     }
 
     def __init__(self, intent_json):
@@ -65,6 +86,12 @@ class OpIntents:
         for option_attr in OpIntents.Option_Attribute_ContractInvocation:
             if option_attr in intent_json:
                 setattr(self, option_attr, intent_json[option_attr])
+
+        # parameter encodes
+        parameters, parameters_description = encode_parameters(intent_json['parameters'])
+
+        setattr(self, 'parameters', parameters)
+        setattr(self, 'parameters_description', parameters_description)
 
         compare_vector = ('contract_addr' not in intent_json or intent_json['contract_addr'] is None) << 1 |\
                          ('contract_code' not in intent_json or intent_json['contract_code'] is None)
