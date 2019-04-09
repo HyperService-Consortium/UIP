@@ -62,6 +62,16 @@ class ChainDNS:
     }
 
     @staticmethod
+    def get_user(user):
+        if len(user) > 4:
+            if user[0:4] == 'http':
+                raise ValueError("unsupported http format")
+            else:
+                host_name, user_name = user.split('.')
+                chain_type, chain_id = host_name.split('://')
+                return ChainDNS.checkuser(chain_type, chain_id, user_name)
+
+    @staticmethod
     def checkuser(chain_type, chain_id, user_name):
         # this function doesn't check chain_type
         return ChainDNS.DNSmethod[chain_type].checkuser(chain_id, user_name)

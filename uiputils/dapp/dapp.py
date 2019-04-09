@@ -39,10 +39,11 @@ class DApp:
             self.info[chain_host] = self.info[user_info['domain']] = {
                 'address': ChainDNS.checkuser(chain_type, chain_id, self.name),
                 'host': chain_host,
+                'domain': user_info['domain'],
                 'password': None
             }
             if 'passphrase' in user_info:
-                self.password = user_info['passphrase']
+                self.info[chain_host]['password'] = user_info['passphrase']
             self.default_domain = user_info['domain']
         else:
             if not hasattr(user_info, '__len__') or len(user_info['accounts']) == 0:
@@ -54,6 +55,7 @@ class DApp:
                 self.info[chain_host] = self.info[infomation['domain']] = {
                     'address': ChainDNS.checkuser(chain_type, chain_id, self.name),
                     'host': chain_host,
+                    'domain': infomation['domain'],
                     'password': None
                 }
                 if 'passphrase' in infomation:
@@ -137,6 +139,7 @@ class DApp:
         if host_name is None:
             host_name = self.default_domain
         host_info = self.info[host_name]
+        host_name = host_info['domain']
         if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
             # not try but here ... TODO
             try:
@@ -162,7 +165,7 @@ class DApp:
         print(ack_func.loop_and_wait())
 
         # not try but here ... TODO
-        ret = ves.session_setup_update(int(content[0]), self.name, signatrue)
+        ret = ves.session_setup_update(int(content[0]), host_name + '.' + self.name, signatrue)
         if isinstance(ret, Exception):
             raise ret
         else:

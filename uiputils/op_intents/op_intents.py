@@ -16,7 +16,10 @@ from uiputils.errors import InitializeError
 def encode_parameters(origin_dict: dict):
     para_list, type_list = [], []
     for para_pair in origin_dict:
-        para_list.append(para_pair['Value'])
+        if 'constant' in para_pair['Value']:
+            para_list.append(para_pair['Value']['constant'])
+        else:
+            para_list.append('@' + para_pair['Value']['contract'] + '.pos' + para_pair['Value']['pos'])
         type_list.append(para_pair['Type'])
     return para_list, type_list
 

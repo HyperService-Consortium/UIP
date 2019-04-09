@@ -104,6 +104,9 @@ class VerifiableExecutionSystem:
         # create txs
         tx_intents, op_owners = VerifiableExecutionSystem.build_graph(op_intents_json)
 
+        from uiputils.uiptools.cast import formated_json
+        print(formated_json(tx_intents.dictize()))
+
         # check owners
         wait_user = set(op_owners)
         for owner in op_owners:
@@ -128,18 +131,16 @@ class VerifiableExecutionSystem:
         atte_v = self.sign(sign_bytes)
 
         # build isc
-        isc: InsuranceSmartContract = None
         try:
             isc = InsuranceSmartContract(
                 [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
-                INCLUDE_PATH + '/isc.abi',
                 ves=self,
                 tx_head={'from': self.address, 'gas': hex(400000)},
-                rlped_txs=sign_bytes,
-                signature=atte_v,
-                tx_count=len(tx_intents.intents)
+                # rlped_txs=sign_bytes,
+                # signature=atte_v,
+                # tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                # contract_addr="0xf8ceffb8a6a503ed6417150c2185e2257fdb309e"
+                contract_addr="0x83aed2040883c7e91a7792c5b62321e6c0741252"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -155,36 +156,36 @@ class VerifiableExecutionSystem:
         # update isc's information
         for idx, tx_intent in enumerate(tx_intents.intents):
             print(idx, tx_intent.jsonize())
-            intent_json = dict(tx_intent.jsonize())
-            fr: str
-            to: str
-            amt: str
-            if 'from' in intent_json:
-                fr = intent_json['from']
-            if 'to' in intent_json:
-                to = intent_json['to']
-            if 'value' in intent_json:
-                amt = int(intent_json['value'], 16)
-            self.unlockself()
-            update_lazyfunc = isc.handle.update_tx_info(
-                idx,
-                fr=fr,
-                to=to,
-                seq=idx,
-                amt=amt,
-                meta=tx_intent.__dict__,
-                lazy=True
-            )
-            print(update_lazyfunc, type(update_lazyfunc))
-            self.unlockself()
-            update_lazyfunc.transact()
-            update_resp = update_lazyfunc.loop_and_wait()
-            print(update_resp['transactionHash'])
-            self.unlockself()
-            print(isc.handle.get_transaction_info(idx))
-
-            self.unlockself()
-            print(isc.handle.freeze_info(idx))
+            # intent_json = dict(tx_intent.jsonize())
+            # fr: str
+            # to: str
+            # amt: str
+            # if 'from' in intent_json:
+            #     fr = intent_json['from']
+            # if 'to' in intent_json:
+            #     to = intent_json['to']
+            # if 'value' in intent_json:
+            #     amt = int(intent_json['value'], 16)
+            # self.unlockself()
+            # update_lazyfunc = isc.handle.update_tx_info(
+            #     idx,
+            #     fr=fr,
+            #     to=to,
+            #     seq=idx,
+            #     amt=amt,
+            #     meta=tx_intent.__dict__,
+            #     lazy=True
+            # )
+            # print(update_lazyfunc, type(update_lazyfunc))
+            # self.unlockself()
+            # update_lazyfunc.transact()
+            # update_resp = update_lazyfunc.loop_and_wait()
+            # print(update_resp['transactionHash'])
+            # self.unlockself()
+            # print(isc.handle.get_transaction_info(idx))
+            #
+            # self.unlockself()
+            # print(isc.handle.freeze_info(idx))
             # TODO: check isc-info updated
 
         # undate session information
@@ -214,7 +215,7 @@ class VerifiableExecutionSystem:
             if not SignatureVerifier.verify_by_raw_message(
                 ack_signature,
                 HexBytes(self.txs_pool[session_id]['ack_dict']['self_first']),
-                ChainDNS.adduser['dot-concated'](ack_user_name)
+                ChainDNS.get_user(ack_user_name)
             ):
                 return Mismatch('invalid signature')
             self.txs_pool[session_id]['ack_counter'] -= 1

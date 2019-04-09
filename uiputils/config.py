@@ -58,3 +58,7 @@ eth_default_gasuse = hex(300000)
 ves_log_dir = ROOT_PATH + "/log/ves.log"
 
 isc_log_dir = ROOT_PATH + "/log/isc.log"
+
+isc_abi_dir = INCLUDE_PATH + "/isc.abi"
+
+isc_bin_dir = INCLUDE_PATH + "/isc.bin"

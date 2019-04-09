@@ -1,7 +1,5 @@
 
 # python modules
-import sys
-sys.path.append("E:/project/uip")
 
 # uip modules
 from uiputils.ethtools import FileLoad, JsonRPC
@@ -12,6 +10,8 @@ from uiputils.transaction import StateType
 
 # config
 from uiputils.config import HTTP_HEADER
+
+
 info_x = {
     'domain': "Ethereum://chain1",
     'name': "X",

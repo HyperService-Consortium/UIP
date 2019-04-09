@@ -6,11 +6,12 @@ from hexbytes import HexBytes
 from web3 import Web3
 
 from uiputils.uiptools.cast import JsonRlpize
-from uiputils.config import isc_log_dir, ETHSIGN_HEADER
 from uiputils.contract.eth_contract import EthContract
 from uiputils.ethtools import AbiEncoder, FileLoad, JsonRPC
 from uiputils.transaction import StateType
 from uiputils.errors import Missing
+
+from uiputils.config import isc_log_dir, isc_abi_dir, isc_bin_dir, ETHSIGN_HEADER
 
 # constant
 ENC = 'utf-8'
@@ -192,7 +193,8 @@ class InsuranceSmartContract:
     def __init__(
         self,
         owners,
-        abi_dir,
+        abi_dir=isc_abi_dir,
+        bin_dir=isc_bin_dir,
         rlped_txs=None,
         signature=None,
         ves=None,
@@ -202,9 +204,10 @@ class InsuranceSmartContract:
     ):
         # Insurance Smart Contract is a contract on the blockchain
         # TODO : contract construct
+        self.address = ""
         if contract_addr is None:
             if rlped_txs is None or signature is None or owners is None or ves is None:
-                self.address = None
+                pass
             else:
                 try:
                     rlped_txs = HexBytes(rlped_txs)
@@ -235,7 +238,7 @@ class InsuranceSmartContract:
                         ],
                         ['address[]', 'uint256[]', 'bytes', 'bytes', 'bytes32', 'uint256']
                     )
-                    bytescode = FileLoad.getbytecode('../isc/isc.bin')
+                    bytescode = FileLoad.getbytecode(bin_dir)
                     ves.unlockself()
                     tx_json = JsonRPC.eth_send_transaction({
                         'from': ves.address,
