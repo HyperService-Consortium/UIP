@@ -107,23 +107,20 @@ class VerifiableExecutionSystem:
         # check owners
         wait_user = set(op_owners)
         for owner in op_owners:
-            if owner not in self.user_pool:
+            owner_name, host_name = [split_str[::-1] for split_str in owner[::-1].split('.', 1)]
+            if owner_name not in self.user_pool:
                 self.debug("session-id: {sid} setupPrepareError {exec}".format(
                     sid=session_id,
-                    exec=Missing(owner + " is not in user-pool").error_info
+                    exec=Missing(owner_name + " is not in user-pool").error_info
                 ))
-                raise Missing(owner + " is not in user-pool")
-            dapp_owner = self.user_pool[owner]
-            if dapp_owner.chain_host != self.chain:
-                relay_owner_name = self.chain + 'relay_' + dapp_owner.name[::-1].split('.', 1)[0][::-1]
-                if relay_owner_name + owner not in self.user_pool:
-                    self.debug("session-id: {sid} setupPrepareError {exec}".format(
-                        sid=session_id,
-                        exec=Missing(owner + "'s relay is not in user-pool").error_info
-                    ))
-                    raise Missing(owner + "'s relay is not in user-pool")
-
-
+                raise Missing(owner_name + " is not in user-pool")
+            owner_dapp = self.user_pool[owner_name]
+            if host_name not in owner_dapp.info:
+                self.debug("session-id: {sid} setupPrepareError {exec}".format(
+                    sid=session_id,
+                    exec=Missing(owner_name + " has no account on chain " + host_name).error_info
+                ))
+                raise Missing(owner_name + " has no account on chain " + host_name)
 
         # sign tx_intent
         sign_content = [str(session_id), tx_intents.purejson()]

@@ -16,9 +16,9 @@ from uiputils.errors import InitializeError
 def encode_parameters(origin_dict: dict):
     para_list, type_list = [], []
     for para_pair in origin_dict:
-        type_list.append(para_pair['Type'])
         para_list.append(para_pair['Value'])
-    return type_list, para_list
+        type_list.append(para_pair['Type'])
+    return para_list, type_list
 
 
 class OpIntents:

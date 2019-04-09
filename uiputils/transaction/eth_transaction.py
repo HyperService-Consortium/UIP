@@ -83,6 +83,10 @@ class EthTransaction:
         elif len(function_name) == 10 and hex_match_withprefix.match(function_name):
             setattr(self, 'signature', function_name)
         elif function_parameters_description:
+            # print(self.tx_info['func'])
+            # print(function_parameters_description)
+            # import time
+            # time.sleep(0.5)
             to_hash = bytes(
                 (self.tx_info['func'] + '(' + ','.join(function_parameters_description) + ')').encode('utf-8')
             )
