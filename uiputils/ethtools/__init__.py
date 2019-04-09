@@ -15,6 +15,8 @@ from .sig_verify import SignatureVerifier
 
 from .startservice import ServiceStart
 
+from .solitypes import SoliTypes
+
 __all__ = [
     'Prover',
     'AbiEncoder',
@@ -28,4 +30,5 @@ __all__ = [
     'SliceLoc',
     'hex_match',
     'hex_match_withprefix',
+    'SoliTypes'
 ]

@@ -22,6 +22,10 @@ POS_MERKLEPROOFTREE = b'\x00' * 31 + b'\x06'
 POS_ACTIONTREE = b'\x00' * 31 + b'\x08'
 
 
+def singlelocation(slot):
+    return keccak(transbytes32(slot))
+
+
 def sliceloc32(slot: bytes, index: int, element_size: int) -> bytes:
     return catint32(bytestoint(keccak(slot)) + (index * element_size))
 
