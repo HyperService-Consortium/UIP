@@ -1,25 +1,14 @@
 
 from uiputils.errors import InitializeError
 
-# [
-#     {
-#         "Type": "uint",
-#         "Value": {
-#             "contract": "c1",
-#             "field": "genuineValue",
-#             "pos": "0"
-#         }
-#     }
-# ]
 
-
-def encode_parameters(origin_dict: dict):
+def encode_parameters(domain: str, origin_dict: dict):
     para_list, type_list = [], []
     for para_pair in origin_dict:
         if 'constant' in para_pair['Value']:
             para_list.append(para_pair['Value']['constant'])
         else:
-            para_list.append('@' + para_pair['Value']['contract'] + '.pos' + para_pair['Value']['pos'])
+            para_list.append('@' + domain + '.' + para_pair['Value']['contract'] + '.' + para_pair['Value']['pos'])
         type_list.append(para_pair['Type'])
     return para_list, type_list
 
@@ -91,7 +80,8 @@ class OpIntents:
                 setattr(self, option_attr, intent_json[option_attr])
 
         # parameter encodes
-        parameters, parameters_description = encode_parameters(intent_json['parameters'])
+        parameters, parameters_description = \
+            encode_parameters(intent_json['contract_domain'], intent_json['parameters'])
 
         setattr(self, 'parameters', parameters)
         setattr(self, 'parameters_description', parameters_description)

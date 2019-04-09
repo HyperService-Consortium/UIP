@@ -59,15 +59,18 @@ if __name__ == '__main__':
     ves.appenduserlink([dapp_x, dapp_y])
 
     # load Sample.json
-    # op_intents_json = FileLoad.getopintents("./opintents2.json")
+    op_intents_json = FileLoad.getopintents("./opintents2.json")
 
-    # session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
-    # print(session_content, isc, session_signature, tx_intents)
+    for intent in op_intents_json['Op-intents']:
+        intent['contract_domain'] = "Ethereum://" + intent['contract_domain']
+
+    session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
+    print(session_content, isc, session_signature, tx_intents)
     # # print('session_content:', session_content)
     # # print('session_signature:', session_signature)
-    #
-    # dapp_x.ackinit(ves, isc, session_content, session_signature)
-    # dapp_y.ackinit(ves, isc, session_content, session_signature)
+
+    dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
+    dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
     #
     # # print(isc.handle.handle.funcs())
     # #

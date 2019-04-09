@@ -64,7 +64,7 @@ class VerifiableExecutionSystem:
         self.address = "0x4f984aa7d262372df92f85af9be8d2df09ac4018"
         self.password = "123456"
         self.chain_host = "http://127.0.0.1:8545"
-        self.chain = "Ethereum://Chain1"
+        self.domain = "Ethereum://Chain1"
         ###########################################################
 
         # TODO: temporary eth-nsb-address
@@ -108,7 +108,7 @@ class VerifiableExecutionSystem:
         print(formated_json(tx_intents.dictize()))
 
         # check owners
-        wait_user = set(op_owners)
+        wait_user = set()
         for owner in op_owners:
             owner_name, host_name = [split_str[::-1] for split_str in owner[::-1].split('.', 1)]
             if owner_name not in self.user_pool:
@@ -117,6 +117,7 @@ class VerifiableExecutionSystem:
                     exec=Missing(owner_name + " is not in user-pool").error_info
                 ))
                 raise Missing(owner_name + " is not in user-pool")
+            wait_user.add(self.domain + '.' + owner_name)
             owner_dapp = self.user_pool[owner_name]
             if host_name not in owner_dapp.info:
                 self.debug("session-id: {sid} setupPrepareError {exec}".format(
@@ -210,6 +211,8 @@ class VerifiableExecutionSystem:
             self.txs_pool.pop(session_id)
             self.info("session-id: {sid} aborted".format(sid=session_id))
             # TODO: inform Aborted
+
+        print(ack_user_name, ChainDNS.get_user(ack_user_name))
 
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
             if not SignatureVerifier.verify_by_raw_message(

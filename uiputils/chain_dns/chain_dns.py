@@ -72,6 +72,13 @@ class ChainDNS:
                 return ChainDNS.checkuser(chain_type, chain_id, user_name)
 
     @staticmethod
+    def get_host(host_name):
+        if len(host_name) > 4 and host_name[0:4] == 'http':
+            return host_name
+
+        return ChainDNS.gethost(*host_name.split('://'))
+
+    @staticmethod
     def checkuser(chain_type, chain_id, user_name):
         # this function doesn't check chain_type
         return ChainDNS.DNSmethod[chain_type].checkuser(chain_id, user_name)

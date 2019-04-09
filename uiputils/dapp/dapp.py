@@ -152,7 +152,7 @@ class DApp:
         # vesack = HexBytes(isc.handle.vesack()).hex()
         # print(HexBytes(isc.handle.vesack()).hex())
 
-        signatrue = self.sign(sig)
+        signatrue = self.sign(sig, host_name)
 
         # print(SignatureVerifier.verify_by_hashed_message(signatrue, vesack, self.address))
 
@@ -165,6 +165,9 @@ class DApp:
         print(ack_func.loop_and_wait())
 
         # not try but here ... TODO
+
+        print(host_name, host_info)
+
         ret = ves.session_setup_update(int(content[0]), host_name + '.' + self.name, signatrue)
         if isinstance(ret, Exception):
             raise ret

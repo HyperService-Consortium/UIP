@@ -15,6 +15,7 @@ from uiputils.errors import (
 
 # eth modules
 from uiputils.ethtools import hex_match, hex_match_withprefix, AbiEncoder
+from uiputils.dataparse.data_parser import EthDataParser
 
 # config
 from uiputils.config import (
@@ -82,7 +83,7 @@ class EthTransaction:
             setattr(self, 'signature', function_name)
         elif len(function_name) == 10 and hex_match_withprefix.match(function_name):
             setattr(self, 'signature', function_name)
-        elif function_parameters_description:
+        elif function_parameters_description is not None:
             # print(self.tx_info['func'])
             # print(function_parameters_description)
             # import time
@@ -125,7 +126,7 @@ class EthTransaction:
         }
         if 'parameters' in self.tx_info:
             if hasattr(self, 'parameters_description'):
-                parameters = AbiEncoder.encodes(self.tx_info['parameters'], getattr(self, 'parameters_description'))
+                parameters = EthDataParser.parse(self.tx_info['parameters'], getattr(self, 'parameters_description'))
                 res['data'] = getattr(self, 'signature') + parameters
             else:  # without parameters_description
                 if isinstance(self.tx_info['parameters'], str):

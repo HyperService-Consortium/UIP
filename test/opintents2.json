@@ -7,7 +7,7 @@
             "invoker": "a1",
             "name": "o1",
             "parameters": [],
-            "type": "ContractInvocation"
+            "op_type": "ContractInvocation"
         },
         {
             "contract_addr": "0x3723261b2a5a62b778b5c74318534d7fdf8db38c",
@@ -25,7 +25,7 @@
                     }
                 }
             ],
-            "type": "ContractInvocation"
+            "op_type": "ContractInvocation"
         }
     ],
     "dependencies": [

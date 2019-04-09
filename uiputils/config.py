@@ -55,6 +55,11 @@ eth_unit_factor = {
 
 eth_default_gasuse = hex(300000)
 
+eth_known_contract = {
+    'c1': "0xef98abdb9a73556c04494db5322ecbf8b1aadd03",
+    'c2': "0x13304db97b1d572360dd01618619923c857695ea"
+}
+
 ves_log_dir = ROOT_PATH + "/log/ves.log"
 
 isc_log_dir = ROOT_PATH + "/log/isc.log"
