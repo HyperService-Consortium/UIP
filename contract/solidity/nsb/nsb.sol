@@ -43,11 +43,12 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         // address pa;
         // Party z
         // address pz;
+        // message hash
+        // bytes32 msghash;
         // signature
-		bytes32 msghash;
-        bytes signature;
+		bytes signature;
     }
-    
+
     struct Transaction {
 		// transaction content hash
 		bytes32 txhash;
@@ -100,7 +101,8 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree; // slot 8
-    
+    mapping (bytes => bool) public validActionorNot;
+
     /**********************************************************************/
     // Owner System Storage
     
@@ -440,24 +442,33 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     {
         // require(pa != 0, "invalid pa address");
         // require(pz != 0, "invalid pz address");
-
-        Action memory toAdd = Action(msghash, signature);
-        keccakhash = keccak256(abi.encodePacked(msghash, signature));
-
+        // require(verify(msg, signature))
+        Action memory toAdd = Action(signature);
+        keccakhash = keccak256(abi.encodePacked(signature));
+        validActionorNot(signature) = true;
         ActionTree[keccakhash]= toAdd;
     }
 
     function getAction(bytes32 keccakhash)
         public
         view
-        returns (bytes32 msghash, bytes memory signature)
+        returns (bytes memory signature)
     {
         Action storage toGet = ActionTree[keccakhash];
         // pa = toGet.pa;
         // pz = toGet.pz;
-		msghash = toGet.msghash;
+		// msghash = toGet.msghash;
         signature = toGet.signature;
     }
+
+    // state variable
+    // function validActionorNot(bytes memory signature)
+    //     public
+    //     view
+    //     returns (bool)
+    // {
+    //
+    // }
 
     /**********************************************************************
      *                         Transaction System                         *

@@ -9,6 +9,7 @@ from uiputils.chain_dns import ChainDNS
 from uiputils.uiptypes.attestation import Attestation
 from uiputils.errors import VerificationError
 from uiputils.transaction import StateType
+from uiputils.nsb import EthLightNetStatusBlockChain
 
 # eth modules
 from uiputils.ethtools import JsonRPC, SignatureVerifier
@@ -29,6 +30,7 @@ class DApp:
     def __init__(self, user_info: dict):
 
         self.info = {}
+        self.session_event = {}
         self.name = user_info['name']
 
         if 'accounts' not in user_info:
@@ -173,12 +175,30 @@ class DApp:
             raise ret
         else:
             print("success")
+            self.session_event[1] = {
+                'info': host_info,
+                # TODO: temporary eth-nsb-address
+                'nsb': "0x4f358c8e9b891082eb61fb96f1a0cbdf23c14b6b"
+            }
 
-    @staticmethod
-    def receive(rlped_atte) -> Attestation:
+    def receive(self, rlped_atte, session_id) -> Attestation:
+
         try:
-            # TODO: verify attestation is on the nsb
+            if session_id not in self.session_event:
+                raise KeyError("No such session_id" + str(session_id))
+
+            host_info = self.session_event[session_id]
+            nsb = EthLightNetStatusBlockChain(
+                host_info['address'],
+                host_info['host'],
+                self.session_event['nsb']
+            )
+
             atte = Attestation(rlped_atte)
+
+            if not nsb.validate_action(signature=atte.signatures[-1][0]):
+                raise VerificationError("this action is not on nsb")
+
         except VerificationError as e:
             # TODO: stop ISC ?
             raise e

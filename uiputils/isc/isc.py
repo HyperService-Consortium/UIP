@@ -203,7 +203,6 @@ class InsuranceSmartContract:
         contract_addr=None
     ):
         # Insurance Smart Contract is a contract on the blockchain
-        # TODO : contract construct
         self.address = ""
         if contract_addr is None:
             if rlped_txs is None or signature is None or owners is None or ves is None:

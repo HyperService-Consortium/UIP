@@ -2,6 +2,7 @@
 # ethereum modules
 from hexbytes import HexBytes
 from web3 import Web3
+from eth_hash.auto import keccak
 
 # uip modules
 from uiputils.uiptools.cast import bytestoint
@@ -32,6 +33,7 @@ class EthLightNetStatusBlockChain:
         'add_transaction_proposal':  "0x3aadafba",
         'add_action_proposal':       "0x5959c982",
         'add_merkleproof_proposal': "0x3e91d71e",
+        'get_action': "",
         'is_active_isc':             "0x5640ee94"
     }
 
@@ -120,12 +122,22 @@ class EthLightNetStatusBlockChain:
             timeout=timeout
         )
 
-    def is_active_isc(self, isc_addr, ):
+    def is_active_isc(self, isc_addr):
         return ContractFunctionWithoutCheck.call(
             self.host,
             EthLightNetStatusBlockChain.Function_Sign['is_active_isc'],
             [isc_addr],
             ['address'],
+        )(self.tx)[-1] == '1'
+
+    def validate_action(self, signature):
+
+        # 27
+        return ContractFunctionWithoutCheck.call(
+            self.host,
+            EthLightNetStatusBlockChain.Function_Sign['get_action'],
+            [signature],
+            ['bytes'],
         )(self.tx)[-1] == '1'
 
 
