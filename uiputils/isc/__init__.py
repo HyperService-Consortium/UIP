@@ -1,2 +1,10 @@
 
-from .isc import InsuranceSmartContract
+from .isc import (
+    InsuranceSmartContract,
+    EthInsuranceSmartContract
+)
+
+__all__ = [
+    "InsuranceSmartContract",
+    "EthInsuranceSmartContract"
+]
