@@ -143,14 +143,6 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
 
         self.tx = tx_head.copy()
 
-        # self.updateFunc = {
-        #     'fr': partial(self.handle.funct, funcname='updateTxFr'),
-        #     'to': partial(self.handle.funct, funcname='updateTxTo'),
-        #     'seq': partial(self.handle.funct, funcname='updateTxSeq'),
-        #     'amt': partial(self.handle.funct, funcname='updateTxAmt'),
-        #     'rlped_data': partial(self.handle.funct, funcname='updateTxRlpedData')
-        # }
-
         console_logger.info('isc({0}) init: functions:{1}'.format(self.address, self.handle.funcs()))
 
     @staticmethod
@@ -242,18 +234,6 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
                 Web3.toChecksumAddress(to),
                 seq, amt, meta, timeout=timeout
             )
-        # else:
-        #     if 'fr' in spec:
-        #         self.handle.funct('updateTxFr', tx, Web3.toChecksumAddress(fr), timeout=timeout)
-        #     if 'to' in spec:
-        #         self.handle.funct('updateTxTo', tx, Web3.toChecksumAddress(to), timeout=timeout)
-        #     if 'seq' in spec:
-        #         self.handle.funct('updateTxSeq', tx, seq, timeout=timeout)
-        #     if 'amt' in spec:
-        #         self.handle.funct('updateTxAmt', tx, amt, timeout=timeout)
-        #     if 'rlped_meta' in spec:
-        #         self.handle.funct('updateTxRlpedMeta', tx, rlped_meta, timeout=timeout)
-        #     # return tuple((self.updateFunc[spec_type](kwargs) for spec_type in spec))
 
     def user_stake(self, tx):
         return self.handle.funct('stakeFund', tx)
@@ -351,11 +331,26 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
             tx = self.tx
         return self.handle.funct('freezeInfo', tx, idx)
 
-# 0x842453b97eb8742178d6af105bdb5bb9340c058e8a6a1d0aedba5f73f15424e80a1da8896cbe9eac968ee75c89a4d5238fb83e501b527e1956f51c81d94e247301
-# ["0xca35b7d915458ef540ade6068dfe2f44e8fa733c","0x14723a09acff6d2a60dcdf7aa4aff308fddc160c"],["0","0"],"0x19457468657265756d205369676e6564204d6573736167653a0a33313233","0x842453b97eb8742178d6af105bdb5bb9340c058e8a6a1d0aedba5f73f15424e80a1da8896cbe9eac968ee75c89a4d5238fb83e501b527e1956f51c81d94e247301","0x21dfbe1c391b2ff861cb3163e70bf1b4c80b61f77f91cbe198967917cd9a22d5","1"
 
-# aborted codes
-# make contract:
+# isc test parameters
+# ["0xca35b7d915458ef540ade6068dfe2f44e8fa733c","0x14723a09acff6d2a60dcdf7aa4aff308fddc160c"],
+# ["0","0"],"0x19457468657265756d205369676e6564204d6573736167653a0a33313233",
+# "0x842453b97eb8742178d6af105bdb5bb9340c058e8a6a1d0aedba5f73f15424e8
+#  0a1da8896cbe9eac968ee75c89a4d5238fb83e501b527e1956f51c81d94e247301",
+# "0x21dfbe1c391b2ff861cb3163e70bf1b4c80b61f77f91cbe198967917cd9a22d5","1"
+
+# aborted codes ########################################################################################################
+
+# eth __init__:
+# self.updateFunc = {
+#     'fr': partial(self.handle.funct, funcname='updateTxFr'),
+#     'to': partial(self.handle.funct, funcname='updateTxTo'),
+#     'seq': partial(self.handle.funct, funcname='updateTxSeq'),
+#     'amt': partial(self.handle.funct, funcname='updateTxAmt'),
+#     'rlped_data': partial(self.handle.funct, funcname='updateTxRlpedData')
+# }
+
+# eth make contract:
 # print(
 #     owners, ',',
 #     [0, 0, 0], ',',
@@ -372,3 +367,17 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
 #     )).hex(), ',',
 #     tx_count
 # )
+
+# eth update info:
+# else:
+#     if 'fr' in spec:
+#         self.handle.funct('updateTxFr', tx, Web3.toChecksumAddress(fr), timeout=timeout)
+#     if 'to' in spec:
+#         self.handle.funct('updateTxTo', tx, Web3.toChecksumAddress(to), timeout=timeout)
+#     if 'seq' in spec:
+#         self.handle.funct('updateTxSeq', tx, seq, timeout=timeout)
+#     if 'amt' in spec:
+#         self.handle.funct('updateTxAmt', tx, amt, timeout=timeout)
+#     if 'rlped_meta' in spec:
+#         self.handle.funct('updateTxRlpedMeta', tx, rlped_meta, timeout=timeout)
+#     # return tuple((self.updateFunc[spec_type](kwargs) for spec_type in spec))
