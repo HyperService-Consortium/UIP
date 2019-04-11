@@ -14,7 +14,7 @@ from uiputils.op_intents import OpIntents
 from uiputils.transaction import StateType
 from uiputils.transaction_intents import TransactionIntents
 from uiputils.chain_dns import ChainDNS
-from uiputils.isc import InsuranceSmartContract
+from uiputils.isc import EthInsuranceSmartContract
 from uiputils.errors import Missing, Mismatch, VerificationError
 from uiputils.uiptypes import Attestation
 
@@ -24,6 +24,7 @@ from uiputils.nsb import EthLightNetStatusBlockChain
 
 # config
 from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir
+from uiputils.loggers import  console_logger
 
 # constant
 ENC = 'utf-8'
@@ -78,7 +79,6 @@ class VerifiableExecutionSystem:
         self.txs_pool = {
             VerifiableExecutionSystem.INVALID: VerifiableExecutionSystem.INITIAL_SESSION
         }
-        self.isc = InsuranceSmartContract
         self.user_pool = {}
         pass
 
@@ -97,6 +97,7 @@ class VerifiableExecutionSystem:
         session_id = 1
 
         self.info("sessionSetupPrepare {sid}".format(sid=session_id))
+        console_logger.info("sessionSetupPrepare {sid}".format(sid=session_id))
 
         # pre-register
         self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
@@ -105,7 +106,10 @@ class VerifiableExecutionSystem:
         tx_intents, op_owners = VerifiableExecutionSystem.build_graph(op_intents_json)
 
         from uiputils.uiptools.cast import formated_json
-        print(formated_json(tx_intents.dictize()))
+        console_logger.info('ves-session[{0}]  init tx_intents: {1}'.format(
+            session_id, formated_json(tx_intents.dictize())
+        ))
+        console_logger.info('ves-session[{0}]  init op_owners: {1}'.format(session_id, op_owners))
 
         # check owners
         wait_user = set()
@@ -126,22 +130,26 @@ class VerifiableExecutionSystem:
                 ))
                 raise Missing(owner_name + " has no account on chain " + host_name)
 
+        console_logger.info('ves-session[{0}] init wait_owners: {1}'.format(session_id, wait_user))
+
         # sign tx_intent
         sign_content = [str(session_id), tx_intents.purejson()]
         sign_bytes = HexBytes(rlp.encode(sign_content)).hex()
         atte_v = self.sign(sign_bytes)
 
+        console_logger.info('ves-session[{0}] init wait_owners: {1}'.format(session_id, wait_user))
+
         # build isc
         try:
-            isc = InsuranceSmartContract(
-                [self.address] + ChainDNS.gatherusers(op_owners, userformat='dot-concated'),
+            isc = EthInsuranceSmartContract(
+                [self.address] + ChainDNS.gatherusers(wait_user, userformat='dot-concated'),
                 ves=self,
                 tx_head={'from': self.address, 'gas': hex(400000)},
-                # rlped_txs=sign_bytes,
-                # signature=atte_v,
-                # tx_count=len(tx_intents.intents)
+                rlped_txs=sign_bytes,
+                signature=atte_v,
+                tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                contract_addr="0x83aed2040883c7e91a7792c5b62321e6c0741252"
+                # contract_addr="0x83aed2040883c7e91a7792c5b62321e6c0741252"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -154,39 +162,43 @@ class VerifiableExecutionSystem:
             isc_addr=isc.address
         ))
 
+        console_logger.info('ves-session[{0}] created isc: address on {1}\n owner {2} '.format(
+            session_id, isc.address, isc.owners
+        ))
+
         # update isc's information
         for idx, tx_intent in enumerate(tx_intents.intents):
             print(idx, tx_intent.jsonize())
-            # intent_json = dict(tx_intent.jsonize())
-            # fr: str
-            # to: str
-            # amt: str
-            # if 'from' in intent_json:
-            #     fr = intent_json['from']
-            # if 'to' in intent_json:
-            #     to = intent_json['to']
-            # if 'value' in intent_json:
-            #     amt = int(intent_json['value'], 16)
-            # self.unlockself()
-            # update_lazyfunc = isc.handle.update_tx_info(
-            #     idx,
-            #     fr=fr,
-            #     to=to,
-            #     seq=idx,
-            #     amt=amt,
-            #     meta=tx_intent.__dict__,
-            #     lazy=True
-            # )
-            # print(update_lazyfunc, type(update_lazyfunc))
-            # self.unlockself()
-            # update_lazyfunc.transact()
-            # update_resp = update_lazyfunc.loop_and_wait()
-            # print(update_resp['transactionHash'])
-            # self.unlockself()
-            # print(isc.handle.get_transaction_info(idx))
-            #
-            # self.unlockself()
-            # print(isc.handle.freeze_info(idx))
+            intent_json = dict(tx_intent.jsonize())
+            fr = "0x0000000000000000000000000000000000000000"
+            to = "0x0000000000000000000000000000000000000000"
+            amt = 0
+            if 'from' in intent_json:
+                fr = intent_json['from']
+            if 'to' in intent_json:
+                to = intent_json['to']
+            if 'value' in intent_json:
+                amt = int(intent_json['value'], 16)
+            self.unlockself()
+            update_lazyfunc = isc.handle.update_tx_info(
+                idx,
+                fr=fr,
+                to=to,
+                seq=idx,
+                amt=amt,
+                meta=tx_intent.__dict__,
+                lazy=True
+            )
+            print(update_lazyfunc, type(update_lazyfunc))
+            self.unlockself()
+            update_lazyfunc.transact()
+            update_resp = update_lazyfunc.loop_and_wait()
+            print(update_resp['transactionHash'])
+            self.unlockself()
+            print(isc.handle.get_transaction_info(idx))
+
+            self.unlockself()
+            print(isc.handle.freeze_info(idx))
             # TODO: check isc-info updated
 
         # undate session information

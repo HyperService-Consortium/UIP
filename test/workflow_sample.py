@@ -10,6 +10,9 @@ from uiputils.transaction import StateType
 
 # config
 from uiputils.config import HTTP_HEADER
+
+from uiputils.config import console_logger
+
 info_x = {
     'name': "a1",
     'accounts': [
@@ -58,6 +61,10 @@ if __name__ == '__main__':
     dapp_y = DApp(info_y)
     ves.appenduserlink([dapp_x, dapp_y])
 
+    console_logger.info('{0} built, info:{1}'.format(dapp_x, dapp_x.info))
+    console_logger.info('{0} built, info:{1}'.format(dapp_y, dapp_y.info))
+    console_logger.info('{0} built, info:{1}'.format(ves, ves.__dict__))
+
     # load Sample.json
     op_intents_json = FileLoad.getopintents("./opintents2.json")
 
@@ -65,24 +72,27 @@ if __name__ == '__main__':
         intent['contract_domain'] = "Ethereum://" + intent['contract_domain']
 
     session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
-    print(session_content, isc, session_signature, tx_intents)
-    # # print('session_content:', session_content)
-    # # print('session_signature:', session_signature)
 
-    dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
-    dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
+    console_logger.info('ves created session:{}'.format(ves.txs_pool[1]))
+    # print(session_content, isc, session_signature, tx_intents)
+    # # # print('session_content:', session_content)
+    # # # print('session_signature:', session_signature)
     #
-    # # print(isc.handle.handle.funcs())
-    # #
-    # # print("raw: ", ves.address)
-    # # print(isc.handle.is_owner(ves.address))
-    # # print(isc.handle.is_raw_sender(ves.address))
-    # # print(isc.handle.is_owner(dapp_x.address))
-    # # print(isc.handle.is_owner(dapp_y.address))
-    # # print(isc.handle.tx_info_length())
+    # dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
+    # dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
+    #
+    # print(isc.handle.handle.funcs())
+    #
+    # print("raw: ", ves.address)
+    # print(isc.handle.is_owner(ves.address))
+    # print(isc.handle.is_raw_sender(ves.address))
+    # print(isc.handle.is_owner(dapp_x.info[ves.chain_host]['address']))
+    # print(isc.handle.is_owner(dapp_y.info[ves.chain_host]['address']))
+    # print(isc.handle.tx_info_length())
     # print(isc)
     # print(isc.__dict__)
     # print(isc.handle.get_isc_state())
+
     # # print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
     #
     # on_chain_txs = [tx.jsonize() for tx in tx_intents.intents]
@@ -135,3 +145,6 @@ if __name__ == '__main__':
     # # # settle
     # #
     # # # close
+
+# user_ack
+# {"from": eth.coinbase, "to":"0x137db188135379e419d796dc380f3825d3d6f2bb", "data":"0x8589ee50"}

@@ -10,9 +10,7 @@ public:
     
     // @abi table 
     struct MerkleProof {
-        std::string chain_id;
-		std::string storage;
-		std::string key;
-		std::string val;
+        std::string path;
+        
     }
 }
