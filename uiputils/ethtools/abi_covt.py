@@ -103,9 +103,10 @@ class AbiEncoder:
                     para = bytes(para.encode(ENC))
                 if para[1] == 'x':
                     para = para[2:]
+            else:
+                raise TypeError("unexpected type " + str(type(para)) + " for initializing datatype " + para_type)
             bytes_size = para_type[5:]
             if bytes_size == "":
-                # print(para)
                 if len(para) & 1:
                     raise Mismatch("odd-length byte-array is invalid")
                 return AbiEncoder.encode('uint256', len(para) >> 1) + para + '0' * ((-len(para)) & MOD6)

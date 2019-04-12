@@ -17,6 +17,7 @@ from uiputils.chain_dns import ChainDNS
 from uiputils.isc import EthInsuranceSmartContract
 from uiputils.errors import Missing, Mismatch, VerificationError
 from uiputils.uiptypes import Attestation
+from uiputils.contract.wrapped_contract_function import ContractFunctionClient
 
 # eth modules
 from uiputils.ethtools import JsonRPC, SignatureVerifier
@@ -53,8 +54,6 @@ class VerifiableExecutionSystem:
     INITIAL_SESSION = {
         'tx_intents': None,
         'isc_addr': None,
-        'Atte': {},
-        'Merk': {},
         'ack_dict': {},
         'ack_counter': 0,
         'users': None
@@ -72,7 +71,7 @@ class VerifiableExecutionSystem:
         self.nsb = EthLightNetStatusBlockChain(
             self.address,
             self.chain_host,
-            "0x4f358c8e9b891082eb61fb96f1a0cbdf23c14b6b"
+            "0x15055c5173c91957ea49552bdee55487e3c2ac43"
         )
         ###########################################################
 
@@ -100,7 +99,7 @@ class VerifiableExecutionSystem:
         console_logger.info("sessionSetupPrepare {sid}".format(sid=session_id))
 
         # pre-register
-        self.txs_pool[session_id] = VerifiableExecutionSystem.INITIAL_SESSION
+        self.txs_pool[session_id] = dict(VerifiableExecutionSystem.INITIAL_SESSION)
 
         # create txs
         tx_intents, op_owners = VerifiableExecutionSystem.build_graph(op_intents_json)
@@ -144,12 +143,12 @@ class VerifiableExecutionSystem:
             isc = EthInsuranceSmartContract(
                 [self.address] + ChainDNS.gatherusers(wait_user, userformat='dot-concated'),
                 ves=self,
-                tx_head={'from': self.address, 'gas': hex(400000)},
-                rlped_txs=sign_bytes,
-                signature=atte_v,
-                tx_count=len(tx_intents.intents)
+                tx_head={'from': self.address, 'gas': hex(4000000)},
+                # rlped_txs=sign_bytes,
+                # signature=atte_v,
+                # tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                # contract_addr="0x83aed2040883c7e91a7792c5b62321e6c0741252"
+                contract_addr="0x0C24884AEe4E89378Bb1E739A5c9b34834D384E5"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -167,39 +166,7 @@ class VerifiableExecutionSystem:
         ))
 
         # update isc's information
-        for idx, tx_intent in enumerate(tx_intents.intents):
-            print(idx, tx_intent.jsonize())
-            intent_json = dict(tx_intent.jsonize())
-            fr = "0x0000000000000000000000000000000000000000"
-            to = "0x0000000000000000000000000000000000000000"
-            amt = 0
-            if 'from' in intent_json:
-                fr = intent_json['from']
-            if 'to' in intent_json:
-                to = intent_json['to']
-            if 'value' in intent_json:
-                amt = int(intent_json['value'], 16)
-            self.unlockself()
-            update_lazyfunc = isc.handle.update_tx_info(
-                idx,
-                fr=fr,
-                to=to,
-                seq=idx,
-                amt=amt,
-                meta=tx_intent.__dict__,
-                lazy=True
-            )
-            print(update_lazyfunc, type(update_lazyfunc))
-            self.unlockself()
-            update_lazyfunc.transact()
-            update_resp = update_lazyfunc.loop_and_wait()
-            print(update_resp['transactionHash'])
-            self.unlockself()
-            print(isc.handle.get_transaction_info(idx))
-
-            self.unlockself()
-            print(isc.handle.freeze_info(idx))
-            # TODO: check isc-info updated
+        self.send_txinfo_to_isc(isc, tx_intents, testing=True)
 
         # undate session information
         session_info = self.txs_pool[session_id]
@@ -208,6 +175,8 @@ class VerifiableExecutionSystem:
         session_info['ack_counter'] = len(wait_user)
         session_info['ack_dict']['self_first'] = atte_v
         session_info['isc_addr'] = isc.address
+
+        console_logger.info('session_info[{0}] updated {1}'.format(session_id, session_info))
 
         # TODO: async - send tx_intents
         return sign_content, isc, atte_v, tx_intents
@@ -223,8 +192,6 @@ class VerifiableExecutionSystem:
             self.txs_pool.pop(session_id)
             self.info("session-id: {sid} aborted".format(sid=session_id))
             # TODO: inform Aborted
-
-        print(ack_user_name, ChainDNS.get_user(ack_user_name))
 
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
             if not SignatureVerifier.verify_by_raw_message(
@@ -249,29 +216,11 @@ class VerifiableExecutionSystem:
             sid=session_id
         ))
 
-        session_info = self.txs_pool[session_id]
-
         # TODO: await isc-State == opening
 
         # TODO: Send Request(Tx-intents) NSB
-        lazy_func = self.nsb.add_transaction_proposal(
-            session_info['isc_addr'],
-            len(session_info['tx_intents'].intents)
-        )
-        self.unlockself()
-        lazy_func.transact()
-        if lazy_func.loop_and_wait():
-            self.info("session-id: {sid} add NSB's info success: ISC-address: {isc_addr}, Intents-count: {tx_count}".format(
-                sid=session_id,
-                isc_addr=session_info['isc_addr'],
-                tx_count=len(session_info['tx_intents'].intents)
-            ))
-        else:
-            self.info("session-id: {sid} add NSB's info failed: ISC-address: {isc_addr}, Intents-count: {tx_count}".format(
-                sid=session_id,
-                isc_addr=session_info['isc_addr'],
-                tx_count=len(session_info['tx_intents'].intents)
-            ))
+
+        self.send_txinfo_to_nsb(session_id, testing=True)
 
     @staticmethod
     def build_graph(op_intents_json):
@@ -282,10 +231,84 @@ class VerifiableExecutionSystem:
         # TODO:sort Graph
         return TransactionIntents(op_intents, op_intents_json['dependencies']), op_owners
 
-    def send_txinfo_to_nsb(self, info):
-        pass
+    def send_txinfo_to_nsb(self, session_id, testing=False):
+        if testing:
+            return
+        session_info = self.txs_pool[session_id]
+        console_logger.info('ves adding isc({0}) with size of transactions: {1}'.format(
+            session_info['isc_addr'], len(session_info['tx_intents'].intents)
+        ))
+        lazy_func = self.nsb.add_transaction_proposal(
+            session_info['isc_addr'],
+            len(session_info['tx_intents'].intents)
+        )
+        self.unlockself()
+        lazy_func.transact()
+        resp = lazy_func.loop_and_wait()
+        console_logger.info('nsb response of adding isc({0}): {1}'.format(session_info['isc_addr'], resp))
+        if resp:
+            self.info(
+                "session-id: {sid} add NSB's info success: ISC-address: {isc_addr}, Intents-count: {tx_count}".format(
+                    sid=session_id,
+                    isc_addr=session_info['isc_addr'],
+                    tx_count=len(session_info['tx_intents'].intents)
+                )
+            )
+        else:
+            self.info(
+                "session-id: {sid} add NSB's info failed: ISC-address: {isc_addr}, Intents-count: {tx_count}".format(
+                    sid=session_id,
+                    isc_addr=session_info['isc_addr'],
+                    tx_count=len(session_info['tx_intents'].intents)
+                )
+            )
 
-    def unlockself(self):
+    def send_txinfo_to_isc(self, isc, tx_intents, testing=False):
+        if testing:
+            return
+        for idx, tx_intent in enumerate(tx_intents.intents):
+            console_logger.info('updating tx_info(index: {0}): {1}'.format(idx, tx_intent.jsonize()))
+            intent_json = dict(tx_intent.jsonize())
+
+            fr = "0x0000000000000000000000000000000000000000"
+            to = "0x0000000000000000000000000000000000000000"
+            amt = 0
+            if 'from' in intent_json:
+                fr = intent_json['from']
+            if 'to' in intent_json:
+                to = intent_json['to']
+            if 'value' in intent_json:
+                amt = int(intent_json['value'], 16)
+
+            update_lazyfunc = isc.update_tx_info(
+                idx,
+                fr=fr,
+                to=to,
+                seq=idx,
+                amt=amt,
+                meta=tx_intent.__dict__,
+                lazy=True
+            )
+            self.unlockself()
+            update_lazyfunc.transact()
+
+            update_resp = update_lazyfunc.loop_and_wait()
+            console_logger.info('update response: {0}'.format(update_resp))
+
+            self.unlockself()
+            console_logger.info(
+                'isc({0})updated information(index: {1}): {2}'.format(
+                    isc.address, idx, isc.get_transaction_info(idx)
+                )
+            )
+
+            self.unlockself()
+            console_logger.info(
+                'freeze_info response: {}'.format(isc.freeze_info(idx))
+            )
+            # TODO: check isc-info updated
+
+    def unlockself(self, hostname=None):
         unlock = JsonRPC.personal_unlock_account(self.address, self.password, 20)
         response = JsonRPC.send(unlock, HTTP_HEADER, self.chain_host)
         if not response['result']:
@@ -313,10 +336,16 @@ class VerifiableExecutionSystem:
         else:  # assuming be class dApp
             self.user_pool[users.name] = users
 
-    def receive(self, rlped_atte):
+    def receive(self, rlped_atte, session_id):
         try:
-            # TODO: verify attestation is on the nsb
+            if session_id not in self.txs_pool:
+                raise KeyError("No such session_id" + str(session_id))
+
             atte = Attestation(rlped_atte)
+
+            if not self.nsb.validate_action(msghash=atte.pre_hash, signature=atte.signatures[-1][0]):
+                raise VerificationError("this action is not on nsb")
+
         except VerificationError as e:
             # TODO: stop ISC ?
             raise e
@@ -325,11 +354,11 @@ class VerifiableExecutionSystem:
 
     def sign_attestation(self, atte: Attestation):
         return atte.sign_and_encode([
-            self.sign(HexBytes(atte.hash()).hex()),
+            self.sign(HexBytes(atte.hash).hex()),
             self.address
         ])
 
-    def init_attestation(self, onchain_tx: dict, state: StateType, session_index: int, tx_index: int):
+    def init_attestation(self, onchain_tx: dict, state: StateType, session_index: int, tx_index: int, host_name=None):
         content_list = [
             json.dumps(
                 onchain_tx,
@@ -345,6 +374,33 @@ class VerifiableExecutionSystem:
                 self.sign(HexBytes(keccak(rlp.encode([content_list, []]))).hex()),
                 self.address
             ]
+        )
+
+    def send_attestation(
+            self,
+            session_index: int,
+            atte: Attestation,
+            tx_index, state: StateType,
+            host_name=None
+    ) -> ContractFunctionClient:
+
+        console_logger.info(
+            'ves ({0}) adding atte[\n'
+            '     isc: {1}\n'
+            '    transaction-action index: ({2}, {3})\n'
+            '    atte: ({4}, {5})\n'
+            ']'.format(
+                self.address, self.txs_pool[session_index]['isc_addr'], tx_index, state.value,
+                HexBytes(atte.pre_hash).hex(), atte.signatures[-1][0].to_hex()
+            )
+        )
+
+        return self.nsb.add_action_proposal(
+            self.txs_pool[session_index]['isc_addr'],
+            tx_index,
+            state.value,
+            atte.pre_hash,
+            atte.signatures[-1][0].to_hex()
         )
 
     def debug(self, msg):

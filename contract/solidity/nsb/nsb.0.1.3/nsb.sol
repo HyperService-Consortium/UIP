@@ -44,7 +44,7 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
         // Party z
         // address pz;
         // message hash
-        bytes32 msghash;
+        // bytes32 msghash;
         // signature
 		bytes signature;
     }
@@ -101,29 +101,29 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     
     // ActionTree (keccak256(Action) => Action)
     mapping (bytes32 => Action) public ActionTree; // slot 8
-    mapping (bytes32 => bool) public validActionorNot; // slot 9
+    mapping (bytes => bool) public validActionorNot;
 
     /**********************************************************************/
     // Owner System Storage
     
     // The Net State BlockChain(NSB) contract is owned by multple entities to ensure security.
-    mapping (address => bool) public isOwner; // slot 10
-    address[] public owners; // slot 11
+    mapping (address => bool) public isOwner; // slot 9
+    address[] public owners; // slot 10
 
-    uint public requiredOwnerCount; // slot 12
-    uint public requiredValidVotesCount; // slot 13
+    uint public requiredOwnerCount; // slot 11
+    uint public requiredValidVotesCount; // slot 12
 
     // Maps used for adding and removing owners.
-    mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 14
-    mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 15
+    mapping (address => mapping (address => bool)) public addingOwnerProposal; // slot 13
+    mapping (address => mapping (address => bool)) public removingOwnerProposal; // slot 14
     
     /**********************************************************************/
     // Transaction System Storage
     
-	Transactions[] public txsStack; // slot 16
-	mapping (address => Transactions) public txsReference; // slot 17
-	mapping (address => bool) public activeISC; // slot 18
-	mapping (bytes32 => CallbackPair) public proofHashCallback; // slot 19
+	Transactions[] public txsStack; // slot 15
+	mapping (address => Transactions) public txsReference; // slot 16
+	mapping (address => bool) public activeISC; // slot 17
+	mapping (bytes32 => CallbackPair) public proofHashCallback; // slot 18
     
     /**********************************************************************
      *                      event & condition                             *
@@ -437,15 +437,15 @@ contract NetworkStatusBlockChain is NetworkStatusBlockChainInterface {
     function addAction(bytes32 msghash, bytes memory signature)
         // future will be private
         public
-        // ownerExists(msg.sender)
+        ownerExists(msg.sender)
         returns (bytes32 keccakhash)
     {
         // require(pa != 0, "invalid pa address");
         // require(pz != 0, "invalid pz address");
         // require(verify(msg, signature))
-        Action memory toAdd = Action(msghash, signature);
-        keccakhash = keccak256(abi.encodePacked(msghash ,signature));
-        validActionorNot[keccakhash] = true;
+        Action memory toAdd = Action(signature);
+        keccakhash = keccak256(abi.encodePacked(signature));
+        validActionorNot(signature) = true;
         ActionTree[keccakhash]= toAdd;
     }
 

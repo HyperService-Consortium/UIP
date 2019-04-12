@@ -39,7 +39,7 @@ class EthTransaction:
         self.chain_host = eth_blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'transfer',
-            'chain': chain_id + "@" + self.chain_host,
+            'chain': chain_id,
             'source': src_addr,
             'dst': dst_addr,
             'fund': hex(fund * eth_unit_factor[fund_unit]),
@@ -51,7 +51,7 @@ class EthTransaction:
         self.chain_host = eth_blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'deploy',
-            'chain': chain_id + "@" + self.chain_host,
+            'chain': chain_id,
             'code': code,
             'gas': gasuse
         }
@@ -70,7 +70,7 @@ class EthTransaction:
         self.chain_host = eth_blockchain_info[chain_id]['host']
         self.tx_info = {
             'trans_type': 'invoke',
-            'chain': chain_id + "@" + self.chain_host,
+            'chain': chain_id,
             'invoker': invoker,
             'address': contract_address,
             'func': function_name,

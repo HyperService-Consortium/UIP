@@ -39,39 +39,39 @@ class InsuranceSmartContract(object, metaclass=ABCMeta):
 
     @property
     def address(self):
-        return self.address
+        return self._address
 
     @address.setter
     def address(self, addr):
         if addr == "" or addr == b"":
-            self.address = ""
+            self._address = ""
         else:
-            self.address = to_checksum_address(addr)
+            self._address = to_checksum_address(addr)
 
     @property
     def checksum_address(self):
-        return self.address
+        return self._address
 
     @property
     def normalized_address(self):
-        return to_normalized_address(self.address)
+        return to_normalized_address(self._address)
 
     @property
     def canonical_address(self):
-        return  to_canonical_address(self.address)
+        return  to_canonical_address(self._address)
 
     @property
     def tx_header(self):
-        return self.tx_header
+        return self._tx_header
 
     @tx_header.setter
     def tx_header(self, tx):
-        self.tx_header = dict(tx)
-        if self.tx_header is not None:
-            if 'from' in self.tx_header:
-                self.tx_header['from'] = to_checksum_address(self.tx_header['from'])
-            if 'to' in self.tx_header:
-                self.tx_header['to'] = to_checksum_address(self.tx_header['to'])
+        self._tx_header = dict(tx)
+        if self._tx_header is not None:
+            if 'from' in self._tx_header:
+                self._tx_header['from'] = to_checksum_address(self._tx_header['from'])
+            if 'to' in self._tx_header:
+                self._tx_header['to'] = to_checksum_address(self._tx_header['to'])
 
     @abstractmethod
     def insurance_claim(self, atte: Attestation, tid, state, nsb_addr, result=None, tcg=None, tx=None):
@@ -140,7 +140,6 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
         console_logger.info('isc {} built'.format(self.address))
 
         self.web3 = self.handle.web3
-
         self.tx = tx_head.copy()
 
         console_logger.info('isc({0}) init: functions:{1}'.format(self.address, self.handle.funcs()))
@@ -213,7 +212,6 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
     ):
         if tx is None:
             tx = self.tx
-        # if spec is None:
         if isinstance(meta, dict):
             meta = JsonRlpize.serialize(meta)
         elif not isinstance(meta, str) and not isinstance(meta, bytes):
@@ -317,6 +315,7 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
 
     def get_transaction_info(self, tid):
         ret = self.handle.func('getTransactionInfo', tid)
+        console_logger.info('geted transaction information(index: {0}) {1}'.format(tid, ret))
         ret[4] = JsonRlpize.unserialize(ret[4])
         return ret
 
@@ -369,6 +368,8 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
 # )
 
 # eth update info:
+# if spec is None:
+#     ...
 # else:
 #     if 'fr' in spec:
 #         self.handle.funct('updateTxFr', tx, Web3.toChecksumAddress(fr), timeout=timeout)

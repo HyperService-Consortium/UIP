@@ -2,6 +2,7 @@
 # ethereum modules
 from hexbytes import HexBytes
 from web3 import Web3
+from eth_keys import KeyAPI
 from eth_hash.auto import keccak
 
 # uip modules
@@ -19,7 +20,8 @@ from uiputils.ethtools import(
     AbiDecoder,
     Prover,
     JsonRPC,
-    LocationTransLator
+    LocationTransLator,
+    SignatureVerifier
 )
 
 # constant
@@ -32,9 +34,10 @@ class EthLightNetStatusBlockChain:
     Function_Sign = {
         'add_transaction_proposal':  "0x3aadafba",
         'add_action_proposal':       "0x5959c982",
-        'add_merkleproof_proposal': "0x3e91d71e",
-        'get_action': "",
-        'is_active_isc':             "0x5640ee94"
+        'add_merkleproof_proposal':  "0x3e91d71e",
+        'get_action':                "0xdce9f070",
+        'is_active_isc':             "0x5640ee94",
+        'valid_action_or_not':       "0xfd1d8671"
     }
 
     def __init__(
@@ -52,7 +55,7 @@ class EthLightNetStatusBlockChain:
         if tx is None:
             self.tx = {
                 "from": self.owner,
-                "gas": hex(4000000),
+                "gas": hex(6000000),
                 "data": None,
                 "to": nsb_addr
             }
@@ -71,7 +74,7 @@ class EthLightNetStatusBlockChain:
                 ['address', 'uint'],
             ),
             wait_catch=ContractFunctionWithoutCheck.wait(self.host),
-            tx=self.tx,
+            tx_header=self.tx,
             timeout=timeout
         )
 
@@ -97,7 +100,7 @@ class EthLightNetStatusBlockChain:
                 ['address', 'uint', 'string', 'bytes32', 'bytes32', 'bytes32'],
             ),
             wait_catch=ContractFunctionWithoutCheck.wait(self.host),
-            tx=self.tx,
+            tx_header=self.tx,
             timeout=timeout
         )
 
@@ -118,7 +121,7 @@ class EthLightNetStatusBlockChain:
                 ['address', 'uint', 'uint', 'bytes32', 'bytes'],
             ),
             wait_catch=ContractFunctionWithoutCheck.wait(self.host),
-            tx=self.tx,
+            tx_header=self.tx,
             timeout=timeout
         )
 
@@ -130,14 +133,34 @@ class EthLightNetStatusBlockChain:
             ['address'],
         )(self.tx)[-1] == '1'
 
-    def validate_action(self, signature):
+    def get_action(self, msghash, signature=None):
+        if signature is not None:
+            if isinstance(signature, KeyAPI.Signature):
+                signature = signature.to_bytes()
+            else:
+                signature = SignatureVerifier.init_signature(signature).to_bytes()
+            msghash = keccak(HexBytes(msghash) + signature)
 
-        # 27
         return ContractFunctionWithoutCheck.call(
             self.host,
             EthLightNetStatusBlockChain.Function_Sign['get_action'],
-            [signature],
-            ['bytes'],
+            [msghash],
+            ['bytes32'],
+        )
+
+    def validate_action(self, msghash, signature=None):
+        if signature is not None:
+            if isinstance(signature, KeyAPI.Signature):
+                signature = signature.to_bytes()
+            else:
+                signature = SignatureVerifier.init_signature(signature).to_bytes()
+            msghash = keccak(HexBytes(msghash) + signature)
+
+        return ContractFunctionWithoutCheck.call(
+            self.host,
+            EthLightNetStatusBlockChain.Function_Sign['valid_action_or_not'],
+            [msghash],
+            ['bytes32'],
         )(self.tx)[-1] == '1'
 
 
@@ -252,7 +275,7 @@ class EthNetStatusBlockchain:
         return self.handle.funct('addAction', self.tx, msg, sig)
 
     def get_action(self, keccakhash):
-        return self.handle.func('getAction', keccakhash[2:])
+        return self.handle.func('getAction', keccakhash)
 
     def valid_merkle_proofor_not(self, keccakhash):
         return self.handle.func('validMerkleProoforNot', keccakhash) == 1

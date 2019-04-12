@@ -35,7 +35,7 @@ class SignatureVerifier:
             if sig[-1] != 1 and sig[-1] != 0:
                 sig = bytestoint(sig)
                 sig -= 27
-            sig = HexBytes(hex(sig))
+                sig = HexBytes(hex(sig))
             try:
                 sig = KeyAPI.Signature(sig)
             except Exception:

@@ -5,7 +5,7 @@ import json
 
 # ethereum modules
 from hexbytes import HexBytes
-from eth_keys.datatypes import PrivateKey
+from eth_keys.datatypes import PrivateKey, Signature
 from eth_hash.auto import keccak
 
 # uip modules
@@ -54,10 +54,10 @@ class Attestation(object):
     def __init__(self, atte_list: bytes or list):
         if isinstance(atte_list, bytes):
             atte_list = rlp.decode(atte_list)
-        self.content, self.signatures = Attestation.recover_atte(atte_list)
+        self.pre_hash = b"\x00"
+        self.content, self.signatures = self.recover_atte(atte_list)
 
-    @staticmethod
-    def recover_atte(atte_list: list):
+    def recover_atte(self, atte_list: list):
         if len(atte_list) != 2:
             raise ValueError(
                 "the format of Attestation must be [Content, Signature], but you give a length of " +
@@ -65,11 +65,14 @@ class Attestation(object):
                 " ?"
             )
         # first right, then left (because of reference variable in python)
-        right_res = Attestation.recover_signatures(atte_list)
+        right_res = self.recover_signatures(atte_list)
         left_res = Attestation.recover_content(atte_list[0])
         return left_res, right_res
 
     def sign_and_encode(self, signature_pair):
+        if not isinstance(signature_pair[0], Signature):
+            signature_pair[0] = SignatureVerifier.init_signature(signature_pair[0])
+        self.pre_hash = self.hash
         self.signatures.append(signature_pair)
         return self.encode()
 
@@ -100,12 +103,12 @@ class Attestation(object):
             raise DecodeFail("failed when recovering content, " + str(type(e)) + str(e))
         return content_list
 
-    @staticmethod
-    def recover_signatures(atte_list: list):
+    def recover_signatures(self, atte_list: list):
         left_list, res_list = [], []
         for sig, addr in atte_list[1]:
             try:
                 rlped_data = rlp.encode([atte_list[0], left_list])
+                self.pre_hash = keccak(rlped_data)
                 left_list.append([sig, addr])
                 if len(sig) > 65:
                     sig = sig.decode(ENC)
@@ -116,7 +119,7 @@ class Attestation(object):
                 res_list.append([sig, addr])
             except Exception as e:
                 raise DecodeFail("failed when recovering signatures, " + str(type(e)) + str(e))
-            if not SignatureVerifier.verify_by_raw_message(sig, keccak(rlped_data), addr):
+            if not SignatureVerifier.verify_by_raw_message(sig, self.pre_hash, addr):
                 raise VerificationError(
                     "wrong signature when verifying: " +
                     "\ncontent: " + HexBytes(rlped_data).hex() +
@@ -138,9 +141,9 @@ class Attestation(object):
     def encode_signatures(signatures_list):
         return [[SignatureVerifier.init_signature(sig).to_bytes(), addr.encode(ENC)] for sig, addr in signatures_list]
 
+    @property
     def hash(self):
         return keccak(self.encode())
-
 
 
 if __name__ == '__main__':

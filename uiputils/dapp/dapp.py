@@ -10,6 +10,7 @@ from uiputils.uiptypes.attestation import Attestation
 from uiputils.errors import VerificationError
 from uiputils.transaction import StateType
 from uiputils.nsb import EthLightNetStatusBlockChain
+from uiputils.contract.wrapped_contract_function import ContractFunctionClient
 
 # eth modules
 from uiputils.ethtools import JsonRPC, SignatureVerifier
@@ -21,6 +22,8 @@ from eth_hash.auto import keccak
 
 # config
 from uiputils.config import HTTP_HEADER
+
+from uiputils.loggers import console_logger
 
 # constant
 ENC = 'utf-8'
@@ -137,48 +140,51 @@ class DApp:
         else:
             raise TypeError("unsupported chain-type: ", + trans.chain_type)
 
-    def ackinit(self, ves, isc, content, sig, host_name=None):
+    def ackinit(self, ves, isc, content, sig, host_name=None, testing=False):
+
         if host_name is None:
             host_name = self.default_domain
         host_info = self.info[host_name]
         host_name = host_info['domain']
         if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
-            # not try but here ... TODO
+            # user refuse TODO
             try:
                 ves.session_setup_update(int(content[0]), self.name, None)
             except Exception as e:
                 raise e
-        # look through content
-
-        # from hexbytes import HexBytes
-        # vesack = HexBytes(isc.handle.vesack()).hex()
-        # print(HexBytes(isc.handle.vesack()).hex())
+        # user looking through content
 
         signatrue = self.sign(sig, host_name)
 
-        # print(SignatureVerifier.verify_by_hashed_message(signatrue, vesack, self.address))
+        console_logger.info(
+            'dapp ({0}) is trying call user_ack, name: {1} host: {2}'.format(
+                self.name,
+                host_name,
+                host_info
+            )
+        )
 
-        self.unlockself(host_name)
-        ack_func = isc.handle.user_ack(signatrue, {
-            'from': Web3.toChecksumAddress(host_info['address']),
-            'gas': hex(5000000)
-        })
-        ack_func.transact()
-        print(ack_func.loop_and_wait())
+        if not testing:
+            self.unlockself(host_name)
+            ack_func = isc.user_ack(signatrue, {
+                'from': Web3.toChecksumAddress(host_info['address']),
+                'gas': hex(5000000)
+            })
+            ack_func.transact()
+            console_logger.info('dapp ({0}) user_ack response:{1}'.format(self.name, ack_func.loop_and_wait()))
 
-        # not try but here ... TODO
-
-        print(host_name, host_info)
+        # what if update no successful? TODO
 
         ret = ves.session_setup_update(int(content[0]), host_name + '.' + self.name, signatrue)
         if isinstance(ret, Exception):
             raise ret
         else:
-            print("success")
-            self.session_event[1] = {
-                'info': host_info,
+            console_logger.info('dapp ({0}) user_ack accepted by ves: {1}'.format(self.name, ves.address))
+            self.session_event[int(content[0])] = {
+                'host_info': host_info,
                 # TODO: temporary eth-nsb-address
-                'nsb': "0x4f358c8e9b891082eb61fb96f1a0cbdf23c14b6b"
+                'isc': isc.address,
+                'nsb': "0x15055c5173c91957ea49552bdee55487e3c2ac43"
             }
 
     def receive(self, rlped_atte, session_id) -> Attestation:
@@ -187,16 +193,16 @@ class DApp:
             if session_id not in self.session_event:
                 raise KeyError("No such session_id" + str(session_id))
 
-            host_info = self.session_event[session_id]
+            session_info = self.session_event[session_id]
             nsb = EthLightNetStatusBlockChain(
-                host_info['address'],
-                host_info['host'],
-                self.session_event['nsb']
+                session_info['host_info']['address'],
+                session_info['host_info']['host'],
+                session_info['nsb']
             )
 
             atte = Attestation(rlped_atte)
 
-            if not nsb.validate_action(signature=atte.signatures[-1][0]):
+            if not nsb.validate_action(msghash=atte.pre_hash, signature=atte.signatures[-1][0]):
                 raise VerificationError("this action is not on nsb")
 
         except VerificationError as e:
@@ -234,7 +240,50 @@ class DApp:
         return Attestation.create_attestation(
             content_list,
             [
-                self.sign(HexBytes(keccak(rlp.encode([content_list, []]))).hex()),
+                self.sign(HexBytes(keccak(rlp.encode([content_list, []]))).hex(), host_name),
                 self.info[host_name]['address']
             ]
         )
+
+    def send_attestation(
+            self,
+            session_index: int,
+            atte: Attestation,
+            tx_index: int, state: StateType,
+            host_name: str = None
+    ) -> ContractFunctionClient:
+        if host_name is None:
+            host_name = self.default_domain
+        host_info = self.info[host_name]
+        nsb = EthLightNetStatusBlockChain(
+            host_info['address'],
+            host_info['host'],
+            self.session_event[session_index]['nsb']
+        )
+
+        console_logger.info(
+            'dapp ({0}) adding atte[\n'
+            '     isc: {1}\n'
+            '    transaction-action index: ({2}, {3})\n'
+            '    atte: ({4}, {5})\n'
+            ']'.format(
+                self.name, self.session_event[session_index]['isc'], tx_index, state.value,
+                HexBytes(atte.pre_hash).hex(), atte.signatures[-1][0].to_hex()
+            )
+        )
+
+        return nsb.add_action_proposal(
+            self.session_event[session_index]['isc'],
+            tx_index,
+            state.value,
+            atte.pre_hash,
+            atte.signatures[-1][0].to_hex()
+        )
+
+# aborted code
+# user ack:
+# from hexbytes import HexBytes
+# vesack = HexBytes(isc.handle.vesack()).hex()
+# print(HexBytes(isc.handle.vesack()).hex())
+
+# print(SignatureVerifier.verify_by_hashed_message(signatrue, vesack, self.address))

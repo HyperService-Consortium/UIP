@@ -11,7 +11,7 @@ from uiputils.transaction import StateType
 # config
 from uiputils.config import HTTP_HEADER
 
-from uiputils.config import console_logger
+from uiputils.loggers import console_logger
 
 info_x = {
     'name': "a1",
@@ -73,74 +73,108 @@ if __name__ == '__main__':
 
     session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
 
-    console_logger.info('ves created session:{}'.format(ves.txs_pool[1]))
-    # print(session_content, isc, session_signature, tx_intents)
-    # # # print('session_content:', session_content)
-    # # # print('session_signature:', session_signature)
-    #
-    # dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
-    # dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host)
-    #
-    # print(isc.handle.handle.funcs())
-    #
-    # print("raw: ", ves.address)
-    # print(isc.handle.is_owner(ves.address))
-    # print(isc.handle.is_raw_sender(ves.address))
-    # print(isc.handle.is_owner(dapp_x.info[ves.chain_host]['address']))
-    # print(isc.handle.is_owner(dapp_y.info[ves.chain_host]['address']))
-    # print(isc.handle.tx_info_length())
-    # print(isc)
-    # print(isc.__dict__)
-    # print(isc.handle.get_isc_state())
+    dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host, testing=True)
+    dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host, testing=True)
 
-    # # print(formated_json(ves.txs_pool[int(session_content[0])]['ack_dict']))
-    #
-    # on_chain_txs = [tx.jsonize() for tx in tx_intents.intents]
-    #
-    # print(on_chain_txs)
-    #
-    # user_table = [
-    #     (dapp_x, ves),
-    #     (dapp_y, ves)
-    # ]
-    #
-    # unlock_table = [
-    #     enc_info_x,
-    #     enc_info_y
-    # ]
-    #
-    # for idx, [u, v] in enumerate(user_table):
-    #     # assert tx_intent is on ISC
-    #
-    #     # compute on_chan_tx
-    #     tx = tx_intents.intents[idx].jsonize()
-    #     print(tx)
-    #     atte = u.init_attestation(tx, StateType.inited, int(session_content[0]), 0)
-    #     # update
-    #
-    #     # relay
-    #     atte_rec = v.receive(atte.encode())
-    #     rlped_data = v.sign_attestation(atte_rec)
-    #     # update
-    #
-    #     # check
-    #     u.receive(rlped_data)
-    #
-    #     # open
-    #     unlock_user(tx['from'])
-    #     tx_json = JsonRPC.eth_send_transaction(tx)
-    #     print(JsonRPC.send(tx_json, HTTP_HEADER, tx_intents.intents[idx].chain_host))
-    #     # verify_transaction_state?
-    #     atte = u.init_attestation(tx, StateType.open, int(session_content[0]), 0)
-    #
-    #     #
-    #     v.receive(atte.encode())
-    #     atte = v.init_attestation(tx, StateType.opened, int(session_content[0]), 0)
-    #
-    #     # ves check
-    #     ves.receive(atte.encode())
-    #     # close
-    #
+    print("raw: ", ves.address)
+    print(isc.is_owner(ves.address))
+    print(isc.is_raw_sender(ves.address))
+    print(isc.is_owner(dapp_x.info[ves.chain_host]['address']))
+    print(isc.is_owner(dapp_y.info[ves.chain_host]['address']))
+    print(isc.tx_info_length())
+    print(isc.get_isc_state())
+    print(ves.nsb.is_active_isc(isc.address))
+
+    user_table = [
+        (dapp_x, ves),
+        (dapp_y, ves)
+    ]
+
+    unlock_table = [
+        enc_info_x,
+        enc_info_relay_y
+    ]
+
+    session_id = int(session_content[0])
+
+    from uiputils.ethtools import AbiEncoder
+    import random
+    testnumber = random.randint(0, 65535)
+    tx = JsonRPC.eth_send_transaction({
+        'from': dapp_x.info['http://127.0.0.1:8545']['address'],
+        'to': "0x7c7b26fa65e091f7b9f23db77ad5f714f1dae5ea",
+        "data": "0x67eb4a3c" + AbiEncoder.encodes([testnumber], ['uint']),
+        "gas": hex(7999999)
+    })
+    print()
+    console_logger.info('genuineValue set: {0}\n response: {1}'.format(
+        testnumber,
+        JsonRPC.send(tx, HTTP_HEADER, 'http://127.0.0.1:8545')
+    ))
+
+    for idx, [u, v] in enumerate(user_table):
+        # assert tx_intent is on ISC
+
+        # Part_A # inited ##############################################################################################
+
+        # compute on_chain_tx
+        tx = tx_intents.intents[idx].jsonize()
+        console_logger.info('on chain transaction computed index: {0}, content: {1}'.format(idx, tx))
+
+        # compute attestation
+        atte = u.init_attestation(tx, StateType.inited, session_id, idx, ves.chain_host)
+
+        # send inited attestaion
+        laz_func = u.send_attestation(session_id, atte, idx, StateType.inited, ves.chain_host)
+        u.unlockself(ves.chain_host)
+        laz_func.transact()
+        console_logger.info('nsb received action, response: {}'.format(laz_func.loop_and_wait()))
+
+        # Part_Z # open ################################################################################################
+
+        # receive attestaion
+        atte_rec = v.receive(atte.encode(), int(session_content[0]))
+
+        # compute attestation
+        rlped_data = v.sign_attestation(atte_rec)
+
+        # send open-request attestion
+        laz_func = v.send_attestation(session_id, atte_rec, idx, StateType.open, ves.chain_host)
+        v.unlockself(ves.chain_host)
+        laz_func.transact()
+        console_logger.info('nsb received action, response: {}'.format(laz_func.loop_and_wait()))
+
+        # Part_A # opened ##############################################################################################
+
+        # no necessary to ack, just verify it
+        u.receive(rlped_data, int(session_content[0]))
+
+        # open transaction
+        u.unlockself(tx_intents.intents[idx].chain_host)
+        tx_json = JsonRPC.eth_send_transaction(tx)
+        print(JsonRPC.send(tx_json, HTTP_HEADER, tx_intents.intents[idx].chain_host))
+
+        # verify_transaction_state?
+
+        # compute opened attestaion
+        atte = u.init_attestation(tx, StateType.opened, int(session_content[0]), 0, ves.chain_host)
+        laz_func = u.send_attestation(session_id, atte, idx, StateType.opened, ves.chain_host)
+        laz_func.transact()
+        console_logger.info('nsb received action, response: {}'.format(laz_func.loop_and_wait()))
+
+        # Part_Z # closed ##############################################################################################
+
+        # no necessary to ack, just verify it
+        v.receive(atte.encode(), int(session_content[0]))
+
+        atte = v.init_attestation(tx, StateType.closed, int(session_content[0]), 0, ves.chain_host)
+        laz_func = v.send_attestation(session_id, atte, idx, StateType.closed, ves.chain_host)
+        laz_func.transact()
+        console_logger.info('nsb received action, response: {}'.format(laz_func.loop_and_wait()))
+
+        # end ##########################################################################################################
+
+        u.receive(atte.encode(), int(session_content[0]))
     # #
     # # # settle
     # #

@@ -1,7 +1,7 @@
 {
     "Op-intents": [
         {
-            "contract_addr": "0xafc7d2959e72081770304f6474151293be1fbba7",
+            "contract_addr": "0x7c7b26fa65e091f7b9f23db77ad5f714f1dae5ea",
             "contract_domain": "Chain1",
             "func": "getGenuineValue",
             "invoker": "a1",
@@ -10,7 +10,7 @@
             "op_type": "ContractInvocation"
         },
         {
-            "contract_addr": "0x3723261b2a5a62b778b5c74318534d7fdf8db38c",
+            "contract_addr": "0x13304db97b1d572360dd01618619923c857695ea",
             "contract_domain": "BuptChain1",
             "func": "CashSettle",
             "invoker": "a2",

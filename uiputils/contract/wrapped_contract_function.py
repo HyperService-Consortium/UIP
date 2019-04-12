@@ -6,6 +6,7 @@ from functools import partial
 # ethereum modules
 from hexbytes import HexBytes
 from web3.utils.threads import Timeout as Web3Timeout
+from eth_utils import to_checksum_address
 
 # eth modules
 from uiputils.ethtools import JsonRPC, AbiEncoder, hex_match, hex_match_withprefix
@@ -121,13 +122,18 @@ class ContractFunctionClient(object):
         function_transact=None,
         function_call=None,
         wait_catch=None,
-        tx=None,
+        tx_header=None,
         timeout=25
     ):
+        if tx_header is not None:
+            if 'from' in tx_header:
+                tx_header['from'] = to_checksum_address(tx_header['from'])
+            if 'to' in tx_header:
+                tx_header['to'] = to_checksum_address(tx_header['to'])
         if function_transact is not None:
-            self.transactor = partial(function_transact, transaction=tx)
+            self.transactor = partial(function_transact, transaction=tx_header)
         if function_call is not None:
-            self.caller = partial(function_call, transaction=tx)
+            self.caller = partial(function_call, transaction=tx_header)
 
         self.wait_catch = wait_catch
         self.timeout = timeout
