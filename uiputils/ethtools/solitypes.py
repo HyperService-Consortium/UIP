@@ -1,5 +1,5 @@
 
-from .loc_cal import singlelocation, slicelocation, maplocation
+from .loc_cal import singlelocation, origin_singlelocation, slicelocation, maplocation
 
 
 class SoliUint256:
@@ -13,6 +13,10 @@ class SoliUint256:
     @staticmethod
     def loc(slot):
         return singlelocation(slot)
+
+    @staticmethod
+    def ori_loc(slot):
+        return origin_singlelocation(slot)
 
 
 class SoliUint(SoliUint256):

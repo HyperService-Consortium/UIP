@@ -148,36 +148,36 @@ if __name__ == '__main__':
 
     # chain1 0x99d5c147122e79c30ce5e6ad793fc6716ced6f98
     # buptchain1 0xff10e1a886cfb4d1be8aa469c783e3492afc398d
-    with open('./contract/solidity/contract_sample/broker-option/broker.bin', 'r') as f:
-        BrokerBytecode = f.read()
-
-        broker_contract = SmartContract(
-            BrokerBytecode + AbiEncoder.encodes(
-                [
-                    ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"],
-                    1
-                ],
-                ['address[]', 'uint']
-            ),
-            BLOCKCHAIN['B'],
-            "BrokerContract", hex(2000000))
-        hyperservice.DeployContract(broker_contract)
+    # with open('./contract/solidity/contract_sample/broker-option/broker.bin', 'r') as f:
+    #     BrokerBytecode = f.read()
+    #
+    #     broker_contract = SmartContract(
+    #         BrokerBytecode + AbiEncoder.encodes(
+    #             [
+    #                 ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"],
+    #                 1
+    #             ],
+    #             ['address[]', 'uint']
+    #         ),
+    #         BLOCKCHAIN['B'],
+    #         "BrokerContract", hex(2000000))
+    #     hyperservice.DeployContract(broker_contract)
         # queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
         # print(queryProof)
 
     # chain1 0x3723261b2a5a62b778b5c74318534d7fdf8db38c
     # buptchain1 0x1c8056438cb7b6b303b02520dbc30faeba805989
     # chain2 0xc06da79957ca0b46aac29ee2815742f05fbad327
-    # with open('./contract_sample/broker-option/option.bin', 'r') as f:
-    #     OptionBytecode = f.read()
-    #     option_contract = SmartContract(
-    #         OptionBytecode + AbiEncoder.encodes(
-    #             ["0xf4dacff5eba7426295e27a32d389fff3cde55de2", '50'],
-    #             ['address', 'uint']
-    #         ),
-    #         BLOCKCHAIN['A'],
-    #         "OptionContract", hex(1000000), "0x872")
-    #     hyperservice.DeployContract(option_contract)
+    with open('./contract/solidity/contract_sample/broker-option/option.bin', 'r') as f:
+        OptionBytecode = f.read()
+        option_contract = SmartContract(
+            OptionBytecode + AbiEncoder.encodes(
+                ["0xf4dacff5eba7426295e27a32d389fff3cde55de2", '10'],
+                ['address', 'uint']
+            ),
+            BLOCKCHAIN['A'],
+            "OptionContract", hex(1000000), "0x8772")
+        hyperservice.DeployContract(option_contract)
 
     # chain1
     # 0x7019fa779024c0a0eac1d8475733eefe10a49f3b

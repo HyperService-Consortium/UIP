@@ -22,6 +22,9 @@ POS_MERKLEPROOFTREE = b'\x00' * 31 + b'\x06'
 POS_ACTIONTREE = b'\x00' * 31 + b'\x08'
 
 
+origin_singlelocation = transbytes32
+
+
 def singlelocation(slot):
     return keccak(transbytes32(slot))
 

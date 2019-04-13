@@ -55,7 +55,7 @@ class EthLightNetStatusBlockChain:
         if tx is None:
             self.tx = {
                 "from": self.owner,
-                "gas": hex(6000000),
+                "gas": hex(7999999),
                 "data": None,
                 "to": nsb_addr
             }

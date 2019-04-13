@@ -15,9 +15,11 @@ class EthDataParser:
         parsed_args = []
         for arg, arg_type in zip(args, args_types):
             if isinstance(arg, str) and len(arg) > 0 and arg[0] == '@':
-                begining_pos, contract_addr, domain = [split_str[::-1] for split_str in arg[:0:-1].split('.', 2)]
-                contract_addr, domain = eth_known_contract[contract_addr], ChainDNS.get_host(domain)
-                authen_pos = HexBytes(SoliTypes[arg_type].loc(begining_pos)).hex()
+                contract_addr, begining_pos = arg[1:].split('.')
+                contract_addr, domain = \
+                    eth_known_contract[contract_addr]['address'], eth_known_contract[contract_addr]['host']
+                authen_pos = HexBytes(SoliTypes[arg_type].ori_loc(begining_pos)).hex()
+                print(authen_pos, contract_addr, domain)
                 parsed_args.append(JsonRPC.send(
                     JsonRPC.eth_get_storage_at(contract_addr, authen_pos, "latest"),
                     HTTP_HEADER,

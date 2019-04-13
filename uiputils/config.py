@@ -58,8 +58,14 @@ eth_unit_factor = {
 eth_default_gasuse = hex(300000)
 
 eth_known_contract = {
-    'c1': "0x7c7b26fa65e091f7b9f23db77ad5f714f1dae5ea",
-    'c2': "0x13304db97b1d572360dd01618619923c857695ea"
+    'c1': {
+        "address": "0x7c7b26fa65e091f7b9f23db77ad5f714f1dae5ea",
+        "host": "http://127.0.0.1:8545"
+    },
+    'c2': {
+        "address": "0xbc03fb164c168b9364e820395fbf6ebdbc8f7ffe",
+        "host": "http://162.105.87.118:8545"
+    }
 }
 
 ves_log_dir = ROOT_PATH + "/log/ves.log"

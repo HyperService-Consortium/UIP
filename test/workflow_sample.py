@@ -73,8 +73,8 @@ if __name__ == '__main__':
 
     session_content, isc, session_signature, tx_intents = ves.session_setup_prepare(op_intents_json)
 
-    dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host, testing=True)
-    dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host, testing=True)
+    dapp_x.ackinit(ves, isc, session_content, session_signature, ves.chain_host, testing=False)
+    dapp_y.ackinit(ves, isc, session_content, session_signature, ves.chain_host, testing=False)
 
     print("raw: ", ves.address)
     print(isc.is_owner(ves.address))
@@ -99,14 +99,14 @@ if __name__ == '__main__':
 
     from uiputils.ethtools import AbiEncoder
     import random
-    testnumber = random.randint(0, 65535)
+    testnumber = random.randint(0, 100)
     tx = JsonRPC.eth_send_transaction({
         'from': dapp_x.info['http://127.0.0.1:8545']['address'],
         'to': "0x7c7b26fa65e091f7b9f23db77ad5f714f1dae5ea",
         "data": "0x67eb4a3c" + AbiEncoder.encodes([testnumber], ['uint']),
         "gas": hex(7999999)
     })
-    print()
+    dapp_x.unlockself('http://127.0.0.1:8545')
     console_logger.info('genuineValue set: {0}\n response: {1}'.format(
         testnumber,
         JsonRPC.send(tx, HTTP_HEADER, 'http://127.0.0.1:8545')
@@ -152,6 +152,7 @@ if __name__ == '__main__':
         # open transaction
         u.unlockself(tx_intents.intents[idx].chain_host)
         tx_json = JsonRPC.eth_send_transaction(tx)
+        print(tx)
         print(JsonRPC.send(tx_json, HTTP_HEADER, tx_intents.intents[idx].chain_host))
 
         # verify_transaction_state?

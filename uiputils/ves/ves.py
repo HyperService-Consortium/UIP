@@ -144,11 +144,11 @@ class VerifiableExecutionSystem:
                 [self.address] + ChainDNS.gatherusers(wait_user, userformat='dot-concated'),
                 ves=self,
                 tx_head={'from': self.address, 'gas': hex(4000000)},
-                # rlped_txs=sign_bytes,
-                # signature=atte_v,
-                # tx_count=len(tx_intents.intents)
+                rlped_txs=sign_bytes,
+                signature=atte_v,
+                tx_count=len(tx_intents.intents)
                 # test by deployed contract
-                contract_addr="0x0C24884AEe4E89378Bb1E739A5c9b34834D384E5"
+                # contract_addr="0x0C24884AEe4E89378Bb1E739A5c9b34834D384E5"
             )
         except Exception as e:
             self.debug('session-id: {sid} ISCBulidError: {exec}'.format(
@@ -166,7 +166,7 @@ class VerifiableExecutionSystem:
         ))
 
         # update isc's information
-        self.send_txinfo_to_isc(isc, tx_intents, testing=True)
+        self.send_txinfo_to_isc(isc, tx_intents, testing=False)
 
         # undate session information
         session_info = self.txs_pool[session_id]
@@ -220,7 +220,7 @@ class VerifiableExecutionSystem:
 
         # TODO: Send Request(Tx-intents) NSB
 
-        self.send_txinfo_to_nsb(session_id, testing=True)
+        self.send_txinfo_to_nsb(session_id, testing=False)
 
     @staticmethod
     def build_graph(op_intents_json):

@@ -10,7 +10,7 @@
             "op_type": "ContractInvocation"
         },
         {
-            "contract_addr": "0x13304db97b1d572360dd01618619923c857695ea",
+            "contract_addr": "0xbc03fb164c168b9364e820395fbf6ebdbc8f7ffe",
             "contract_domain": "BuptChain1",
             "func": "CashSettle",
             "invoker": "a2",

@@ -88,6 +88,7 @@ class EthTransaction:
             # print(function_parameters_description)
             # import time
             # time.sleep(0.5)
+            print(function_parameters_description)
             to_hash = bytes(
                 (self.tx_info['func'] + '(' + ','.join(function_parameters_description) + ')').encode('utf-8')
             )
