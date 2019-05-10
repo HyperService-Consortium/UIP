@@ -3,15 +3,15 @@
 
 
 # ethereum modules
-from eth_utils import is_address
-
+from eth_utils import is_address as is_eth_address
+from uiputils.tennsbtools import is_address as is_tennsb_address
 
 # uip modules
 from uiputils.errors import Missing
 
 
 # config
-from uiputils.config import eth_blockchain_info
+from uiputils.config import eth_blockchain_info, tennsb_blockchain_info
 
 
 def adduser_f00(user):
@@ -26,7 +26,7 @@ class EthChainDNS:
 
     @staticmethod
     def checkuser(chain_id, user_name):
-        if is_address(user_name):
+        if is_eth_address(user_name):
             return user_name
         if chain_id in eth_blockchain_info:
             if user_name in eth_blockchain_info[chain_id]['user']:
@@ -53,9 +53,43 @@ class EthChainDNS:
             raise Missing('no such chainID: ' + chain_id)
 
 
+class TenChainDNS:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def checkuser(chain_id, user_name):
+        if is_tennsb_address(user_name):
+            return user_name
+        if chain_id in tennsb_blockchain_info:
+            if user_name in tennsb_blockchain_info[chain_id]['user']:
+                return tennsb_blockchain_info[chain_id]['user'][user_name]
+            raise Missing('no user named ' + user_name + ' in ' + chain_id)
+        else:
+            raise Missing('no such chainID: ' + chain_id)
+
+    @staticmethod
+    def checkrelay(chain_id):
+        if chain_id in tennsb_blockchain_info:
+            if 'relay_nsb' in tennsb_blockchain_info[chain_id]['user']:
+                return tennsb_blockchain_info[chain_id]['user']['relay_nsb']
+            else:
+                raise Missing('this chain has not relay-address' + chain_id)
+        else:
+            raise Missing('no such chainID: ' + chain_id)
+
+    @staticmethod
+    def gethost(chain_id):
+        if chain_id in tennsb_blockchain_info:
+            return tennsb_blockchain_info[chain_id]['host']
+        else:
+            raise Missing('no such chainID: ' + chain_id)
+
+
 class ChainDNS:
     DNSmethod = {
-       'Ethereum': EthChainDNS
+       'Ethereum': EthChainDNS,
+       'Tendermint': TenChainDNS
     }
     adduser = {
         'dot-concated': adduser_f00

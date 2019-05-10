@@ -64,7 +64,7 @@ class VerifiableExecutionSystem:
         self.address = "0x4f984aa7d262372df92f85af9be8d2df09ac4018"
         self.password = "123456"
         self.chain_host = "http://127.0.0.1:8545"
-        self.domain = "Ethereum://Chain1"
+        self.domain = "Ethereum://chain1"
         ###########################################################
 
         # TODO: temporary eth-nsb-address
@@ -168,7 +168,7 @@ class VerifiableExecutionSystem:
         # update isc's information
         self.send_txinfo_to_isc(isc, tx_intents, testing=False)
 
-        # undate session information
+        # update session information
         session_info = self.txs_pool[session_id]
         session_info['tx_intents'] = tx_intents
         session_info['ack_dict'] = dict((owner, None) for owner in wait_user)

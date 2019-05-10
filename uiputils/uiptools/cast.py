@@ -13,6 +13,7 @@ from hexbytes import HexBytes
 from uiputils.errors import DecodeFail
 
 # constant
+from uiputils.config import trans_factor
 MOD512 = (1 << 512) - 1
 MOD256 = (1 << 256) - 1
 MOD8 = (1 << 8) - 1
@@ -481,6 +482,12 @@ CastReference = {
 
 def create_cast(length=None, mutikey=False):
     return CastReference[length][mutikey]
+
+
+def trans_amount(amn, src_chain_type, dst_chain_type):
+    pass
+
+
 
 
 if __name__ == '__main__':

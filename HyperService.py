@@ -13,7 +13,7 @@ BLOCKCHAIN = {
 }
 
 NETWORK_SETUP = {
-    BLOCKCHAIN['A']: "http://162.105.87.118:8545",
+    # BLOCKCHAIN['A']: "http://162.105.87.118:8545",
     BLOCKCHAIN['B']: "http://127.0.0.1:8545",
     BLOCKCHAIN['C']: "http://127.0.0.1:8599",
     BLOCKCHAIN['D']: "http://127.0.0.1:8545"
@@ -143,7 +143,7 @@ def serializeNSBData(bytecode, addrlist, required):
 
 if __name__ == '__main__':
 
-    supported_chains = [BLOCKCHAIN['A'], BLOCKCHAIN['B']]
+    supported_chains = [BLOCKCHAIN['B']]  # [BLOCKCHAIN['A'],
     hyperservice = HyperService(supported_chains)
 
     # chain1 0x99d5c147122e79c30ce5e6ad793fc6716ced6f98
@@ -162,22 +162,23 @@ if __name__ == '__main__':
     #         BLOCKCHAIN['B'],
     #         "BrokerContract", hex(2000000))
     #     hyperservice.DeployContract(broker_contract)
-        # queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
-        # print(queryProof)
+    #    # queryProof = hyperservice.GetAuthenticatedPriceFromBroker()
+    #    # print(queryProof)
 
     # chain1 0x3723261b2a5a62b778b5c74318534d7fdf8db38c
     # buptchain1 0x1c8056438cb7b6b303b02520dbc30faeba805989
     # chain2 0xc06da79957ca0b46aac29ee2815742f05fbad327
-    with open('./contract/solidity/contract_sample/broker-option/option.bin', 'r') as f:
-        OptionBytecode = f.read()
-        option_contract = SmartContract(
-            OptionBytecode + AbiEncoder.encodes(
-                ["0xf4dacff5eba7426295e27a32d389fff3cde55de2", '10'],
-                ['address', 'uint']
-            ),
-            BLOCKCHAIN['A'],
-            "OptionContract", hex(1000000), "0x8772")
-        hyperservice.DeployContract(option_contract)
+
+    # with open('./contract/solidity/contract_sample/broker-option/option.bin', 'r') as f:
+    #     OptionBytecode = f.read()
+    #     option_contract = SmartContract(
+    #         OptionBytecode + AbiEncoder.encodes(
+    #             ["0xf4dacff5eba7426295e27a32d389fff3cde55de2", '10'],
+    #             ['address', 'uint']
+    #         ),
+    #         BLOCKCHAIN['A'],
+    #         "OptionContract", hex(1000000), "0x8772")
+    #     hyperservice.DeployContract(option_contract)
 
     # chain1
     # 0x7019fa779024c0a0eac1d8475733eefe10a49f3b
@@ -191,5 +192,16 @@ if __name__ == '__main__':
     #         NSBdata, BLOCKCHAIN['B'],
     #         "NSBContract", hex(8000000))
     #     hyperservice.DeployContract(NSB_contract)
+
+    # ethereum chain1
+    # 0xa537235f11b50a89ba2b5007cdd5eb7fd3cb3f7e
+
+    with open('./contract/hsapps/CryptoAsset/CryptoAsset.bin', 'r') as f:
+        CryptoAssetBytecode = f.read()
+        # NSBdata = serializeNSBData(NSBBytecode, ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"], 1)
+        CryptoAssetContract = SmartContract(
+            CryptoAssetBytecode, BLOCKCHAIN['B'],
+            "CryptoAssetContract", hex(8000000))
+        hyperservice.DeployContract(CryptoAssetContract)
 
     # print(hyperservice.contracts)

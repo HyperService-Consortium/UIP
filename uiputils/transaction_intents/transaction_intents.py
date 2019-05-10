@@ -4,9 +4,9 @@ from eth_hash.auto import keccak
 from hexbytes import HexBytes
 
 from uiputils.chain_dns import ChainDNS
-from uiputils.transaction.eth_transaction import EthTransaction as EthTx
+from uiputils.transaction import transaction_creator
 from uiputils.errors import GenerationError
-
+from uiputils.uiptools.cast import trans_amount
 
 ENC = 'utf-8'
 
@@ -45,33 +45,27 @@ class TransactionIntents:
         src_chain_type, src_chain_id = op_intent.src['domain'].split('://')
         dst_chain_type, dst_chain_id = op_intent.dst['domain'].split('://')
 
-        if src_chain_type == "Ethereum":
-            tx = EthTx(
-                "transfer",  # transaction type
-                src_chain_id,  # chain_id
-                ChainDNS.checkuser(src_chain_type, src_chain_id, op_intent.src['user_name']),  # src_addr
-                ChainDNS.checkrelay(src_chain_type, src_chain_id),  # dst_addr
-                op_intent.amount,  # fund
-                op_intent.unit  # fund_unit
-            )
-            self.intents.append(tx)
-            tx.tx_info['name'] = "T" + str(len(self.intents))
-        else:
-            raise GenerationError("unsupported chain-type: " + src_chain_type)
+        tx = transaction_creator(src_chain_type)(
+            "transfer",  # transaction type
+            src_chain_id,  # chain_id
+            ChainDNS.checkuser(src_chain_type, src_chain_id, op_intent.src['user_name']),  # src_addr
+            ChainDNS.checkrelay(src_chain_type, src_chain_id),  # dst_addr
+            op_intent.amount,  # fund
+            op_intent.unit  # fund_unit
+        )
+        self.intents.append(tx)
+        tx.tx_info['name'] = "T" + str(len(self.intents))
 
-        if dst_chain_type == "Ethereum":
-            tx = EthTx(
-                "transfer",  # transaction type
-                dst_chain_id,  # chain_id
-                ChainDNS.checkuser(dst_chain_type, dst_chain_id, op_intent.dst['user_name']),  # src_addr
-                ChainDNS.checkrelay(dst_chain_type, dst_chain_id),  # dst_addr
-                op_intent.amount,  # fund
-                getattr(op_intent, 'unit')  # option fund_unit
-            )
-            self.intents.append(tx)
-            tx.tx_info['name'] = "T" + str(len(self.intents))
-        else:
-            raise GenerationError("unsupported chain-type: " + dst_chain_type)
+        tx = transaction_creator(dst_chain_type)(
+            "transfer",  # transaction type
+            dst_chain_id,  # chain_id
+            ChainDNS.checkuser(dst_chain_type, dst_chain_id, op_intent.dst['user_name']),  # src_addr
+            ChainDNS.checkrelay(dst_chain_type, dst_chain_id),  # dst_addr
+            op_intent.amount,  # fund
+            op_intent.unit  # option fund_unit
+        )
+        self.intents.append(tx)
+        tx.tx_info['name'] = "T" + str(len(self.intents))
 
         t_fr, t_to = "T" + str(len(self.intents) - 1), "T" + str(len(self.intents))
         intent_tx[op_intent.name] = [t_fr, t_to]
@@ -86,7 +80,7 @@ class TransactionIntents:
             invoker_address = ChainDNS.checkuser(chain_type, chain_id, op_intent.invoker)
             compare_vector = hasattr(op_intent, 'address') << 1 | hasattr(op_intent, 'func')
             if compare_vector == 3:  # deployed address + invoke function
-                tx = EthTx(
+                tx = transaction_creator(chain_type)(
                     "invoke",
                     chain_id,
                     invoker_address,
@@ -100,12 +94,12 @@ class TransactionIntents:
                 intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
             elif compare_vector == 2:  # deployed address
                 print("warning: transaction", len(self.intents) + 1, "has no effect")
-                tx = EthTx('void')
+                tx = transaction_creator(chain_type)('void')
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
                 intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
             elif compare_vector == 1:  # deploy address + invoke function
-                tx = EthTx(
+                tx = transaction_creator(chain_type)(
                     "deploy",
                     chain_id,
                     op_intent.code,
@@ -113,7 +107,7 @@ class TransactionIntents:
                 )
                 self.intents.append(tx)
                 tx.tx_info['name'] = "T" + str(len(self.intents))
-                tx = EthTx(
+                tx = transaction_creator(chain_type)(
                     "invoke",
                     chain_id,
                     invoker_address,
@@ -128,7 +122,7 @@ class TransactionIntents:
                 intent_tx[op_intent.name] = [t_fr, t_to]
                 self.dependencies.append(t_fr + "->" + t_to)
             else:  # depoly address
-                tx = EthTx(
+                tx = transaction_creator(chain_type)(
                     "deploy",
                     chain_id,
                     op_intent.code,

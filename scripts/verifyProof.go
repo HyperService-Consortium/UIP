@@ -200,6 +200,7 @@ func OpenDB(dbpath *C.char) C.int {
 func CloseDB(dbpi C.int) {
     db := dbPacket[dbpi]
     db.Close();
+	dbPacket[dbpi] = nil
 }
 
 

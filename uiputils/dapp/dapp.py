@@ -58,6 +58,7 @@ class DApp:
                 chain_type, chain_id = infomation['domain'].split('://')
                 chain_host = ChainDNS.gethost(chain_type, chain_id)
                 self.info[chain_host] = self.info[infomation['domain']] = {
+                    'chain_type': chain_type,
                     'address': ChainDNS.checkuser(chain_type, chain_id, self.name),
                     'host': chain_host,
                     'domain': infomation['domain'],
@@ -75,11 +76,18 @@ class DApp:
         """
         if host_name is None:
             host_name = self.default_domain
+
         host_info = self.info[host_name]
-        unlock = JsonRPC.personal_unlock_account(host_info['address'], host_info['password'], 20)
-        response = JsonRPC.send(unlock, HTTP_HEADER, host_info['host'])
-        if not response['result']:
-            raise ValueError("unlock failed. wrong password?")
+
+        if host_info['chain_type'] == 'Tendermint':
+            return
+        elif host_info['chain_type'] == 'Ethereum':
+            unlock = JsonRPC.personal_unlock_account(host_info['address'], host_info['password'], 20)
+            response = JsonRPC.send(unlock, HTTP_HEADER, host_info['host'])
+            if not response['result']:
+                raise ValueError("unlock failed. wrong password?")
+        else:
+            raise TypeError("unsupported chain-type: ", + host_info['chain_type'])
 
     def sign(self, msg, host_name=None):
         """
@@ -90,10 +98,17 @@ class DApp:
         """
         if host_name is None:
             host_name = self.default_domain
-        self.unlockself(host_name)
+
         host_info = self.info[host_name]
-        sign_json = JsonRPC.eth_sign(host_info['address'], msg)
-        return JsonRPC.send(sign_json, HTTP_HEADER, host_info['host'])['result']
+
+        if host_info['chain_type'] == 'Tendermint':
+            return host_info['password'].sign(msg)
+        elif host_info['chain_type'] == 'Ethereum':
+            self.unlockself(host_name)
+            sign_json = JsonRPC.eth_sign(host_info['address'], msg)
+            return JsonRPC.send(sign_json, HTTP_HEADER, host_info['host'])['result']
+        else:
+            raise TypeError("unsupported chain-type: ", + host_info['chain_type'])
 
     @staticmethod
     def call(trans):
@@ -215,7 +230,7 @@ class DApp:
         if host_name is None:
             host_name = self.default_domain
         return atte.sign_and_encode([
-            self.sign(HexBytes(atte.hash()).hex()),
+            self.sign(HexBytes(atte.hash).hex()),
             self.info[host_name]['address']
         ])
 

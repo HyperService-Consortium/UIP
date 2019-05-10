@@ -25,7 +25,8 @@ class OpIntents:
     Op_Type = ('Payment', 'ContractInvocation')
     Chain_Default_Unit = {
         'Ethereum': 'wei',
-        'EOS': 'SYS'
+        'EOS': 'SYS',
+        'Tendermint': 'iew',
     }
 
     def __init__(self, intent_json):
