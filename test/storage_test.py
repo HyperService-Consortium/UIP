@@ -1,10 +1,8 @@
 
-from uiputils.eth.tools import ServiceStart
+from uiputils.ethtools import ServiceStart
 from web3 import Web3
-from uiputils.eth import JsonRPC
-from hexbytes import HexBytes
-from uiputils.eth.tools.loc_cal import slicelocation, maplocation
-from uiputils.eth.ethtypes import EthNetStatusBlockchain
+from uiputils.ethtools import JsonRPC
+from uiputils.nsb.nsb import EthNetStatusBlockchain
 
 EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
 url = "http://127.0.0.1:8545"
@@ -16,15 +14,20 @@ nsb_abi_addr = "../nsb/nsb.abi"
 nsb_bytecode_addr = "../nsb/nsb.bin"
 nsb_db_addr = "../nsb/actiondata"
 if __name__ == '__main__':
-    web3h = ServiceStart.startweb3(url)
+    print(JsonRPC.send(
+                    JsonRPC.eth_get_storage_at("0x7c7b26fa65e091f7b9f23db77ad5f714f1dae5ea", "0x0", "latest"),
+                    HTTP_HEADER,
+                    'http://127.0.0.1:8545'
+                )['result'])
+    # web3h = ServiceStart.startweb3(url)
     # key = 0
-    nsbt = EthNetStatusBlockchain(url, nsb_addr, nsb_abi_addr, EDB_PATH, nsb_bytecode_addr)
-    nsb = nsbt.handle
+    # nsbt = EthNetStatusBlockchain(url, nsb_addr, nsb_abi_addr, EDB_PATH, nsb_bytecode_addr)
+    # nsb = nsbt.handle
 
     # print(JsonRPC.send(url, HTTP_HEADER, JsonRPC.ethGetProof(nsb_addr, ["0x0"], "latest"))
     #       ['result']['storageProof'][0]['value'])
     #
-    print(nsb.funcs())
+    # print(nsb.funcs())
     # idx:  0
     #     block_address A
     #     storageHash 0x933b2499f931cef309f61259914d250c69446f55dcd9a6e85cebf0aed214ef36

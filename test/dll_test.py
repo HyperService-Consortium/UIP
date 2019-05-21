@@ -6,8 +6,7 @@ import time
 from hexbytes import HexBytes
 
 # uip modules
-import uiputils.eth as eth
-from uiputils.eth import JsonRPC
+from uiputils.ethtools import JsonRPC, Prover
 
 EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
 url = "http://127.0.0.1:8545"
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     time.sleep(5)
 
     try:
-        prover = eth.Prover(EDB_PATH)
+        prover = Prover(EDB_PATH)
 
         # prover.verify(HexBytes(keccak(HexBytes(uint64hexstring(int(storageProof['key'], 16))))).hex(),
         #               storageProof['value'],

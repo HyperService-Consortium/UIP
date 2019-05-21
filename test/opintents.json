@@ -22,8 +22,14 @@
             "contract_addr": "0x85854fe3853b7A51576bFd78564Ec1993f8820d1",
             "contract_code": null,
             "func": "isOwner",
-            "parameters": ["0x7019fa779024c0a0eac1d8475733eefe10a49f3b"],
-            "parameters_description": ["address"]
+            "parameters": [
+                {
+                    "Type": "address",
+                    "Value": {
+                        "constant": "0x7019fa779024c0a0eac1d8475733eefe10a49f3b"
+                    }
+                }
+            ]
         }
     ],
     "dependencies": [{

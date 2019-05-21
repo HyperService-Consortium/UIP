@@ -1,0 +1,1 @@
+solc.exe -o ./ nsb.sol --abi --bin
