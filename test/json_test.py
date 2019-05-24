@@ -4,7 +4,7 @@ import json
 
 # uip modules
 from uiputils.dapp import DApp
-from uiputils.op_intents import OpIntents
+from uiputils.op_intents import OpIntent
 from uiputils.transaction_intents import TransactionIntents
 
 # eth modules
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     op_intents_json = FileLoad.getopintents("opintents.json")
 
     # build eligible Op intents
-    op_intents = OpIntents.createopintents(op_intents_json['Op-intents'])
+    op_intents = OpIntent.createopintents(op_intents_json['Op-intents'])
     for op_intent in op_intents:
         print("---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----")
         print(json.dumps(op_intent.__dict__, sort_keys=True, indent=4, separators=(', ', ': ')))
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # Generate Transaction intents and Dependency Graph
     tx_intents = TransactionIntents(op_intents, op_intents_json['dependencies'])
-    for tx_intent in tx_intents.intents:
+    for tx_intent in tx_intents._intents:
         print("---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----")
         print("Transaction Chain-ID:", tx_intent.chain_host)
         print(

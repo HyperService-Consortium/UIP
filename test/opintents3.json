@@ -4,11 +4,11 @@
             "name": "Op1",
             "op_type": "Payment",
             "src": {
-                "domain":"Tendermint://chain1",
+                "domain":"Tendermint://chain2",
                 "user_name": "a2"
             },
             "dst": {
-                "domain":"Ethereum://chain1",
+                "domain":"Ethereum://chain3",
                 "user_name": "a1"
             },
             "amount": 20,
@@ -18,8 +18,8 @@
             "op_type": "ContractInvocation",
             "name": "Op2",
             "invoker": "a1",
-            "contract_domain": "Ethereum://chain1",
-            "contract_addr": "0xa537235f11b50a89ba2b5007cdd5eb7fd3cb3f7e",
+            "contract_domain": "Ethereum://chain3",
+            "contract_addr": "0x27f8e035eb353bcefb348174205e90bc18ab3eda",
             "contract_code": null,
             "func": "deposit",
             "parameters": [

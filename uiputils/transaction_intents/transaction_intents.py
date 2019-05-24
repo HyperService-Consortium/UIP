@@ -1,23 +1,26 @@
+import copy
 import json
+import queue
 
 from eth_hash.auto import keccak
 from hexbytes import HexBytes
 
-from uiputils.chain_dns import ChainDNS
-from uiputils.transaction import transaction_creator
+from uiputils.transaction import (
+    TransactionHelper
+)
+
 from uiputils.errors import GenerationError
-from uiputils.uiptools.cast import trans_amount
 
 ENC = 'utf-8'
 
 
 class TransactionIntents:
-    def __init__(self, op_intents, dependencies):
-        self.intents = []
-        self.dependencies = []
-        intent_tx = {}
-        for op_intent in op_intents:
-            getattr(self, op_intent.op_type + "TxGenerate")(op_intent, intent_tx)
+    def __init__(self, op_intents=None, dependencies=None):
+        self._intents: list = None
+        self._belongs = None
+        self._dependencies = None
+        self._origin_intents = copy.copy(op_intents)
+        self._dependencies = copy.copy(dependencies)
 
         # print generated OpX -> TxXs
         # for k, vs in intent_tx.items():
@@ -26,118 +29,105 @@ class TransactionIntents:
         #         print("   ", v)
 
         # build Dependencies
-        for dependency in dependencies:
+        # for dependency in dependencies:
+        #     if 'left' not in dependency or 'right' not in dependency:
+        #         raise GenerationError("attribute left/right missing")
+        #
+        #     if 'dep' not in dependency or dependency['dep'] == 'before':  # OpX before OpY (default relation)
+        #         for u in intent_tx[dependency['left']]:
+        #             for v in intent_tx[dependency['right']]:
+        #                 self.dependencies.append(u + "->" + v)
+        #     elif dependency['dep'] == 'after':  # OpX after OpY
+        #         for u in intent_tx[dependency['right']]:
+        #             for v in intent_tx[dependency['left']]:
+        #                 self.dependencies.append(u + "->" + v)
+        #     else:
+        #         raise GenerationError('unsupported dependency-type: ' + dependency['dep'])
+
+    @property
+    def intents(self):
+        if self._intents is None:
+            self.sort(self._dependencies)
+        return self._intents
+
+    @property
+    def belongs(self):
+        if self._belongs is None:
+            self.generate_from_opintents(self._origin_intents)
+        return self._belongs
+
+    @property
+    def origin_intents(self):
+        return self._origin_intents
+
+    @origin_intents.setter
+    def origin_intents(self, value):
+        self._origin_intents = value
+        self._belongs = None
+        self._intents = None
+
+    @property
+    def dependencies(self):
+        return self._dependencies
+
+    @dependencies.setter
+    def dependencies(self, value):
+        self._dependencies = value
+        self._intents = None
+
+    def generate_from_opintents(self, op_intents=None):
+        if op_intents is not None and self._origin_intents is not op_intents:
+            self._origin_intents = copy.copy(op_intents)
+
+        self._belongs = {}
+        for op_intent in self._origin_intents:
+            self._belongs[op_intent.name] = [*TransactionHelper.make(op_intent.op_type, op_intent)]
+        return self._belongs
+
+    def sort(self, dependencies=None):
+        if dependencies is not None and self._dependencies is not dependencies:
+            self._dependencies = copy.copy(dependencies)
+        if self._belongs is None:
+            self.generate_from_opintents(self._origin_intents)
+
+        self._intents = []
+        sort_edge = dict(((name, []) for name in self._belongs.keys()))
+        sort_counting = dict(((name, 0) for name in self._belongs.keys()))
+        for dependency in self._dependencies:
             if 'left' not in dependency or 'right' not in dependency:
                 raise GenerationError("attribute left/right missing")
 
             if 'dep' not in dependency or dependency['dep'] == 'before':  # OpX before OpY (default relation)
-                for u in intent_tx[dependency['left']]:
-                    for v in intent_tx[dependency['right']]:
-                        self.dependencies.append(u + "->" + v)
+                sort_edge[dependency['left']].append(dependency['right'])
+                sort_counting[dependency['right']] += 1
             elif dependency['dep'] == 'after':  # OpX after OpY
-                for u in intent_tx[dependency['right']]:
-                    for v in intent_tx[dependency['left']]:
-                        self.dependencies.append(u + "->" + v)
+                sort_edge[dependency['right']].append(dependency['left'])
+                sort_counting[dependency['left']] += 1
             else:
                 raise GenerationError('unsupported dependency-type: ' + dependency['dep'])
+        ready_erase = queue.Queue()
+        for name, cnt in sort_counting.items():
+            if cnt == 0:
+                ready_erase.put(name)
+        while ready_erase.qsize():
+            name = ready_erase.get()
+            sort_counting.pop(name)
+            self._intents.extend(self._belongs[name])
+            for node in sort_edge[name]:
+                sort_counting[node] -= 1
+                if sort_counting[node] == 0:
+                    ready_erase.put(node)
 
-    def PaymentTxGenerate(self, op_intent, intent_tx):
-        src_chain_type, src_chain_id = op_intent.src['domain'].split('://')
-        dst_chain_type, dst_chain_id = op_intent.dst['domain'].split('://')
-
-        tx = transaction_creator(src_chain_type)(
-            "transfer",  # transaction type
-            src_chain_id,  # chain_id
-            ChainDNS.checkuser(src_chain_type, src_chain_id, op_intent.src['user_name']),  # src_addr
-            ChainDNS.checkrelay(src_chain_type, src_chain_id),  # dst_addr
-            op_intent.amount,  # fund
-            op_intent.unit  # fund_unit
-        )
-        self.intents.append(tx)
-        tx.tx_info['name'] = "T" + str(len(self.intents))
-
-        tx = transaction_creator(dst_chain_type)(
-            "transfer",  # transaction type
-            dst_chain_id,  # chain_id
-            ChainDNS.checkuser(dst_chain_type, dst_chain_id, op_intent.dst['user_name']),  # src_addr
-            ChainDNS.checkrelay(dst_chain_type, dst_chain_id),  # dst_addr
-            op_intent.amount,  # fund
-            op_intent.unit  # option fund_unit
-        )
-        self.intents.append(tx)
-        tx.tx_info['name'] = "T" + str(len(self.intents))
-
-        t_fr, t_to = "T" + str(len(self.intents) - 1), "T" + str(len(self.intents))
-        intent_tx[op_intent.name] = [t_fr, t_to]
-        self.dependencies.append(t_fr + "->" + t_to)
-
-    def ContractInvocationTxGenerate(self, op_intent, intent_tx):
-        chain_type, chain_id = op_intent.contract_domain.split('://')
-
-        # assert (hasattr(op_intent, 'address') ^ hasattr(op_intent, 'code')) == 1
-
-        if chain_type == "Ethereum":
-            invoker_address = ChainDNS.checkuser(chain_type, chain_id, op_intent.invoker)
-            compare_vector = hasattr(op_intent, 'address') << 1 | hasattr(op_intent, 'func')
-            if compare_vector == 3:  # deployed address + invoke function
-                tx = transaction_creator(chain_type)(
-                    "invoke",
-                    chain_id,
-                    invoker_address,
-                    op_intent.address,
-                    op_intent.func,
-                    getattr(op_intent, 'parameters'),
-                    getattr(op_intent, 'parameters_description')
-                )
-                self.intents.append(tx)
-                tx.tx_info['name'] = "T" + str(len(self.intents))
-                intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
-            elif compare_vector == 2:  # deployed address
-                print("warning: transaction", len(self.intents) + 1, "has no effect")
-                tx = transaction_creator(chain_type)('void')
-                self.intents.append(tx)
-                tx.tx_info['name'] = "T" + str(len(self.intents))
-                intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
-            elif compare_vector == 1:  # deploy address + invoke function
-                tx = transaction_creator(chain_type)(
-                    "deploy",
-                    chain_id,
-                    op_intent.code,
-                    gasuse=hex(200000)  # op_intent.gas
-                )
-                self.intents.append(tx)
-                tx.tx_info['name'] = "T" + str(len(self.intents))
-                tx = transaction_creator(chain_type)(
-                    "invoke",
-                    chain_id,
-                    invoker_address,
-                    "@T" + str(len(self.intents)) + ".address",
-                    op_intent.func,
-                    op_intent.parameters,
-                    op_intent.parameters_description
-                )
-                self.intents.append(tx)
-                tx.tx_info['name'] = "T" + str(len(self.intents))
-                t_fr, t_to = "T" + str(len(self.intents) - 1), "T" + str(len(self.intents))
-                intent_tx[op_intent.name] = [t_fr, t_to]
-                self.dependencies.append(t_fr + "->" + t_to)
-            else:  # depoly address
-                tx = transaction_creator(chain_type)(
-                    "deploy",
-                    chain_id,
-                    op_intent.code,
-                    gasuse=op_intent.gas
-                )
-                self.intents.append(tx)
-                tx.tx_info['name'] = "T" + str(len(self.intents))
-                intent_tx[op_intent.name] = ["T" + str(len(self.intents))]
-        else:
-            raise GenerationError("unsupported chain-type: " + chain_type)
+        if len(sort_counting) == 0:
+            return True
+        self._intents = None
+        return False
 
     def dictize(self):
         return {
-            'intents': [tx.tx_info for tx in self.intents],
-            'dependencies': self.dependencies
+            'intents': [
+                json.dumps(tx.__dict__, sort_keys=True, indent=4, separators=(', ', ': ')) for tx in self.intents],
+            'dependencies': self._dependencies
         }
 
     def purejson(self):
@@ -148,3 +138,80 @@ class TransactionIntents:
 
     def hash(self):
         return HexBytes(keccak(bytes(json.dumps(self.dictize(), sort_keys=True).encode(ENC)))).hex()
+
+
+if __name__ == '__main__':
+    intents_json = {
+        "Op-intents": [
+            {
+                "name": "Op1",
+                "op_type": "Payment",
+                "src": {
+                    "domain": "Tendermint://chain2",
+                    "user_name": "a2"
+                },
+                "dst": {
+                    "domain": "Ethereum://chain3",
+                    "user_name": "a1"
+                },
+                "amount": 20,
+                "unit": "iew"
+            },
+            {
+                "name": "Op2",
+                "op_type": "Payment",
+                "dst": {
+                    "domain": "Tendermint://chain2",
+                    "user_name": "a2"
+                },
+                "src": {
+                    "domain": "Ethereum://chain3",
+                    "user_name": "a1"
+                },
+                "amount": 20,
+                "unit": "iew"
+            },
+            {
+                "op_type": "ContractInvocation",
+                "name": "Op3",
+                "invoker": "a1",
+                "contract_domain": "Ethereum://chain3",
+                "contract_addr": "0x27f8e035eb353bcefb348174205e90bc18ab3eda",
+                "contract_code": None,
+                "func": "deposit",
+                "parameters": [
+                    {
+                        "Type": "uint256",
+                        "Value": {
+                            "constant": "10"
+                        }
+                    }
+                ]
+            }
+        ],
+        "dependencies": [{
+            "left": "Op1",
+            "right": "Op2",
+            "dep": "after"
+        }, {
+            "left": "Op1",
+            "right": "Op3",
+            "dep": "after"
+        }, {
+            "left": "Op2",
+            "right": "Op3",
+            "dep": "after"
+        }]
+    }
+
+    from uiputils.op_intents import OpIntent
+    op_intents, owners = OpIntent.createopintents(intents_json['Op-intents'])
+    print(op_intents, owners)
+
+    tx_intents = TransactionIntents(op_intents, intents_json['dependencies'])
+
+    print(tx_intents.__dict__)
+
+    print(tx_intents.belongs)
+    print(tx_intents.sort())
+    print(*tx_intents.dictize()['intents'])

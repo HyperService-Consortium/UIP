@@ -1,10 +1,12 @@
 
 from .isc import (
     InsuranceSmartContract,
-    EthInsuranceSmartContract
+    EthInsuranceSmartContract,
+    TenInsuranceSmartContract
 )
 
 __all__ = [
     "InsuranceSmartContract",
-    "EthInsuranceSmartContract"
+    "EthInsuranceSmartContract",
+    "TenInsuranceSmartContract"
 ]

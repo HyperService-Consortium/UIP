@@ -1,0 +1,89 @@
+{
+    "Op-intents": [
+        {
+            "op_type": "ContractInvocation",
+            "name": "Op1",
+            "invoker": "a1",
+            "contract_domain": "Ethereum://chain3",
+            "contract_addr": "0x4cc6cca9bdffc90acdd28a024d5492c6ee5d0ba5",
+            "contract_code": null,
+            "func": "GetStrikePrice",
+            "parameters": []
+        },
+        {
+            "op_type": "ContractInvocation",
+            "name": "Op2",
+            "invoker": "a2",
+            "contract_domain": "Ethereum://chain3",
+            "contract_addr": "0x6d50ac0087113ea1c5d3281d59b831f7675b003b",
+            "contract_code": null,
+            "func": "CashSettle",
+            "parameters": [
+                {
+                    "Type": "uint256",
+                    "Value": {
+                        "constant": "10"
+                    }
+                },{
+                    "Type": "uint256",
+                    "Value": {
+                        "contract": "c1",
+                        "field": "StrikePrice",
+                        "pos": "0"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Op3",
+            "op_type": "Payment",
+            "src": {
+                "domain":"Ethereum://chain3",
+                "user_name": "a1"
+            },
+            "dst": {
+                "domain":"Tendermint://chain1",
+                "user_name": "a3"
+            },
+            "amount": 10,
+            "unit": "wei"
+        },
+        {
+            "op_type": "ContractInvocation",
+            "name": "Op4",
+            "invoker": "a3",
+            "contract_domain": "Tendermint://chain1",
+            "contract_addr": "0xe31ddd72dd2f601e1fd82372b898952cfcf6d78662bdf59297dd3ef8cca9ba46",
+            "contract_code": null,
+            "func": "BuyOption",
+            "parameters": [
+                {
+                    "Type": "uint256",
+                    "Value": {
+                        "constant": "5"
+                    }
+                },{
+                    "Type": "uint256",
+                    "Value": {
+                        "contract": "c1",
+                        "field": "StrikePrice",
+                        "pos": "0"
+                    }
+                }
+            ]
+        }
+    ],
+    "dependencies": [{
+        "left": "Op1",
+        "right": "Op2",
+        "dep": "before"
+    },{
+        "left": "Op1",
+        "right": "Op3",
+        "dep": "before"
+    },{
+        "left": "Op3",
+        "right": "Op4",
+        "dep": "before"
+    }]
+}

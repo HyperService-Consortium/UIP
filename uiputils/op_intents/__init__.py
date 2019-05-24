@@ -1,2 +1,2 @@
 
-from .op_intents import OpIntents
+from .op_intents import OpIntent

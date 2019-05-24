@@ -20,8 +20,11 @@ from web3 import Web3
 from hexbytes import HexBytes
 from eth_hash.auto import keccak
 
+
+from py_nsbcli.system_action import SystemAction, Action
+
 # config
-from uiputils.config import HTTP_HEADER
+from uiputils.config import HTTP_HEADER, action_using_flag
 
 from uiputils.loggers import console_logger
 
@@ -102,6 +105,10 @@ class DApp:
         host_info = self.info[host_name]
 
         if host_info['chain_type'] == 'Tendermint':
+            if isinstance(msg, str):
+                if msg[0:2] == "0x":
+                    msg = msg[2:]
+                msg = bytes.fromhex(msg)
             return host_info['password'].sign(msg)
         elif host_info['chain_type'] == 'Ethereum':
             self.unlockself(host_name)
@@ -161,15 +168,20 @@ class DApp:
             host_name = self.default_domain
         host_info = self.info[host_name]
         host_name = host_info['domain']
-        if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
-            # user refuse TODO
-            try:
-                ves.session_setup_update(int(content[0]), self.name, None)
-            except Exception as e:
-                raise e
-        # user looking through content
 
-        signatrue = self.sign(sig, host_name)
+
+        # if not SignatureVerifier.verify_by_raw_message(sig, rlp.encode(content), ves.address):
+        #     # user refuse TODO
+        #     try:
+        #         ves.session_setup_update(int(content[0]), self.name, None)
+        #     except Exception as e:
+        #         raise e
+        # user looking through content
+        # print(sig, host_name)
+        if host_name == "Tendermint://chain1":
+            signature = self.sign(bytes.fromhex(sig[2:]), host_name)
+        else:
+            signature = self.sign(sig, host_name)
 
         console_logger.info(
             'dapp ({0}) is trying call user_ack, name: {1} host: {2}'.format(
@@ -178,19 +190,27 @@ class DApp:
                 host_info
             )
         )
-
         if not testing:
-            self.unlockself(host_name)
-            ack_func = isc.user_ack(signatrue, {
-                'from': Web3.toChecksumAddress(host_info['address']),
-                'gas': hex(5000000)
-            })
-            ack_func.transact()
-            console_logger.info('dapp ({0}) user_ack response:{1}'.format(self.name, ack_func.loop_and_wait()))
+            if host_name == "Tendermint://chain1":
+                self.unlockself(host_name)
+                sys_act = SystemAction(host_info['host'])
+                sys_act.add_action(host_info['password'], Action(
+                    bytes.fromhex("123456"), None, None,
+                    action_using_flag[host_info['chain_type']].value, bytes.fromhex(sig[2:]),
+                    signature
+                ))
+            else:
+                self.unlockself(host_name)
+                sys_act = SystemAction(host_info['host'])
+                sys_act.add_action(host_info['password'], Action(
+                    bytes.fromhex("123456"), None, None,
+                    action_using_flag[host_info['chain_type']].value, bytes.fromhex(sig[2:]),
+                    bytes.fromhex(signature[2:])
+                ))
 
         # what if update no successful? TODO
 
-        ret = ves.session_setup_update(int(content[0]), host_name + '.' + self.name, signatrue)
+        ret = ves.session_setup_update(int(content[0]), host_name + '.' + self.name, signature)
         if isinstance(ret, Exception):
             raise ret
         else:
@@ -199,26 +219,32 @@ class DApp:
                 'host_info': host_info,
                 # TODO: temporary eth-nsb-address
                 'isc': isc.address,
-                'nsb': "0x15055c5173c91957ea49552bdee55487e3c2ac43"
+                'nsb': "PLACEHODER"
             }
 
-    def receive(self, rlped_atte, session_id) -> Attestation:
+    def receive(self, rlped_atte, session_id, tid, aid, host_name=None) -> Attestation:
+
+        if host_name is None:
+            host_name = self.default_domain
+        host_info = self.info[host_name]
+        host_name = host_info['domain']
 
         try:
             if session_id not in self.session_event:
                 raise KeyError("No such session_id" + str(session_id))
 
-            session_info = self.session_event[session_id]
-            nsb = EthLightNetStatusBlockChain(
-                session_info['host_info']['address'],
-                session_info['host_info']['host'],
-                session_info['nsb']
-            )
+            # session_info = self.session_event[session_id]
+            # nsb = EthLightNetStatusBlockChain(
+            #     session_info['host_info']['address'],
+            #     session_info['host_info']['host'],
+            #     session_info['nsb']
+            # )
+            sys_act = SystemAction(host_info['host'])
 
             atte = Attestation(rlped_atte)
-
-            if not nsb.validate_action(msghash=atte.pre_hash, signature=atte.signatures[-1][0]):
-                raise VerificationError("this action is not on nsb")
+            print(sys_act.get_action(host_info['password'], bytes.fromhex("123456"), tid, aid))
+            # if not nsb.validate_action(msghash=atte.pre_hash, signature=atte.signatures[-1][0]):
+            #     raise VerificationError("this action is not on nsb")
 
         except VerificationError as e:
             # TODO: stop ISC ?
@@ -270,11 +296,11 @@ class DApp:
         if host_name is None:
             host_name = self.default_domain
         host_info = self.info[host_name]
-        nsb = EthLightNetStatusBlockChain(
-            host_info['address'],
-            host_info['host'],
-            self.session_event[session_index]['nsb']
-        )
+        # nsb = EthLightNetStatusBlockChain(
+        #     host_info['address'],
+        #     host_info['host'],
+        #     self.session_event[session_index]['nsb']
+        # )
 
         console_logger.info(
             'dapp ({0}) adding atte[\n'
@@ -286,14 +312,20 @@ class DApp:
                 HexBytes(atte.pre_hash).hex(), atte.signatures[-1][0].to_hex()
             )
         )
-
-        return nsb.add_action_proposal(
-            self.session_event[session_index]['isc'],
-            tx_index,
-            state.value,
-            atte.pre_hash,
-            atte.signatures[-1][0].to_hex()
-        )
+        self.unlockself(host_name)
+        sys_act = SystemAction(host_info['host'])
+        sys_act.add_action(host_info['password'], Action(
+            bytes.fromhex("123456"), tx_index, state.value,
+            action_using_flag[host_info['chain_type']].value, HexBytes(atte.pre_hash),
+            atte.signatures[-1][0].bytes()
+        ))
+        # return nsb.add_action_proposal(
+        #     self.session_event[session_index]['isc'],
+        #     tx_index,
+        #     state.value,
+        #     atte.pre_hash,
+        #     atte.signatures[-1][0].to_hex()
+        # )
 
 # aborted code
 # user ack:

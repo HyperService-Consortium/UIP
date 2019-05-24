@@ -1,0 +1,45 @@
+{
+    "Op-intents": [
+        {
+            "op_type": "ContractInvocation",
+            "name": "Op1",
+            "invoker": "a2",
+            "contract_domain": "Tendermint://chain2",
+            "contract_addr": "0xed361e9ab7e16c8d80b551669fc417b9ba78b1647fe9492ab4a27261b7ae7ad2",
+            "contract_code": null,
+            "func": "vote",
+            "parameters": []
+        },
+        {
+            "op_type": "ContractInvocation",
+            "name": "Op2",
+            "invoker": "a1",
+            "contract_domain": "Ethereum://chain3",
+            "contract_addr": "0xe64a9c8ef223a3527aff4984b37cc691685bcd13",
+            "contract_code": null,
+            "func": "submitVotes",
+            "parameters": [
+                {
+                    "Type": "string",
+                    "Value": {
+                        "contract": "c1",
+                        "field": "district",
+                        "pos": "district"
+                    }
+                },{
+                    "Type": "uint256",
+                    "Value": {
+                        "contract": "c1",
+                        "field": "totalVotes",
+                        "pos": "totalVotes"
+                    }
+                }
+            ]
+        }
+    ],
+    "dependencies": [{
+        "left": "Op1",
+        "right": "Op2",
+        "dep": "before"
+    }]
+}

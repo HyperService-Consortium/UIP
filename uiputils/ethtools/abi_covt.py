@@ -74,7 +74,7 @@ class AbiEncoder:
             if isinstance(para, str):
                 if not hex_match.match(para) and not hex_match_withprefix.match(para):
                     raise TypeError("invalid hexstring " + para + " for initializing datatype " + para_type)
-                if para[1] == 'x':
+                if len(para) >= 2 and para[1] == 'x':
                     numstr = para[2:]
                 else:
                     numstr = para
@@ -101,7 +101,7 @@ class AbiEncoder:
             elif isinstance(para, str):
                 if not hex_match.match(para) and not hex_match_withprefix.match(para):
                     para = bytes(para.encode(ENC))
-                if para[1] == 'x':
+                if len(para) >= 2 and para[1] == 'x':
                     para = para[2:]
             else:
                 raise TypeError("unexpected type " + str(type(para)) + " for initializing datatype " + para_type)

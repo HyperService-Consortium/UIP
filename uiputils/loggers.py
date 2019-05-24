@@ -23,9 +23,9 @@ def console_logger_init():
     to shield
     """
     formatter = logging.Formatter('%(asctime)-15s %(name)s %(message)s')
-    console_logger.setLevel(logging.INFO)
+    console_logger.setLevel(logging.DEBUG)
     console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
     console_handler.suffix = "%Y-%m-%d_%H.log"
     console_logger.addHandler(console_handler)
 

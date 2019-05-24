@@ -10,11 +10,12 @@ from hexbytes import HexBytes
 from eth_hash.auto import keccak
 
 # uip modules
-from uiputils.op_intents import OpIntents
+from uiputils.op_intents import OpIntent
 from uiputils.transaction import StateType
 from uiputils.transaction_intents import TransactionIntents
 from uiputils.chain_dns import ChainDNS
-from uiputils.isc import EthInsuranceSmartContract
+from uiputils import isc as isc_module
+from uiputils.isc import TenInsuranceSmartContract as InsuranceSmartContract
 from uiputils.errors import Missing, Mismatch, VerificationError
 from uiputils.uiptypes import Attestation
 from uiputils.contract.wrapped_contract_function import ContractFunctionClient
@@ -23,8 +24,14 @@ from uiputils.contract.wrapped_contract_function import ContractFunctionClient
 from uiputils.ethtools import JsonRPC, SignatureVerifier
 from uiputils.nsb import EthLightNetStatusBlockChain
 
+
+# nsb modules
+from py_nsbcli import Client
+
+from py_nsbcli.system_action import SystemAction, Action
+
 # config
-from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir
+from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir, action_using_flag, alice
 from uiputils.loggers import  console_logger
 
 # constant
@@ -61,18 +68,19 @@ class VerifiableExecutionSystem:
 
     def __init__(self):
         # TODO: temporary eth-address
-        self.address = "0x4f984aa7d262372df92f85af9be8d2df09ac4018"
+        self.address = "0xf4dacff5eba7426295e27a32d389fff3cde55de2"
         self.password = "123456"
-        self.chain_host = "http://127.0.0.1:8545"
-        self.domain = "Ethereum://chain1"
+        self.chain_host = "http://162.105.87.118:8545"
+        self.domain = "Ethereum://chain3"
         ###########################################################
 
+        self.nsb = Client("http://47.254.66.11:26657")
         # TODO: temporary eth-nsb-address
-        self.nsb = EthLightNetStatusBlockChain(
-            self.address,
-            self.chain_host,
-            "0x15055c5173c91957ea49552bdee55487e3c2ac43"
-        )
+        # self.nsb = EthLightNetStatusBlockChain(
+        #     self.address,
+        #     self.chain_host,
+        #     "0x15055c5173c91957ea49552bdee55487e3c2ac43"
+        # )
         ###########################################################
 
         self.txs_pool = {
@@ -120,7 +128,7 @@ class VerifiableExecutionSystem:
                     exec=Missing(owner_name + " is not in user-pool").error_info
                 ))
                 raise Missing(owner_name + " is not in user-pool")
-            wait_user.add(self.domain + '.' + owner_name)
+            wait_user.add("Tendermint://chain1" + '.' + owner_name)
             owner_dapp = self.user_pool[owner_name]
             if host_name not in owner_dapp.info:
                 self.debug("session-id: {sid} setupPrepareError {exec}".format(
@@ -140,13 +148,12 @@ class VerifiableExecutionSystem:
 
         # build isc
         try:
-            isc = EthInsuranceSmartContract(
-                [self.address] + ChainDNS.gatherusers(wait_user, userformat='dot-concated'),
-                ves=self,
-                tx_head={'from': self.address, 'gas': hex(4000000)},
-                rlped_txs=sign_bytes,
-                signature=atte_v,
-                tx_count=len(tx_intents.intents)
+            isc = InsuranceSmartContract(
+                isc_owners=[self.address] + ChainDNS.gatherusers(wait_user, userformat='dot-concated'),
+                transaction_intents=tx_intents,
+                required_funds=[0, 0, 0],
+                ves_signature=atte_v,
+                host_addr=self.nsb.host
                 # test by deployed contract
                 # contract_addr="0x0C24884AEe4E89378Bb1E739A5c9b34834D384E5"
             )
@@ -184,7 +191,7 @@ class VerifiableExecutionSystem:
     def session_setup_update(self, session_id, ack_user_name, ack_signature):
         if session_id not in self.txs_pool:
             return KeyError("session (id=" + str(session_id) + ") is not valid anymore")
-
+        # print("ac", ack_user_name)
         if ack_user_name not in self.txs_pool[session_id]['ack_dict']:
             return Missing('You have no right to vote on this session')
 
@@ -194,12 +201,12 @@ class VerifiableExecutionSystem:
             # TODO: inform Aborted
 
         if self.txs_pool[session_id]['ack_dict'][ack_user_name] is None:
-            if not SignatureVerifier.verify_by_raw_message(
-                ack_signature,
-                HexBytes(self.txs_pool[session_id]['ack_dict']['self_first']),
-                ChainDNS.get_user(ack_user_name)
-            ):
-                return Mismatch('invalid signature')
+            # if not SignatureVerifier.verify_by_raw_message(
+            #     ack_signature,
+            #     HexBytes(self.txs_pool[session_id]['ack_dict']['self_first']),
+            #     ChainDNS.get_user(ack_user_name)
+            # ):
+            #     return Mismatch('invalid signature')
             self.txs_pool[session_id]['ack_counter'] -= 1
             self.txs_pool[session_id]['ack_dict'][ack_user_name] = ack_signature
             self.info("session-id: {sid} user-ack: {ack_name} {ack_sig}".format(
@@ -225,13 +232,15 @@ class VerifiableExecutionSystem:
     @staticmethod
     def build_graph(op_intents_json):
         # build eligible Op intents
-        op_intents, op_owners = OpIntents.createopintents(op_intents_json['Op-intents'])
+        op_intents, op_owners = OpIntent.createopintents(op_intents_json['Op-intents'])
 
         # Generate Transaction intents and Dependency Graph
         # TODO:sort Graph
         return TransactionIntents(op_intents, op_intents_json['dependencies']), op_owners
 
     def send_txinfo_to_nsb(self, session_id, testing=False):
+        if isinstance(self.nsb, Client):
+            return
         if testing:
             return
         session_info = self.txs_pool[session_id]
@@ -264,6 +273,9 @@ class VerifiableExecutionSystem:
             )
 
     def send_txinfo_to_isc(self, isc, tx_intents, testing=False):
+        if isinstance(isc, isc_module.TenInsuranceSmartContract):
+            return
+
         if testing:
             return
         for idx, tx_intent in enumerate(tx_intents.intents):
@@ -336,15 +348,21 @@ class VerifiableExecutionSystem:
         else:  # assuming be class dApp
             self.user_pool[users.name] = users
 
-    def receive(self, rlped_atte, session_id):
+    def receive(self, rlped_atte, session_id, tid, aid, host_name=None):
         try:
             if session_id not in self.txs_pool:
                 raise KeyError("No such session_id" + str(session_id))
 
-            atte = Attestation(rlped_atte)
+            # session_info = self.session_event[session_id]
+            # nsb = EthLightNetStatusBlockChain(
+            #     session_info['host_info']['address'],
+            #     session_info['host_info']['host'],
+            #     session_info['nsb']
+            # )
+            sys_act = SystemAction(self.nsb.host)
 
-            if not self.nsb.validate_action(msghash=atte.pre_hash, signature=atte.signatures[-1][0]):
-                raise VerificationError("this action is not on nsb")
+            atte = Attestation(rlped_atte)
+            print(sys_act.get_action(alice, bytes.fromhex("123456"), tid, aid))
 
         except VerificationError as e:
             # TODO: stop ISC ?
@@ -395,13 +413,20 @@ class VerifiableExecutionSystem:
             )
         )
 
-        return self.nsb.add_action_proposal(
-            self.txs_pool[session_index]['isc_addr'],
-            tx_index,
-            state.value,
-            atte.pre_hash,
-            atte.signatures[-1][0].to_hex()
-        )
+        sys_act = SystemAction(self.nsb.host)
+        sys_act.add_action(alice, Action(
+            bytes.fromhex("123456"), tx_index, state.value,
+            action_using_flag["Tendermint"].value, HexBytes(atte.pre_hash),
+            atte.signatures[-1][0].bytes()
+        ))
+
+        # return self.nsb.add_action_proposal(
+        #     self.txs_pool[session_index]['isc_addr'],
+        #     tx_index,
+        #     state.value,
+        #     atte.pre_hash,
+        #     atte.signatures[-1][0].to_hex()
+        # )
 
     def debug(self, msg):
         VerifiableExecutionSystem.VesLog.logger.debug(msg, extra={'vesaddr': self.address})

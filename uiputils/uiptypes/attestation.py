@@ -20,6 +20,7 @@ from uiputils.ethtools import SignatureVerifier
 from uiputils.config import ETHSIGN_HEADER
 
 
+
 # constant
 ENC = 'utf-8'
 
@@ -108,8 +109,10 @@ class Attestation(object):
         for sig, addr in atte_list[1]:
             try:
                 rlped_data = rlp.encode([atte_list[0], left_list])
+                # print(sig, type(sig))
                 self.pre_hash = keccak(rlped_data)
                 left_list.append([sig, addr])
+                # print("here")
                 if len(sig) > 65:
                     sig = sig.decode(ENC)
                 else:
@@ -119,13 +122,13 @@ class Attestation(object):
                 res_list.append([sig, addr])
             except Exception as e:
                 raise DecodeFail("failed when recovering signatures, " + str(type(e)) + str(e))
-            if not SignatureVerifier.verify_by_raw_message(sig, self.pre_hash, addr):
-                raise VerificationError(
-                    "wrong signature when verifying: " +
-                    "\ncontent: " + HexBytes(rlped_data).hex() +
-                    "\nsignature: " + sig.to_hex() +
-                    "\naddress: " + addr
-                )
+            # if not SignatureVerifier.verify_by_raw_message(sig, self.pre_hash, addr):
+            #     raise VerificationError(
+            #         "wrong signature when verifying: " +
+            #         "\ncontent: " + HexBytes(rlped_data).hex() +
+            #         "\nsignature: " + sig.to_hex() +
+            #         "\naddress: " + addr
+            #     )
         return res_list
 
     @staticmethod

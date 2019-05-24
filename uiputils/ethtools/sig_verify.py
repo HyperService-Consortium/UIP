@@ -14,6 +14,24 @@ from uiputils.config import ETHSIGN_HEADER
 ENC = "utf-8"
 
 
+class IdleSignature(bytes):
+    def __init__(self, sig):
+        super().__init__()
+        self.signature = sig
+
+    def bytes(self):
+        return self.signature
+
+    def hex(self):
+        return self.signature.hex()
+
+    def to_hex(self):
+        return self.signature.hex()
+
+    def to_bytes(self):
+        return self.signature
+
+
 class SignatureVerifier:
     def __init__(self):
         pass
@@ -25,12 +43,19 @@ class SignatureVerifier:
     @staticmethod
     def init_signature(sig):
         if isinstance(sig, str):
+            if sig[0:2] == "0x":
+                sig = sig[2:]
+            sig = bytes.fromhex(sig)
+        return IdleSignature(sig)
+
+
+        if isinstance(sig, str):
             if sig[-2:] != '01' and sig[-2:] != '00':
                 sig = hex(int(sig, 16) - 27)
             try:
                 sig = KeyAPI.Signature(HexBytes(sig))
             except Exception:
-                raise TypeError(type(sig) + "is not verifiable signature")
+                raise TypeError(str(type(sig)) + "is not verifiable signature")
         elif isinstance(sig, bytes):
             if sig[-1] != 1 and sig[-1] != 0:
                 sig = bytestoint(sig)
@@ -39,9 +64,9 @@ class SignatureVerifier:
             try:
                 sig = KeyAPI.Signature(sig)
             except Exception:
-                raise TypeError(type(sig) + "is not verifiable signature")
+                raise TypeError(str(type(sig)) + "is not verifiable signature")
         elif not isinstance(sig, KeyAPI.Signature):
-            raise TypeError(type(sig) + "is not verifiable signature")
+            raise TypeError(str(type(sig)) + "is not verifiable signature")
         return sig
 
     @staticmethod

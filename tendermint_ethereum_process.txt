@@ -1,0 +1,63 @@
+prepare end.. 3.2266244449999997
+compute on_chain_tx
+compute on_chain_tx 1.2832000000351229e-05
+attestation inited
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AZr/xhC1Ikh+AAL3XOvg0hLFQn+zWENGwYWKi2a6qTK30STBLisdcDImvTtCj9xMr1++SBdnwTdXk3rjFLaSpN4hPmOlZylSHYhiR1q05AdGblvzHgIJaYFka7rxP0JPDA==', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '327mtKiw8aRgFU3k5VoyxCn5QTc7xehYG5rrdCW5p8k='}]}, 'hash': '6718CD598D2740489BA70A330A491468B9C62E7DE4CD4597FD52F5C7472B6D2E', 'height': '20309'}}
+attestation inited 2.024426502
+attestation open
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AXv7qhaOwMeevyEXAvYJhFZPNmaXiriLG7KA9Ykj0KuDzoawLpvfUnWBypF+QhgOqFfGrnlWvRW83YYcf3YiDOw9oHPDG5tJd2BmA4gEkAvRC5O1iUv0Q7SgPZzkKIBOThs=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'kiHqX8Z46amTWPJD+McX8UZCS2+L7lmA8cIFXATiDa0='}]}, 'hash': '0224BEDF2EDB77E5E1E85F6133C7D7128B43B855634E5E3CE93679C8CE825145', 'height': '20312'}}
+attestation open 3.1066823689999996
+transact
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '0URfi3nYMkCBOycjimuPn65ojuyo3eeCURRMK+KioaA='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'T0L7+aCsP7ddceUikn1E+7vLoTuJRpLeWiJZETSGRR8='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '+bky3X2f0ql6Vtl+2JNC5A6CICed8ddOoT06s/y4/TQ='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'm6/wUou9oebIe6yvnvXOqlI93LDcqrs0Dzeb4pGMWf8='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'MbONRqsX1XcWxC3pJu5bU3JV56Z+bt1fOSHhV3aKlLg='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'UakCqPA0wmNESTZBJxGO2vVM9CKbpP+9T1FaoS3yP5I='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'fhM3f4C2Ebfk0LZYsHwCEyAr55BUc7XL1s5K6WZ8hjY='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'r3YSR2lsTLnobs5HLJE+OwwtAPp1xJCQi4G2McagEAE='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'UtbzJ1qTexDEFBwIVwGL30llQoIgAkfCp+2hEfJnVb0='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'aM9Bxw9aG2YZb8UWLYiUfHRymErkeNg4yQRgZ0gMCcg='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'FaHou0lFXuc+16h3aa/UUrZ9eH5Ww3K5NXMp9pctHAo='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'aCUWq79AxVsPiu1vMk9edizowtMw3c2whdXYbTIqgYg='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'j50MhjCe1QpzgfFux5lWg566nSmsc8zG2i9iZEkWKTM='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '5eTbofakf+68E3GAS6JSOl+GJ2bxmo4le59C42rY5oA='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '95bvJ+Fq9lz+39y1kBozSLRi4W5n27WO1rtW/BP8Ycg='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'gyX+bXCNBq67WxJzskvV/IcTSjydZCTyxFFFIe937KY='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'XTSrnFtyy7hxVtMcNsdNzvdLOh+80cBTb8+E0hKfYq4='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '2ApCrtk1v1pPzE8Y5uWswumXu+Q7X7POCpUXdQQzSO4='}, {'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'No9VY4bfX+cDmLY0shaUNHM3g21wLWUZM0fNGJjAd/g='}]}, 'hash': '8471DBF9C08C2554CCF28D740B68A13681DE074526C9A10973FBE2DD920F3D91', 'height': '16873'}}
+transact 1.223670180000001
+attestation opened
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AZkmmBlaFsPNB3bedUfRjqGmDjOG9D3M8dblL14XH38+TkeSbJO+zTlZm4evR5wAVP+128KY7fhywNCcEV3yyz5D6c5oFUOz8lKUl4wD0QFlZjOBo4l12+jHZNmRnZzKCA==', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '+ShFMK0KtlqDBISG2oLBejjIhBlIrbU5q0p1o5ihQIo='}]}, 'hash': '55417444F3E38DF146507B7F4469B181190476098989AC32167150D878C51BDF', 'height': '20315'}}
+attestation opened 1.9261853959999993
+attestation closed
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AXc0/577vX0BqUXQPPbqWoLzgxPchOO5BL9IHnd1bmh0sikFTdzEwdHKxRcvRukRi3XuxzFTFRnJBF//sVXUn1JgIVrdJmJWnIrcgrzK5zUXWPvp+pkzRyjUsMrwiytFnxw=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'c3r5cNDhEEPENEhyQgYx+ZF6INnWWXa4x18csb/ccTU='}]}, 'hash': 'DDFE6B8C9B9C0D64B290B9EFAA74DD8578267F14E8F79305A10011983F488E0E', 'height': '20318'}}
+attestation closed 3.079455266
+----------end transaction----------
+compute on_chain_tx
+compute on_chain_tx 1.0587000000228386e-05
+attestation inited
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AShCbFnl2vwuB6tBV9y6ac8mYDVfIfPPT05yDjz8YyAspJZ73YUUsUn8ItW9uDhxZ4sBJzaCqlypUyMVgUiMpNQ4RKOnCqB8EorKpiarqUxytj+OWi7OQr0DiKfr5P5Oaxw=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'C558cTTnhKq80a+G0O+HcBNoKIN0J54W1IHlbYk4BlE='}]}, 'hash': 'CE66C4C8C6EA617848601A8E294B1DD8EA2CD7CE93893DB8C2E24B02A13DBD3D', 'height': '20321'}}
+attestation inited 3.068581042
+attestation open
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AQwp6HajWhjRnMIqEVsXhkAxT6XAzRut8xMxvV//SkFYDEqXiiXhyofpFQLsj6jqJ6z5/dTE7fxe44P9q+Llfj9py0t2J4ym0tgM9ZJyU9DkAcipaFYL67Rcg1NvGUf1LBs=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '9OQIIlh1UU0uAGMj105axK2sSgG4zwAUK9OFQNwlpgQ='}]}, 'hash': 'D52173C2D83EE56307008388687C7FC5F2D310C6AD0495E77398C33C6AF9D820', 'height': '20324'}}
+attestation open 3.0924397249999984
+transact
+{'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'to': '0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', 'gas': '0x493e0', 'value': '0xa'}
+Exec...
+Exec...
+Exec...
+{'jsonrpc': '2.0', 'id': 1, 'result': {'blockHash': '0x649eba712af551089ebeda2c2998610f066b65a1bdfebd156b932878770c163c', 'blockNumber': '0x161', 'contractAddress': None, 'cumulativeGasUsed': '0x5208', 'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'gasUsed': '0x5208', 'logs': [], 'logsBloom': '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 'root': '0x06c9cc18d37d82f46218a67acabe26607ec90d88b558ef759291cb3f543ecaf8', 'to': '0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', 'transactionHash': '0x2c88c92da48375d8ce2fef04c6f8f29e508b15626d8fb731d494e2e7cdf5b191', 'transactionIndex': '0x0'}}
+transact 3.7257117629999996
+attestation opened
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AQEGqPvuKbmdokKnq6Ykil4Z44o4IuZ+co0sb4MSTNqQhuGXvao7H9fLMaGlz9dpMA7CmbNe2cJAdYprxausSphIPiNXnB0QlikExPwkLyWnRtUF7WlFGHsO+q9JASaYJxw=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'GurhLQQkcQz0hEdXh6sGGVp8frAQApS6vMH84UR4lcc='}]}, 'hash': 'B4C4FE7B423C4B881FFF287B0A10CE0AAA507BE1CB0C6777DC3266F20C7032AA', 'height': '20330'}}
+attestation opened 2.4947292240000003
+attestation closed
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AXjg3HRhs57R64vsxdxq3SY1h49Zd5GPMnU7OHtdZ5gP2+VAf+oU/k1zH26LZUFU95j6YbJ/nbZepM4gQuInN9Ck0A4Rl1NFDoz2Ro2c7T5jDcF9PqmH7W6nuzD823JTCw==', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '1ADXQIGrYlrYCZSzHO95fQTTvJ7qllOLMOWQUkxuLcQ='}]}, 'hash': 'D54C1A6FF13242358AB6CB799241B54FCCBA6CEFDE2C9E3545B8B5AAE111AA46', 'height': '20332'}}
+attestation closed 1.9951189979999988
+----------end transaction----------
+compute on_chain_tx
+compute on_chain_tx 3.560900000110223e-05
+attestation inited
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AcBVo2TrLeVaIfRMRnaAwLxlGONp9J20pZicaU/2a8AUIsOUuwMWIuNdm6CxRZqeXtUj9UYY6tVoXxpuCMY32ilUbt78rMlPl4des6B4Sse0SHEA8AUoRhVtaO9IR0I0CQ==', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'YUHQ+CqpUJGBp4rnby4NJ8uX9g3x3Z4/Ox18OxgTy4k='}]}, 'hash': '8A9C5A9659EAAA99C5785C7069CA3732E1B9B55144A6C6390DE22AB6DB2732B1', 'height': '20334'}}
+attestation inited 2.137464278999996
+attestation open
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AS7vyt5E19sd4VTHkS98HMdh+12HUVzLyKUSiEX7RygiFnulgYU+QzdWJIs/BLkPDrbt73MzR/eF1ezbJYf1dzUaDDI4vbyPz5/v/SB4E7iua/RbjVWXkVwzgNjsFGKpERw=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'n88XAU5mDb/zQO/OcFSYVElHf83a9GtFNQhvz+XBoRE='}]}, 'hash': '2B224A760F45FA4F50E22DA1A2E1EE65BB986F66F0867D6642D88015D74DC0CC', 'height': '20337'}}
+attestation open 3.046777095000003
+transact
+{'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'to': '0x5b4f81a8f87f87a1250f98680c5ad646c82e79a5', 'data': '0xb6b55f250000000000000000000000000000000000000000000000000000000000000010', 'gas': '0x493e0'}
+Exec...
+Exec...
+{'jsonrpc': '2.0', 'id': 1, 'result': {'blockHash': '0xc2b71fa766cc1e1cd4ab689b8a7ff7ec53fd0ce3290075e19c607620fe5ee761', 'blockNumber': '0x16e', 'contractAddress': None, 'cumulativeGasUsed': '0x493e0', 'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'gasUsed': '0x493e0', 'logs': [], 'logsBloom': '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 'root': '0xd246fae17c8143212940fd69be56ccef150691893b60de606fe0559f54554a68', 'to': '0x5b4f81a8f87f87a1250f98680c5ad646c82e79a5', 'transactionHash': '0xaac721745fe0097d29447329eaaf2049b9e1a16708098f665d97fd31b495ca12', 'transactionIndex': '0x0'}}
+transact 2.7298677529999935
+attestation opened
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AbuaEeXIBAgM/DTna4kepLcOPVIaYCZyR2BqLfWGULrP1ZMvEfC68DTcnRrvS4cymf7iLZSXpibnxJiHaA8KZtaq5ab1CBykme5Y6qPAeIxCSRicyJQUET/Gau1+C54FDw==', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': 'iO32mpfPpJTR1dfaF31YjSYPSORKjyTbu2OvLJQqI68='}]}, 'hash': 'C81DAB5FB2FEE9AC81807E77CA7BA3C02001E8868CDA84102CEE7FC05EB513EA', 'height': '20342'}}
+attestation opened 2.4305357900000004
+attestation closed
+{'jsonrpc': '2.0', 'id': '', 'result': {'check_tx': {}, 'deliver_tx': {'data': 'AQcXPDgbuZnhB0061KeCok4//DzcWRPLqLaxNqvXVhzi4y41vPJlDdvt4wuTN7eBs7fGwr0YuKtjoEc6eBptfC9aC5fNSLY4HV/vOoHJ0djSpHESST+h/JApJ9YEwTaaIxs=', 'tags': [{'key': 'VHJhbnNhY3Rpb25IYXNo', 'value': '5JJdYYFHiLZWiYY3hOOfBGpoWmIWYF7QZxXpFtWDqLo='}]}, 'hash': '161B100A5A88B46E1D726B08B49778D5E8829B6AEB151B7D1885C1EF69EAA6BB', 'height': '20345'}}
+attestation closed 3.0934932380000006
+----------end transaction----------
+tot_time 42.402290783

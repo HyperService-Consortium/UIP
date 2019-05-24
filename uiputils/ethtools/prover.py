@@ -15,22 +15,23 @@ from uiputils.config import INCLUDE_PATH
 ENC = "utf-8"
 
 # Prover functions setting
-funcs = CDLL(INCLUDE_PATH + "/verifyproof.dll")
-
-funcs.OpenDB.restype = GolevelDBptr
-funcs.OpenDB.argtype = GoString.Type
-
-funcs.CloseDB.argtype = GolevelDBptr
-
-funcs.VerifyProof.restype = GoInt32
-funcs.VerifyProof.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type, GoStringSlice.Type, GoInt32)
-
-funcs.VerifyProofWithoutPath.restype = GoInt32
-funcs.VerifyProofWithoutPath.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type)
+# funcs = CDLL(INCLUDE_PATH + "/verifyproof.dll")
+#
+# funcs.OpenDB.restype = GolevelDBptr
+# funcs.OpenDB.argtype = GoString.Type
+#
+# funcs.CloseDB.argtype = GolevelDBptr
+#
+# funcs.VerifyProof.restype = GoInt32
+# funcs.VerifyProof.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type, GoStringSlice.Type, GoInt32)
+#
+# funcs.VerifyProofWithoutPath.restype = GoInt32
+# funcs.VerifyProofWithoutPath.argtypes = (GolevelDBptr, GoString.Type, GoString.Type, GoString.Type)
 
 
 class Prover:
     def __init__(self, path):
+        pass
         if path == "":
             self.testmode = True
         else:
@@ -38,12 +39,14 @@ class Prover:
             self.ethdb = funcs.OpenDB(bytes(path.encode(ENC)))
 
     def close(self):
+        pass
         if self.testmode:
             print("you are in testmode")
             return None
         funcs.CloseDB(self.ethdb)
 
     def verify(self, merkleproof):
+        pass
         if self.testmode:
             print("you are in testmode")
             return None
@@ -62,6 +65,7 @@ class Prover:
         funcs.VerifyProofWithoutPath(self.ethdb, hashptr, keyptr, valptr)
 
     def verify_with_path(self, key, val, storagehash, storagepath):
+        pass
         if self.testmode:
             print("you are in testmode")
             return None

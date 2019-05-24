@@ -484,12 +484,6 @@ def create_cast(length=None, mutikey=False):
     return CastReference[length][mutikey]
 
 
-def trans_amount(amn, src_chain_type, dst_chain_type):
-    pass
-
-
-
-
 if __name__ == '__main__':
     dit = {
         'from': "12345678",

@@ -1,0 +1,222 @@
+host_addr http://127.0.0.1:26657
+http://127.0.0.1:26657
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:25,196 console_logger <uiputils.dapp.dapp.DApp object at 0x0000022FDF9E04A8> built, info:{'http://127.0.0.1:8545': {'chain_type': 'Ethereum', 'address': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'host': 'http://127.0.0.1:8545', 'domain': 'Ethereum://chain1', 'password': '123456'}, 'Ethereum://chain1': {'chain_type': 'Ethereum', 'address': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'host': 'http://127.0.0.1:8545', 'domain': 'Ethereum://chain1', 'password': '123456'}, 'http://47.254.66.11:26657': {'chain_type': 'Tendermint', 'address': '0x604bdd2dd4b7e1b761e2ac96db99bb2bda386bb0d075b51a8f49c5103ebaa985', 'host': 'http://47.254.66.11:26657', 'domain': 'Tendermint://chain1', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0358>}, 'Tendermint://chain1': {'chain_type': 'Tendermint', 'address': '0x604bdd2dd4b7e1b761e2ac96db99bb2bda386bb0d075b51a8f49c5103ebaa985', 'host': 'http://47.254.66.11:26657', 'domain': 'Tendermint://chain1', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0358>}}
+2019-05-11 18:22:25,196 console_logger <uiputils.dapp.dapp.DApp object at 0x0000022FE12C8BA8> built, info:{'http://47.254.66.11:26657': {'chain_type': 'Tendermint', 'address': '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', 'host': 'http://47.254.66.11:26657', 'domain': 'Tendermint://chain1', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0320>}, 'Tendermint://chain1': {'chain_type': 'Tendermint', 'address': '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', 'host': 'http://47.254.66.11:26657', 'domain': 'Tendermint://chain1', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0320>}, 'http://47.251.2.73:26657': {'chain_type': 'Tendermint', 'address': '0x4f7a1b3d9f2f8f3e2c7e7729bc873fc55e607e47309941391a7a82673e563887', 'host': 'http://47.251.2.73:26657', 'domain': 'Tendermint://chain2', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0438>}, 'Tendermint://chain2': {'chain_type': 'Tendermint', 'address': '0x4f7a1b3d9f2f8f3e2c7e7729bc873fc55e607e47309941391a7a82673e563887', 'host': 'http://47.251.2.73:26657', 'domain': 'Tendermint://chain2', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0438>}}
+2019-05-11 18:22:25,197 console_logger <uiputils.ves.ves.VerifiableExecutionSystem object at 0x0000022FDF87EC50> built, info:{'address': '0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', 'password': '123456', 'chain_host': 'http://127.0.0.1:8545', 'domain': 'Ethereum://chain1', 'nsb': <py_nsbcli.modules.client.Client object at 0x0000022FDF87EC88>, 'txs_pool': {0: {'tx_intents': None, 'isc_addr': None, 'ack_dict': {}, 'ack_counter': 0, 'users': None}}, 'user_pool': {'a1': <uiputils.dapp.dapp.DApp object at 0x0000022FDF9E04A8>, 'a2': <uiputils.dapp.dapp.DApp object at 0x0000022FE12C8BA8>}}
+2019-05-11 18:22:25,198 console_logger sessionSetupPrepare 1
+transfer ('chain2', '0x4f7a1b3d9f2f8f3e2c7e7729bc873fc55e607e47309941391a7a82673e563887', '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', 20, 'iew') {}
+['uint256']
+2019-05-11 18:22:25,201 console_logger ves-session[1]  init tx_intents: {
+    "dependencies": [
+        "T1->T2",
+        "T1->T3",
+        "T2->T3"
+    ],
+    "intents": [
+        {
+            "chain": "chain2",
+            "dst": "0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63",
+            "fund": 20,
+            "name": "T1",
+            "src": "0x4f7a1b3d9f2f8f3e2c7e7729bc873fc55e607e47309941391a7a82673e563887",
+            "trans_type": "transfer",
+            "unit": "iew"
+        },
+        {
+            "chain": "chain1",
+            "dst": "0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f",
+            "fund": "0xa",
+            "gas": "0x493e0",
+            "name": "T2",
+            "src": "0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6",
+            "trans_type": "transfer",
+            "unit": "wei"
+        },
+        {
+            "chain": "chain1",
+            "dst": "0xf8a4cd25fad51161e27ceb83c237c492491c2968",
+            "func": "deposit",
+            "gas": "0x493e0",
+            "name": "T3",
+            "parameters": [
+                "10"
+            ],
+            "src": "0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6",
+            "trans_type": "invoke"
+        }
+    ]
+}
+2019-05-11 18:22:25,205 console_logger ves-session[1]  init op_owners: {'Tendermint://chain2.a2', 'Ethereum://chain1.a1'}
+2019-05-11 18:22:25,205 console_logger ves-session[1] init wait_owners: {'Tendermint://chain1.a2', 'Tendermint://chain1.a1'}
+2019-05-11 18:22:25,877 console_logger ves-session[1] init wait_owners: {'Tendermint://chain1.a2', 'Tendermint://chain1.a1'}
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+host_addr <py_nsbcli.modules.admin.Admin object at 0x0000022FE356EE80>
+http://47.254.66.11:26657
+['0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', '0x604bdd2dd4b7e1b761e2ac96db99bb2bda386bb0d075b51a8f49c5103ebaa985'] [0, 0, 0] 0x347428e79dc9a90349443b33abc6c14834eee21c734aa1f600b59b5b18fa11a843d7d15f720ac79a99aed2740c6ffe77ebee5eca234d153a56e6b642cccc71481b http://47.254.66.11:26657
+2019-05-11 18:22:25,878 console_logger isc 0x12345678 built
+2019-05-11 18:22:25,878 console_logger ves-session[1] created isc: address on 0x12345678
+ owner ['0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', '0x604bdd2dd4b7e1b761e2ac96db99bb2bda386bb0d075b51a8f49c5103ebaa985']
+2019-05-11 18:22:25,879 console_logger session_info[1] updated {'tx_intents': <uiputils.transaction_intents.transaction_intents.TransactionIntents object at 0x0000022FE11CA518>, 'isc_addr': '0x12345678', 'ack_dict': {'Tendermint://chain1.a2': None, 'Tendermint://chain1.a1': None, 'self_first': '0x347428e79dc9a90349443b33abc6c14834eee21c734aa1f600b59b5b18fa11a843d7d15f720ac79a99aed2740c6ffe77ebee5eca234d153a56e6b642cccc71481b'}, 'ack_counter': 2, 'users': None}
+0x347428e79dc9a90349443b33abc6c14834eee21c734aa1f600b59b5b18fa11a843d7d15f720ac79a99aed2740c6ffe77ebee5eca234d153a56e6b642cccc71481b Tendermint://chain1
+2019-05-11 18:22:25,879 console_logger dapp (a1) is trying call user_ack, name: Tendermint://chain1 host: {'chain_type': 'Tendermint', 'address': '0x604bdd2dd4b7e1b761e2ac96db99bb2bda386bb0d075b51a8f49c5103ebaa985', 'host': 'http://47.254.66.11:26657', 'domain': 'Tendermint://chain1', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0358>}
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+ac Tendermint://chain1.a1
+2019-05-11 18:22:27,349 console_logger dapp (a1) user_ack accepted by ves: 0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f
+0x347428e79dc9a90349443b33abc6c14834eee21c734aa1f600b59b5b18fa11a843d7d15f720ac79a99aed2740c6ffe77ebee5eca234d153a56e6b642cccc71481b Tendermint://chain1
+2019-05-11 18:22:27,349 console_logger dapp (a2) is trying call user_ack, name: Tendermint://chain1 host: {'chain_type': 'Tendermint', 'address': '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', 'host': 'http://47.254.66.11:26657', 'domain': 'Tendermint://chain1', 'password': <py_nsbcli.types.wallet.Wallet object at 0x0000022FDF9D0320>}
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+ac Tendermint://chain1.a2
+2019-05-11 18:22:28,325 console_logger dapp (a2) user_ack accepted by ves: 0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f
+2019-05-11 18:22:28,326 console_logger on chain transaction computed index: 0, content: {'trans_type': 'transfer', 'chain': 'chain2', 'src': '0x4f7a1b3d9f2f8f3e2c7e7729bc873fc55e607e47309941391a7a82673e563887', 'dst': '0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63', 'fund': 20, 'unit': 'iew'}
+b'\xd1$\xc1.+\x1dp2&\xbd;B\x8f\xdcL\xaf_\xbeH\x17g\xc17W\x93z\xe3\x14\xb6\x92\xa4\xde!>c\xa5g)R\x1d\x88bGZ\xb4\xe4\x07Fn[\xf3\x1e\x02\ti\x81dk\xba\xf1?BO\x0c' <class 'bytes'>
+here
+2019-05-11 18:22:28,327 console_logger dapp (a2) adding atte[
+     isc: 0x12345678
+    transaction-action index: (0, 2)
+    atte: (0x9affc610b522487e0002f75cebe0d212c5427fb3584346c1858a8b66baa932b7, d124c12e2b1d703226bd3b428fdc4caf5fbe481767c13757937ae314b692a4de213e63a56729521d8862475ab4e407466e5bf31e02096981646bbaf13f424f0c)
+]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:29,376 console_logger nsb received action, response: None
+b'\xd1$\xc1.+\x1dp2&\xbd;B\x8f\xdcL\xaf_\xbeH\x17g\xc17W\x93z\xe3\x14\xb6\x92\xa4\xde!>c\xa5g)R\x1d\x88bGZ\xb4\xe4\x07Fn[\xf3\x1e\x02\ti\x81dk\xba\xf1?BO\x0c' <class 'bytes'>
+here
+2019-05-11 18:22:30,234 console_logger ves (0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f) adding atte[
+     isc: 0x12345678
+    transaction-action index: (0, 3)
+    atte: (0x7bfbaa168ec0c79ebf211702f60984564f3666978ab88b1bb280f58923d0ab83, ce86b02e9bdf527581ca917e42180ea857c6ae7956bd15bcdd861c7f76220cec3da073c31b9b49776066038804900bd10b93b5894bf443b4a03d9ce428804e4e1b) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:31,448 console_logger nsb received action, response: None
+b'\xd1$\xc1.+\x1dp2&\xbd;B\x8f\xdcL\xaf_\xbeH\x17g\xc17W\x93z\xe3\x14\xb6\x92\xa4\xde!>c\xa5g)R\x1d\x88bGZ\xb4\xe4\x07Fn[\xf3\x1e\x02\ti\x81dk\xba\xf1?BO\x0c' <class 'bytes'>
+here
+b'\xce\x86\xb0.\x9b\xdfRu\x81\xca\x91~B\x18\x0e\xa8W\xc6\xaeyV\xbd\x15\xbc\xdd\x86\x1c\x7fv"\x0c\xec=\xa0s\xc3\x1b\x9bIw`f\x03\x88\x04\x90\x0b\xd1\x0b\x93\xb5\x89K\xf4C\xb4\xa0=\x9c\xe4(\x80NN\x1b' <class 'bytes'>
+here
+host_addr None
+http://47.251.2.73:26657
+host_addr <py_nsbcli.modules.admin.Admin object at 0x0000022FE35D8B00>
+http://47.251.2.73:26657
+host_addr <py_nsbcli.modules.admin.Admin object at 0x0000022FE35D8C50>
+http://47.251.2.73:26657
+b'NG\x92l\x93\xbe\xcd9Y\x9b\x87\xafG\x9c\x00T\xff\xb5\xdb\xc2\x98\xed\xf8r\xc0\xd0\x9c\x11]\xf2\xcb>C\xe9\xceh\x15C\xb3\xf2R\x94\x97\x8c\x03\xd1\x01ef3\x81\xa3\x89u\xdb\xe8\xc7d\xd9\x91\x9d\x9c\xca\x08' <class 'bytes'>
+here
+2019-05-11 18:22:32,779 console_logger dapp (a2) adding atte[
+     isc: 0x12345678
+    transaction-action index: (0, 4)
+    atte: (0x992698195a16c3cd0776de7547d18ea1a60e3386f43dccf1d6e52f5e171f7f3e, 4e47926c93becd39599b87af479c0054ffb5dbc298edf872c0d09c115df2cb3e43e9ce681543b3f25294978c03d10165663381a38975dbe8c764d9919d9cca08)
+]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:33,486 console_logger nsb received action, response: None
+b'NG\x92l\x93\xbe\xcd9Y\x9b\x87\xafG\x9c\x00T\xff\xb5\xdb\xc2\x98\xed\xf8r\xc0\xd0\x9c\x11]\xf2\xcb>C\xe9\xceh\x15C\xb3\xf2R\x94\x97\x8c\x03\xd1\x01ef3\x81\xa3\x89u\xdb\xe8\xc7d\xd9\x91\x9d\x9c\xca\x08' <class 'bytes'>
+here
+b'0xb229054ddcc4c1d1cac5172f46e9118b75eec731531519c9045fffb155d49f5260215add2662569c8adc82bccae7351758fbe9fa99334728d4b0caf08b2b459f1c' <class 'bytes'>
+here
+2019-05-11 18:22:34,145 console_logger ves (0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f) adding atte[
+     isc: 0x12345678
+    transaction-action index: (0, 5)
+    atte: (0x7734ff9efbbd7d01a945d03cf6ea5a82f38313dc84e3b904bf481e77756e6874, b229054ddcc4c1d1cac5172f46e9118b75eec731531519c9045fffb155d49f5260215add2662569c8adc82bccae7351758fbe9fa99334728d4b0caf08b2b459f1c) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:35,582 console_logger nsb received action, response: None
+b'\xb2)\x05M\xdc\xc4\xc1\xd1\xca\xc5\x17/F\xe9\x11\x8bu\xee\xc71S\x15\x19\xc9\x04_\xff\xb1U\xd4\x9fR`!Z\xdd&bV\x9c\x8a\xdc\x82\xbc\xca\xe75\x17X\xfb\xe9\xfa\x993G(\xd4\xb0\xca\xf0\x8b+E\x9f\x1c' <class 'bytes'> here
+2019-05-11 18:22:35,582 console_logger on chain transaction computed index: 1, content: {'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'to': '0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', 'gas': '0x493e0', 'value': '0xa'}
+b'0xa4967bdd8514b149fc22d5bdb83871678b01273682aa5ca953231581488ca4d43844a3a70aa07c128acaa626aba94c72b63f8e5a2ece42bd0388a7ebe4fe4e6b1c' <class 'bytes'>
+here
+2019-05-11 18:22:36,254 console_logger ves (0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f) adding atte[
+     isc: 0x12345678
+    transaction-action index: (1, 2)
+    atte: (0x28426c59e5dafc2e07ab4157dcba69cf2660355f21f3cf4f4e720e3cfc63202c, a4967bdd8514b149fc22d5bdb83871678b01273682aa5ca953231581488ca4d43844a3a70aa07c128acaa626aba94c72b63f8e5a2ece42bd0388a7ebe4fe4e6b1c) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:37,607 console_logger nsb received action, response: None
+b'\xa4\x96{\xdd\x85\x14\xb1I\xfc"\xd5\xbd\xb88qg\x8b\x01\'6\x82\xaa\\\xa9S#\x15\x81H\x8c\xa4\xd48D\xa3\xa7\n\xa0|\x12\x8a\xca\xa6&\xab\xa9Lr\xb6?\x8eZ.\xceB\xbd\x03\x88\xa7\xeb\xe4\xfeNk\x1c' <class 'bytes'>
+here
+2019-05-11 18:22:38,388 console_logger dapp (a1) adding atte[
+     isc: 0x12345678
+    transaction-action index: (1, 3)
+    atte: (0x0c29e876a35a18d19cc22a115b178640314fa5c0cd1badf31331bd5fff4a4158, 0c4a978a25e1ca87e91502ec8fa8ea27acf9fdd4c4edfc5ee383fdabe2e57e3f69cb4b76278ca6d2d80cf5927253d0e401c8a968560bebb45c83536f1947f52c1b) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:39,726 console_logger nsb received action, response: None
+b'\xa4\x96{\xdd\x85\x14\xb1I\xfc"\xd5\xbd\xb88qg\x8b\x01\'6\x82\xaa\\\xa9S#\x15\x81H\x8c\xa4\xd48D\xa3\xa7\n\xa0|\x12\x8a\xca\xa6&\xab\xa9Lr\xb6?\x8eZ.\xceB\xbd\x03\x88\xa7\xeb\xe4\xfeNk\x1c' <class 'bytes'>
+here
+b"\x0cJ\x97\x8a%\xe1\xca\x87\xe9\x15\x02\xec\x8f\xa8\xea'\xac\xf9\xfd\xd4\xc4\xed\xfc^\xe3\x83\xfd\xab\xe2\xe5~?i\xcbKv'\x8c\xa6\xd2\xd8\x0c\xf5\x92rS\xd0\xe4\x01\xc8\xa9hV\x0b\xeb\xb4\\\x83So\x19G\xf5,\x1b" <class 'bytes'>
+here
+{'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'to': '0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f', 'gas': '0x493e0', 'value': '0xa'}
+{'jsonrpc': '2.0', 'id': 1, 'result': '0x019fc10c38398dbb62653073ad73411305aa11249b46835fb48ebde862294447'}
+b'0x86e197bdaa3b1fd7cb31a1a5cfd769300ec299b35ed9c240758a6bc5abac4a98483e23579c1d10962904c4fc242f25a746d505ed6945187b0efaaf49012698271c' <class 'bytes'>
+here
+2019-05-11 18:22:41,934 console_logger ves (0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f) adding atte[
+     isc: 0x12345678
+    transaction-action index: (1, 4)
+    atte: (0x0106a8fbee29b99da242a7aba6248a5e19e38a3822e67e728d2c6f83124cda90, 86e197bdaa3b1fd7cb31a1a5cfd769300ec299b35ed9c240758a6bc5abac4a98483e23579c1d10962904c4fc242f25a746d505ed6945187b0efaaf49012698271c) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:42,808 console_logger nsb received action, response: None
+b"\x86\xe1\x97\xbd\xaa;\x1f\xd7\xcb1\xa1\xa5\xcf\xd7i0\x0e\xc2\x99\xb3^\xd9\xc2@u\x8ak\xc5\xab\xacJ\x98H>#W\x9c\x1d\x10\x96)\x04\xc4\xfc$/%\xa7F\xd5\x05\xediE\x18{\x0e\xfa\xafI\x01&\x98'\x1c" <class 'bytes'>
+here
+b"\xdb\xe5@\x7f\xea\x14\xfeMs\x1fn\x8beAT\xf7\x98\xfaa\xb2\x7f\x9d\xb6^\xa4\xce B\xe2'7\xd0\xa4\xd0\x0e\x11\x97SE\x0e\x8c\xf6F\x8d\x9c\xed>c\r\xc1}>\xa9\x87\xedn\xa7\xbb0\xfc\xdbrS\x0b" <class 'bytes'>
+here
+2019-05-11 18:22:42,813 console_logger dapp (a1) adding atte[
+     isc: 0x12345678
+    transaction-action index: (1, 5)
+    atte: (0x78e0dc7461b39ed1eb8becc5dc6add2635878f5977918f32753b387b5d67980f, dbe5407fea14fe4d731f6e8b654154f798fa61b27f9db65ea4ce2042e22737d0a4d00e119753450e8cf6468d9ced3e630dc17d3ea987ed6ea7bb30fcdb72530b)
+]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:43,851 console_logger nsb received action, response: None
+b"\xdb\xe5@\x7f\xea\x14\xfeMs\x1fn\x8beAT\xf7\x98\xfaa\xb2\x7f\x9d\xb6^\xa4\xce B\xe2'7\xd0\xa4\xd0\x0e\x11\x97SE\x0e\x8c\xf6F\x8d\x9c\xed>c\r\xc1}>\xa9\x87\xedn\xa7\xbb0\xfc\xdbrS\x0b" <class 'bytes'>
+here
+2019-05-11 18:22:43,898 console_logger on chain transaction computed index: 2, content: {'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'to': '0xf8a4cd25fad51161e27ceb83c237c492491c2968', 'data': '0xb6b55f250000000000000000000000000000000000000000000000000000000000000010', 'gas': '0x493e0'}
+b'\x8b\xebP|BG\xc3\x11<oY54T@\xa7\xc0g\xab/\xc0.HX\x11\x94\xb5\xd3\xf3?\xfc\x7f\xd0}V\xfd\x01\xc2\x9e\xfb\xcc\x1a!Nm\xf6n\x18.\x87><;F\xe0\xbb\xdb\xe1\xa9\xbb\xae\x0fS\x0b' <class 'bytes'>
+here
+2019-05-11 18:22:43,964 console_logger dapp (a1) adding atte[
+     isc: 0x12345678
+    transaction-action index: (2, 2)
+    atte: (0x5d8055172dd63b5ac62d848c22030f79e8f3379b213d3e13f86d74825bb50d79, 8beb507c4247c3113c6f5935345440a7c067ab2fc02e48581194b5d3f33ffc7fd07d56fd01c29efbcc1a214e6df66e182e873e3c3b46e0bbdbe1a9bbae0f530b)
+]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:44,906 console_logger nsb received action, response: None
+b'\x8b\xebP|BG\xc3\x11<oY54T@\xa7\xc0g\xab/\xc0.HX\x11\x94\xb5\xd3\xf3?\xfc\x7f\xd0}V\xfd\x01\xc2\x9e\xfb\xcc\x1a!Nm\xf6n\x18.\x87><;F\xe0\xbb\xdb\xe1\xa9\xbb\xae\x0fS\x0b' <class 'bytes'>
+here
+2019-05-11 18:22:45,560 console_logger ves (0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f) adding atte[
+     isc: 0x12345678
+    transaction-action index: (2, 3)
+    atte: (0xa1a429deac6d89d2e0c8c092f2373d75eae953e78def15389ce8112897c4e547, f79aefeb173911872edc4a21ebc64d4c1c6d4f24839f801fef02760bb3b2e48d5798f8b2ac6b071d75f48c895b11a54564a0ecf91b8c686de5ffe7927ddf0df01b) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:46,935 console_logger nsb received action, response: None
+b'\x8b\xebP|BG\xc3\x11<oY54T@\xa7\xc0g\xab/\xc0.HX\x11\x94\xb5\xd3\xf3?\xfc\x7f\xd0}V\xfd\x01\xc2\x9e\xfb\xcc\x1a!Nm\xf6n\x18.\x87><;F\xe0\xbb\xdb\xe1\xa9\xbb\xae\x0fS\x0b' <class 'bytes'>
+here
+b'\xf7\x9a\xef\xeb\x179\x11\x87.\xdcJ!\xeb\xc6ML\x1cmO$\x83\x9f\x80\x1f\xef\x02v\x0b\xb3\xb2\xe4\x8dW\x98\xf8\xb2\xack\x07\x1du\xf4\x8c\x89[\x11\xa5Ed\xa0\xec\xf9\x1b\x8chm\xe5\xff\xe7\x92}\xdf\r\xf0\x1b' <class 'bytes'>
+here
+{'from': '0x93334ae4b2d42ebba8cc7c797bfeb02bfb3349d6', 'to': '0xf8a4cd25fad51161e27ceb83c237c492491c2968', 'data': '0xb6b55f250000000000000000000000000000000000000000000000000000000000000010', 'gas': '0x493e0'} {'jsonrpc': '2.0', 'id': 1, 'result': '0xe6e3e0927468627361052e9a1720cb057ffd2b09e6f19e909aa40a2d0a653ea9'}
+b'*\xb0\xa2:<\xd0>D-UJ\x00\x83\x9c\x96\x1a\x83\xdc$\x97\xb2\xbe\xe9\xf5\xa9\x94\x9d7\xd8C\x8f\xdec\xca\r\xd1\x9d\xda\xa1F.z\xbb\xdf\xb7\xda~c\xbaN\x8c7\xa0U\xe7\xbbd\xa3u`.\x0e!\x01' <class 'bytes'>
+here
+2019-05-11 18:22:47,593 console_logger dapp (a1) adding atte[
+     isc: 0x12345678
+    transaction-action index: (2, 4)
+    atte: (0x3ad39b70884396f1bef2ca4dbe6ab29151d55dace792462f8c75e22ce25a1a41, 2ab0a23a3cd03e442d554a00839c961a83dc2497b2bee9f5a9949d37d8438fde63ca0dd19ddaa1462e7abbdfb7da7e63ba4e8c37a055e7bb64a375602e0e2101)
+]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:49,035 console_logger nsb received action, response: None
+b'*\xb0\xa2:<\xd0>D-UJ\x00\x83\x9c\x96\x1a\x83\xdc$\x97\xb2\xbe\xe9\xf5\xa9\x94\x9d7\xd8C\x8f\xdec\xca\r\xd1\x9d\xda\xa1F.z\xbb\xdf\xb7\xda~c\xbaN\x8c7\xa0U\xe7\xbbd\xa3u`.\x0e!\x01' <class 'bytes'>
+here
+b'0x27be275f664449b66e530d4ced510976ad85eeedb4097d4fdb66822d8438e3cf127b3002b33942f16dc3869a61fef92dc273579e0402aaac27ed62e750c766be1b' <class 'bytes'>
+here
+2019-05-11 18:22:49,688 console_logger ves (0x0ac45f1e6b8d47ac4c73aee62c52794b5898da9f) adding atte[
+     isc: 0x12345678
+    transaction-action index: (2, 5)
+    atte: (0xae545491f2594dee441acec1185f961383444bb0d09bd78885be392e1edf3bde, 27be275f664449b66e530d4ced510976ad85eeedb4097d4fdb66822d8438e3cf127b3002b33942f16dc3869a61fef92dc273579e0402aaac27ed62e750c766be1b) ]
+host_addr http://47.254.66.11:26657
+http://47.254.66.11:26657
+2019-05-11 18:22:51,090 console_logger nsb received action, response: None
+b"'\xbe'_fDI\xb6nS\rL\xedQ\tv\xad\x85\xee\xed\xb4\t}O\xdbf\x82-\x848\xe3\xcf\x12{0\x02\xb39B\xf1m\xc3\x86\x9aa\xfe\xf9-\xc2sW\x9e\x04\x02\xaa\xac'\xedb\xe7P\xc7f\xbe\x1b" <class 'bytes'>
+here
