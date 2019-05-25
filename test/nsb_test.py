@@ -8,8 +8,8 @@ from web3 import Web3
 
 # uip modules
 from uiputils.ethtools import ServiceStart
-from uiputils.dapp import DApp
-from uiputils.nsb.nsb import EthNetStatusBlockchain
+from dapp import DApp
+from nsb import EthNetStatusBlockchain
 from uiputils.ethtools.loc_cal import slicelocation
 
 baser = DApp({

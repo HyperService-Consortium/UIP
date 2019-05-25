@@ -9,14 +9,12 @@ from uiputils.chain_dns import ChainDNS
 from uiputils.uiptypes.attestation import Attestation
 from uiputils.errors import VerificationError
 from uiputils.transaction import StateType
-from uiputils.nsb import EthLightNetStatusBlockChain
 from uiputils.contract.wrapped_contract_function import ContractFunctionClient
 
 # eth modules
-from uiputils.ethtools import JsonRPC, SignatureVerifier
+from uiputils.ethtools import JsonRPC
 
 # ethereum modules
-from web3 import Web3
 from hexbytes import HexBytes
 from eth_hash.auto import keccak
 

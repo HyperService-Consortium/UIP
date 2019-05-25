@@ -3,8 +3,8 @@
 
 # uip modules
 from uiputils.ethtools import FileLoad, JsonRPC
-from uiputils.ves import VerifiableExecutionSystem
-from uiputils.dapp import DApp
+from ves import VerifiableExecutionSystem
+from dapp import DApp
 from uiputils.transaction import StateType
 import time
 
@@ -61,7 +61,6 @@ def temporary_transact(tx, host):
 
     if host == "http://47.251.2.73:26657":
         from py_nsbcli import Client, Admin
-        from hexbytes import HexBytes
         admin = Admin()
         admin.set_rpc_host(host)
         cli = Client(admin)

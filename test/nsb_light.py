@@ -1,6 +1,6 @@
 
 from uiputils.ethtools import JsonRPC
-from uiputils.nsb.nsb import EthLightNetStatusBlockChain
+from nsb import EthLightNetStatusBlockChain
 
 from uiputils.config import HTTP_HEADER
 

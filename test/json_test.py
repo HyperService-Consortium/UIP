@@ -3,7 +3,7 @@
 import json
 
 # uip modules
-from uiputils.dapp import DApp
+from dapp import DApp
 from uiputils.op_intents import OpIntent
 from uiputils.transaction_intents import TransactionIntents
 

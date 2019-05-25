@@ -80,7 +80,7 @@ class InsuranceSmartContract(object, metaclass=ABCMeta):
                 self._tx_header['to'] = to_checksum_address(self._tx_header['to'])
 
     @abstractmethod
-    def insurance_claim(self, atte: Attestation, tid, state, nsb_addr, result=None, tcg=None, tx=None):
+    def insurance_claim(self, atte: Attestation, tid, state, *arg, **kwargs):
         """
         insurance claim
         """
@@ -91,6 +91,7 @@ class InsuranceSmartContract(object, metaclass=ABCMeta):
         settle contract
         """
 
+    @abstractmethod
     def return_funds(self, tx=None):
         """
         return funds
@@ -253,7 +254,7 @@ class EthInsuranceSmartContract(InsuranceSmartContract):
             tx = self.tx
         return self.handle.funct('userRefuse', tx)
 
-    def insurance_claim(self, atte: Attestation, tid, state, nsb_addr, result=None, tcg=None, tx=None):
+    def insurance_claim(self, atte: Attestation, tid, state, nsb_addr=None, result=None, tcg=None, tx=None):
         if tx is None:
             tx = self.tx
         console_logger.info('isc({0}) claiming:\n Attestation: {1},\n tid:{2},\n state: {3}'.format(
@@ -353,7 +354,7 @@ class TenInsuranceSmartContract(InsuranceSmartContract):
         contract_addr=None,
         wlt=None
     ):
-        self.handle = ISC(bind_cli=Client(host_addr))
+        self.handler = ISC(bind_cli=Client(host_addr))
         super().__init__()
         self.debugger = partial(isc_log.debug, extra={'iscaddr': self.address})
         self.infoer = partial(isc_log.info, extra={'iscaddr': self.address})
@@ -374,8 +375,8 @@ class TenInsuranceSmartContract(InsuranceSmartContract):
         console_logger.info('isc {} built'.format(self.address))
 
     @staticmethod
-    def make_contract(
-            isc_owners, transaction_intents, required_funds, ves_signature, host_addr, wlt):
+    def make_contract(isc_owners=None, transaction_intents=None, required_funds=None,
+            ves_signature=None, host_addr=None, wlt=None):
         # print(isc_owners, required_funds, ves_signature, host_addr)
         # isc.create_isc()
         return "0x12345678"
@@ -388,130 +389,28 @@ class TenInsuranceSmartContract(InsuranceSmartContract):
             seq=None,
             amt=None,
             meta=None,
-            tx: dict = None,
-            # spec: set = None,
-            lazy=False,
-            timeout=10
+            wlt,
+            # spec: set = None
     ):
-        if tx is None:
-            tx = self.tx
-        if isinstance(meta, dict):
-            meta = JsonRlpize.serialize(meta)
-        elif not isinstance(meta, str) and not isinstance(meta, bytes):
-            raise ValueError("unexpected meta-type" + str(type(meta)))
-        if lazy:
-            return self.handle.lazyfunct(
-                'updateTxInfo',
-                tx, idx,
-                Web3.toChecksumAddress(fr),
-                Web3.toChecksumAddress(to),
-                seq, amt, meta,
-            )
-        else:
-            return self.handle.funct(
-                'updateTxInfo',
-                tx, idx,
-                Web3.toChecksumAddress(fr),
-                Web3.toChecksumAddress(to),
-                seq, amt, meta, timeout=timeout
-            )
+        return self.handler.update_tx_info(wlt, fr, to, seq, amt, meta)
 
-    def user_stake(self, tx):
-        return self.handle.funct('stakeFund', tx)
+    def user_stake(self, value, wlt):
+        return self.handler.stake_fund(wlt, value)
 
-    def user_ack(self, sig, tx=None):
-        if tx is None:
-            tx = self.tx
-        return self.handle.lazyfunct('userAck', tx, sig)
+    def user_ack(self, wlt):
+        return self.handler.user_ack(wlt)
 
-    def user_refuse(self, tx=None):
-        if tx is None:
-            tx = self.tx
-        return self.handle.funct('userRefuse', tx)
+    def user_refuse(self, wlt):
+        return self.handler.user_refuse(wlt)
 
-    def insurance_claim(self, atte: Attestation, tid, state, nsb_addr, result=None, tcg=None, tx=None):
-        if tx is None:
-            tx = self.tx
-        console_logger.info('isc({0}) claiming:\n Attestation: {1},\n tid:{2},\n state: {3}'.format(
-            self.address, atte.__dict__, tid, state
-        ))
-        print(atte, "is not verified")
-        if state == StateType.opened:
-            if tcg is None:
-                raise Missing("the opening time of Transaction must be given")
-            return self.handle.funct('ChangeStateOpened', tx, tid, tcg)
-        elif state == StateType.closed:
-            if tcg is None:
-                raise Missing("the close time of Transaction must be given")
-            return self.handle.funct('ChangeStateClosed', tx, tid, tcg)
-        elif state == StateType.open:
-            if result is None:
-                raise Missing("the result of Transaction must be given")
-            return (
-                self.handle.funct('ChangeState', tx, tid, state),
-                self.handle.funct('ChangeResult', tx, nsb_addr, tid, result)
-            )
-        else:
-            return self.handle.funct('ChangeState', tx, tid, state)
+    def insurance_claim(self, atte: Attestation, tid, state, wlt=None, *arg, **kwargs):
+        return self.handler.insurance_claim(wlt, atte, tid, state)
 
-    def stop_isc(self, tx=None):
-        if tx is None:
-            tx = self.tx
-        console_logger.info('isc({}) closed'.format(self.address))
-        return self.handle.funct('StopISC', tx)
+    def settle_contract(self, wlt=None):
+        return self.handler.settle_contract(wlt)
 
-    def settle_contract(self, tx=None):
-        if tx is None:
-            tx = self.tx
-        console_logger.info('isc({}) settling'.format(self.address))
-        return self.handle.funct('settleContract', tx)
-
-    def update_funds(self, owner, tx):
-        if owner not in self.owners:
-            raise Missing('this address is not owner')
-        console_logger.info('isc({}) updating funds'.format(self.address))
-        print(owner, "updated fund:", tx)
-
-    def return_funds(self, tx=None):
-        if tx is None:
-            tx = self.tx
-        console_logger.info('isc({}) returing funds'.format(self.address))
-        return self.handle.funct('returnFunds', tx)
-
-    def is_owner(self, addr):
-        return self.handle.func('isOwner', Web3.toChecksumAddress(addr))
-
-    def is_raw_sender(self, addr):
-        return self.handle.func('isRawSender', Web3.toChecksumAddress(addr))
-
-    def tx_info_length(self):
-        return self.handle.func('txInfoLength')
-
-    def get_meta_by_number(self, tid):
-        return self.handle.func('getMetaByNumber', tid)
-
-    def get_state(self, tid):
-        return self.handle.func('getState', tid)
-
-    def get_result(self, tid):
-        return self.handle.func('getResult', tid)
-
-    def get_transaction_info(self, tid):
-        ret = self.handle.func('getTransactionInfo', tid)
-        console_logger.info('geted transaction information(index: {0}) {1}'.format(tid, ret))
-        ret[4] = JsonRlpize.unserialize(ret[4])
-        return ret
-
-    def get_isc_state(self):
-        return self.handle.func('iscState')
-
-    def vesack(self):
-        return self.handle.func('vesack')
-
-    def freeze_info(self, idx, tx=None):
-        if tx is None:
-            tx = self.tx
-        return self.handle.funct('freezeInfo', tx, idx)
+    def return_funds(self, wlt=None):
+        return self.handler.return_funds(, wlt)
 
 
 # isc test parameters

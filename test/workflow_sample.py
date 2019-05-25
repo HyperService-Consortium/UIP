@@ -3,8 +3,8 @@
 
 # uip modules
 from uiputils.ethtools import FileLoad, JsonRPC
-from uiputils.ves import VerifiableExecutionSystem
-from uiputils.dapp import DApp
+from ves import VerifiableExecutionSystem
+from dapp import DApp
 from uiputils.transaction import StateType
 
 

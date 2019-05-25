@@ -14,16 +14,14 @@ from uiputils.op_intents import OpIntent
 from uiputils.transaction import StateType
 from uiputils.transaction_intents import TransactionIntents
 from uiputils.chain_dns import ChainDNS
-from uiputils import isc as isc_module
-from uiputils.isc import TenInsuranceSmartContract as InsuranceSmartContract
-from uiputils.errors import Missing, Mismatch, VerificationError
+import isc as isc_module
+from isc import TenInsuranceSmartContract as InsuranceSmartContract
+from uiputils.errors import Missing, VerificationError
 from uiputils.uiptypes import Attestation
 from uiputils.contract.wrapped_contract_function import ContractFunctionClient
 
 # eth modules
-from uiputils.ethtools import JsonRPC, SignatureVerifier
-from uiputils.nsb import EthLightNetStatusBlockChain
-
+from uiputils.ethtools import JsonRPC
 
 # nsb modules
 from py_nsbcli import Client
@@ -31,7 +29,7 @@ from py_nsbcli import Client
 from py_nsbcli.system_action import SystemAction, Action
 
 # config
-from uiputils.config import HTTP_HEADER, INCLUDE_PATH, ves_log_dir, action_using_flag, alice
+from uiputils.config import HTTP_HEADER, ves_log_dir, action_using_flag, alice
 from uiputils.loggers import  console_logger
 
 # constant

@@ -1,8 +1,4 @@
-
-from uiputils.ethtools import ServiceStart
-from web3 import Web3
 from uiputils.ethtools import JsonRPC
-from uiputils.nsb.nsb import EthNetStatusBlockchain
 
 EDB_PATH = "D:/Go Ethereum/data/geth/chaindata"
 url = "http://127.0.0.1:8545"
