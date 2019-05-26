@@ -71,7 +71,7 @@ func uint64tobytes(number uint64) []byte {
 	return enc
 }
 
-//input a string and return common.Hash
+// input a string and return common.Hash
 func stringtohash(hashstr string) Hash {
 	var hres Hash
 	ofs := uint64(0)
@@ -87,7 +87,7 @@ func stringtohash(hashstr string) Hash {
 	return hres
 }
 
-//input a string and return a byte slice
+// input a string and return a byte slice
 func stringtobytes(bytes string) []byte {
 	glen := len(bytes)
 	if  glen <= 1 || ((glen & 1) == 1) {
@@ -111,7 +111,7 @@ func stringtobytes(bytes string) []byte {
 	return bres
 }
 
-//input a string and return a nibble slice
+// input a string and return a nibble slice
 func stringtonibbles(nibbles string) []byte {
 	glen := len(nibbles)
 
@@ -321,7 +321,6 @@ func verifyKey(db *leveldb.DB, roothash string, path string, consumed int) (stri
 
 		// compare to storagepath
 		// compare to rlp-hash
-		// TODO
 
 		node := rlp.Unserialize(querynode)
 
