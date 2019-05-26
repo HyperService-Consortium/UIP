@@ -1,50 +1,50 @@
 # UIP API Design
 
-- [ves]()
-- [nsb]()
-- [dapp]()
+- [ves]() DOING
+- [nsb]() DOING
+- [dapp]() DOING
 - [uiputil](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#uiputils)
     -  **uip** types:
-        - [OpIntent](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#opintent)
-        - [TransactionIntents](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#transactionintents)
-        - [Transaction](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#transaction)
-        - [PaymentTransaction(Transaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#paymenttransactiontransaction)
-        - [InvokeTransaction(Transaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#invoketransactiontransaction)
-    -  **uip** [Chain DNS](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#chain-dns)
-    -  **uip** [Data parser](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#data-parser)
-    -  **tendermint** [Data parser](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#data-parser-2)
-    -  **tendermint** [json Encoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#json-encoder)
-    -  **tendermint** [json Decoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#json-decoder)
+        - [OpIntent](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#opintent) FINISHED
+        - [TransactionIntents](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#transactionintents) FINISHED
+        - [Transaction](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#transaction) FINISHED
+        - [PaymentTransaction(Transaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#paymenttransactiontransaction) FINISHED
+        - [InvokeTransaction(Transaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#invoketransactiontransaction) FINISHED
+    -  **uip** [Chain DNS](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#chain-dns) FINISHED
+    -  **uip** [Data parser](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#data-parser) TODO
+    -  **tendermint** [Data parser](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#data-parser-2) TODO
+    -  **tendermint** [json Encoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#json-encoder) FINISHED
+    -  **tendermint** [json Decoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#json-decoder) FINISHED
     -  **eth** types
-        - [Contract](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#contract)
-        - [EthPaymentTransaction(PaymentTransaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#ethpaymenttransactionpaymenttransaction)
-        - [EthInvokeTransaction(InvokeTransaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#ethinvoketransactioninvoketransaction)
-    -  **eth** [ABI Encoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#abi-encoder)
-    -  **eth** [ABI Decoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#abi-decoder)
-    -  **eth** [Data parser](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#data-parser-1)
-    -  **eth** [jsonRPC]()
-    -  **eth** [SignatureVerifier]()
+        - [Contract](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#contract) FINISHED
+        - [EthPaymentTransaction(PaymentTransaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#ethpaymenttransactionpaymenttransaction) FINISHED
+        - [EthInvokeTransaction(InvokeTransaction)](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#ethinvoketransactioninvoketransaction) FINISHED
+    -  **eth** [ABI Encoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#abi-encoder) FINISHED
+    -  **eth** [ABI Decoder](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#abi-decoder) FINISHED
+    -  **eth** [Data parser](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#data-parser-1) TODO
+    -  **eth** [jsonRPC]() FINISHED
+    -  **eth** [SignatureVerifier]() TODO
     -  **solidity** types
-        - [SoliUint](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#soliuint)
-        - [SoliUint256](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#soliuint256)
-        - [SoliUint128]()
-        - [SoliUint64]()
-        - [SoliUint32]()
-        - [SoliUin16]()
-        - [SoliUint8]()
-        - [SoliInt]()
-        - [SoliInt256]()
-        - [SoliInt128]()
-        - [SoliInt64]()
-        - [SoliInt32]()
-        - [SoliIn16]()
-        - [SoliInt8]()
-        - [SoliBool]()
-        - [SoliAddress]()
-        - [SoliBytes]()
-        - [SoliString]()
-    -  **solidity** [SliceLoc](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#sliceloc)
-    -  **solidity** [MapLoc](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#maploc)
+        - [SoliUint](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#soliuint) FINISHED
+        - [SoliUint256](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#soliuint256) FINISHED
+        - [SoliUint128]() TODO
+        - [SoliUint64]() TODO
+        - [SoliUint32]() TODO
+        - [SoliUin16]() TODO
+        - [SoliUint8]() TODO
+        - [SoliInt]() TODO
+        - [SoliInt256]() TODO
+        - [SoliInt128]() TODO
+        - [SoliInt64]() TODO
+        - [SoliInt32]() TODO
+        - [SoliIn16]() TODO
+        - [SoliInt8]() TODO
+        - [SoliBool]() TODO
+        - [SoliAddress]() TODO
+        - [SoliBytes]() TODO
+        - [SoliString]() TODO
+    -  **solidity** [SliceLoc](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#sliceloc) FINISHED
+    -  **solidity** [MapLoc](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#maploc) FINISHED
 
 # VES
 
