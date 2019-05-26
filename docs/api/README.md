@@ -1,8 +1,8 @@
 # UIP API Design
 
-- ves
-- nsb
-- dapp
+- [ves]()
+- [nsb]()
+- [dapp]()
 - [uiputil](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#uiputils)
     -  **uip** types:
         - [OpIntent](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#opintent)
@@ -45,6 +45,46 @@
         - [SoliString]()
     -  **solidity** [SliceLoc](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#sliceloc)
     -  **solidity** [MapLoc](https://github.com/HyperServiceOne/UIP/tree/master/docs/api#maploc)
+
+# VES
+
+###### \__init__
+
+###### session_setup_prepare
+
+###### session_setup_update
+
+###### session_setup_finish
+
+###### build_graph
+
+##### send_txinfo_to_isc
+
+###### insurance_claim
+
+###### session_close
+
+###### exec
+
+# NSB
+
+###### add_attestation
+
+###### add_merkleproof
+
+###### get_attestation
+
+###### get_merkleproof
+
+# DApp
+
+###### ack_init
+
+###### insurance_claim
+
+###### exec
+
+###### session_close_requset
 
 # uiputils
 
