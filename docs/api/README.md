@@ -148,6 +148,20 @@ UIP API Design
 
 ###### parse(args: list, args_desc: list)
 
+#### Json RPC
+
+###### rpc_apis()
+
+###### get_json(api_name, args)
+
+###### api_name(args)
+
+#### Signature Verifier
+
+###### verify_by_raw_message(signature, msg, address)
+
+###### verify_by_hashed_message(signature, msg, address)
+
 # uiputils.tendermint
 
 #### Data parser
