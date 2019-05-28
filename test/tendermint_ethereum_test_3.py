@@ -95,7 +95,7 @@ if __name__ == '__main__':
     console_logger.info('{0} built, info:{1}'.format(ves, ves.__dict__))
 
     # load Sample.json
-    op_intents_json = FileLoad.getopintents("./test/opintents5.json")
+    op_intents_json = FileLoad.getopintents("./opintents5.json")
 
     # for intent in op_intents_json['Op-intents']:
     #     intent['contract_domain'] = "Ethereum://" + intent['contract_domain']
