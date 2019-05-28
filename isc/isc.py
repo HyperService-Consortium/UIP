@@ -374,43 +374,43 @@ class TenInsuranceSmartContract(InsuranceSmartContract):
         self.owners = isc_owners
         console_logger.info('isc {} built'.format(self.address))
 
-    # @staticmethod
-    # def make_contract(isc_owners=None, transaction_intents=None, required_funds=None,
-    #         ves_signature=None, host_addr=None, wlt=None):
-    #     # print(isc_owners, required_funds, ves_signature, host_addr)
-    #     # isc.create_isc()
-    #     return "0x12345678"
-    #
-    # def update_tx_info(
-    #         self,
-    #         idx,
-    #         fr=None,
-    #         to=None,
-    #         seq=None,
-    #         amt=None,
-    #         meta=None,
-    #         wlt,
-    #         # spec: set = None
-    # ):
-    #     return self.handler.update_tx_info(wlt, fr, to, seq, amt, meta)
-    #
-    # def user_stake(self, value, wlt):
-    #     return self.handler.stake_fund(wlt, value)
-    #
-    # def user_ack(self, wlt):
-    #     return self.handler.user_ack(wlt)
-    #
-    # def user_refuse(self, wlt):
-    #     return self.handler.user_refuse(wlt)
-    #
-    # def insurance_claim(self, atte: Attestation, tid, state, wlt=None, *arg, **kwargs):
-    #     return self.handler.insurance_claim(wlt, atte, tid, state)
-    #
-    # def settle_contract(self, wlt=None):
-    #     return self.handler.settle_contract(wlt)
-    #
-    # def return_funds(self, wlt=None):
-    #     return self.handler.return_funds(wlt)
+    @staticmethod
+    def make_contract(isc_owners=None, transaction_intents=None, required_funds=None,
+            ves_signature=None, host_addr=None, wlt=None):
+        # print(isc_owners, required_funds, ves_signature, host_addr)
+        # isc.create_isc()
+        return "0x12345678"
+
+    def update_tx_info(
+            self,
+            idx,
+            fr=None,
+            to=None,
+            seq=None,
+            amt=None,
+            meta=None,
+            wlt,
+            # spec: set = None
+    ):
+        return self.handler.update_tx_info(wlt, fr, to, seq, amt, meta)
+
+    def user_stake(self, value, wlt):
+        return self.handler.stake_fund(wlt, value)
+
+    def user_ack(self, wlt):
+        return self.handler.user_ack(wlt)
+
+    def user_refuse(self, wlt):
+        return self.handler.user_refuse(wlt)
+
+    def insurance_claim(self, atte: Attestation, tid, state, wlt=None, *arg, **kwargs):
+        return self.handler.insurance_claim(wlt, atte, tid, state)
+
+    def settle_contract(self, wlt=None):
+        return self.handler.settle_contract(wlt)
+
+    def return_funds(self, wlt=None):
+        return self.handler.return_funds(, wlt)
 
 
 # isc test parameters

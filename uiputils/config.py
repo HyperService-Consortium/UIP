@@ -72,7 +72,7 @@ eth_blockchain_info = {
 
 tennsb_blockchain_info = {
     'chain1': {
-        'host': "http://47.251.2.73:26657",  # "http://47.254.66.11:26657",
+        'host': "http://47.254.66.11:26657",
         'user': {
             "a1": "0x604bdd2dd4b7e1b761e2ac96db99bb2bda386bb0d075b51a8f49c5103ebaa985",
             "a2": "0xcfe900c7a56f87882f0e18e26851bce7b7e61ebeca6c4b235fa360d627dfac63",
